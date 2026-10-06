@@ -2,6 +2,8 @@
 
 > **Branding:** The project name is written as **Dhatri** in documentation, code, UI labels, and general references. The logo/brand mark will use the stylized Sanskrit form **Dhātrī**. This is a visual branding choice; the canonical written project name remains **Dhatri**.
 
+> **Revision note (6 Oct 2026):** This guide stays the product source of truth. Two edits were made. (1) A branding find-and-replace had turned the word "Dose" into "Dhatri" (`DhatriEvent`, "Missed-Dhatri Detection", and similar); those are restored. (2) Sections 7-10 (voice and telephony) describe the full vision. For the 8-day hackathon build, real phone calls (Exotel), Piper and IndicF5 are not built; the call experience is in-app. See `docs/DECISIONS.md` for every scope change and the reason for it, and `ARCHITECTURE.md` for what is actually built.
+
 > **Purpose of this document:** This is the single source-of-truth summary for the Dhatri hackathon project. A new teammate or AI agent should be able to read this file and understand the product, decided feature scope, architecture direction, Serverpod usage, voice options, AI/memory strategy, and the intended video demonstration without needing the previous conversation.
 
 ---
@@ -82,7 +84,7 @@ Instead, Dhatri should provide:
 
 # 3. Core feature set we decided on
 
-## A. Prescription Photo → Dhatri Schedule
+## A. Prescription Photo → Dose Schedule
 
 The user uploads a photo of a prescription.
 
@@ -90,7 +92,7 @@ Dhatri extracts a structured draft such as:
 
 ```text
 Medicine: Metformin 500 mg
-Dhatri: 1 tablet
+Dose: 1 tablet
 Frequency: Twice daily
 Timing: Morning + evening
 Duration: 30 days
@@ -152,13 +154,13 @@ The confirmation is logged.
 
 ---
 
-## D. Missed-Dhatri Detection + Caregiver Escalation
+## D. Missed-Dose Detection + Caregiver Escalation
 
 Example:
 
 ```text
 8:00 PM
-Dhatri reminder sent
+Dose reminder sent
 
 8:15 PM
 No confirmation
@@ -294,8 +296,8 @@ Caregiver
 Doctor
 Medication
 Prescription
-DhatriSchedule
-DhatriEvent
+MedicationSchedule
+DoseEvent
 Call
 WellnessCheck
 Symptom
@@ -389,7 +391,7 @@ Use Serverpod Streams/WebSockets for:
 
 ```text
 Missed-dose alert
-Dhatri state changes
+Dose state changes
 Caregiver dashboard updates
 Doctor dashboard updates
 Live call/session events
@@ -993,8 +995,8 @@ The project should be implemented in this order.
 2. Prescription extraction
 3. Human confirmation of extracted schedule
 4. Medication scheduling
-5. Dhatri reminder
-6. Dhatri confirmation
+5. Dose reminder
+6. Dose confirmation
 7. Missed-dose detection
 8. Caregiver alert
 9. Basic patient timeline
@@ -1107,7 +1109,7 @@ PrescriptionFile
 
 Medication
 MedicationSchedule
-DhatriEvent
+DoseEvent
 
 Call
 CallAttempt
