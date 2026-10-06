@@ -1,4 +1,4 @@
-# Dhatri — Team Plan
+# Dhatri ï¿½ Team Plan
 
 Four people, eight days. Technical details are in `ARCHITECTURE.md`.
 
@@ -84,27 +84,27 @@ Nothing is installed yet. Do this together.
 
 Gates are checked at the evening standup. A failed gate changes the plan the next morning.
 
-### 6 Oct (Tue) — scaffold
+### 6 Oct (Tue) ï¿½ scaffold
 
 | BE | AI | APP-P | APP-C |
 |---|---|---|---|
-| Day-zero setup. Email sign-in working. All models from `ARCHITECTURE.md` §4, first migration | API keys. Plain Dart script calling Gemini with a prescription photo and printing JSON | Flutter app runs against local server. Sign-in screen | Collect 5 printed prescriptions (2 simple, 2 multi-drug, 1 hard). Draft the video script |
+| Day-zero setup. Email sign-in working. All models from `ARCHITECTURE.md` ï¿½4, first migration | API keys. Plain Dart script calling Gemini with a prescription photo and printing JSON | Flutter app runs against local server. Sign-in screen | Collect 5 printed prescriptions (2 simple, 2 multi-drug, 1 hard). Draft the video script |
 
-### 7 Oct (Wed) — contract in place
+### 7 Oct (Wed) ï¿½ contract in place
 
 | BE | AI | APP-P | APP-C |
 |---|---|---|---|
-| **By 13:00:** every endpoint in §5 exists with real signatures and placeholder bodies, so the app team codes against the generated client. Then: `requireAccess`, profile and linking, upload ticket and `submit` | Extraction schema and prompt tuned on the 5 samples. Sarvam text-to-speech script producing a Hindi WAV | Onboarding (role, link code). Routing by role | Caregiver home layout. Upload flow with `image_picker` and `FileUploader` |
+| **By 13:00:** every endpoint in ï¿½5 exists with real signatures and placeholder bodies, so the app team codes against the generated client. Then: `requireAccess`, profile and linking, upload ticket and `submit` | Extraction schema and prompt tuned on the 5 samples. Sarvam text-to-speech script producing a Hindi WAV | Onboarding (role, link code). Routing by role | Caregiver home layout. Upload flow with `image_picker` and `FileUploader` |
 
 **Gate:** extraction is correct on at least 4 of 5 samples. If not, the review screen opens with empty rows the caregiver fills in, and extraction becomes a prefill. The rest of the flow is unchanged.
 
-### 8 Oct (Thu) — schedule and escalation
+### 8 Oct (Thu) ï¿½ schedule and escalation
 
 | BE | AI | APP-P | APP-C |
 |---|---|---|---|
 | `confirm()` creates dose events. `remind` and `escalate` future calls. `dose_rules.transition`. Integration tests 1 and 2 | `extract` future call body wired into `PrescriptionFutureCall`. Sarvam speech-to-text tested with recorded Hindi | Patient home: today's doses, Taken button, `markTaken` | Prescription review screen: banner, editable rows, confirm |
 
-### 9 Oct (Fri) — live on two phones
+### 9 Oct (Fri) ï¿½ live on two phones
 
 | BE | AI | APP-P | APP-C |
 |---|---|---|---|
@@ -112,7 +112,7 @@ Gates are checked at the evening standup. A failed gate changes the plan the nex
 
 **Gate:** steps 1 to 4 of "Must work" run on two physical phones. If not, AI and APP-C stop voice and summary work tomorrow and everyone fixes the core loop.
 
-### 10 Oct (Sat) — voice and summary
+### 10 Oct (Sat) ï¿½ voice and summary
 
 | BE | AI | APP-P | APP-C |
 |---|---|---|---|
@@ -120,7 +120,7 @@ Gates are checked at the evening standup. A failed gate changes the plan the nex
 
 **Gate:** a Hindi check-in round trip works on a phone. If not, the check-in falls back to the patient tapping one of four answers in Hindi, still sent through the same symptom pipeline. Keep text-to-speech for the question.
 
-### 11 Oct (Sun) — feature freeze and deploy
+### 11 Oct (Sun) ï¿½ feature freeze and deploy
 
 | BE | AI | APP-P | APP-C |
 |---|---|---|---|
@@ -128,19 +128,19 @@ Gates are checked at the evening standup. A failed gate changes the plan the nex
 
 **Freeze at 20:00 IST.** After this, only bug fixes.
 
-### 12 Oct (Mon) — record
+### 12 Oct (Mon) ï¿½ record
 
 | BE | AI | APP-P | APP-C |
 |---|---|---|---|
 | Server watch during filming, `DHATRI_GRACE_MINUTES=1` | Voice for the patient in the video | Patient phone operator | Directs, records both screens, edits under 2:00 |
 
-### 13 Oct (Tue) — write and harden
+### 13 Oct (Tue) ï¿½ write and harden
 
 | BE | AI | APP-P | APP-C |
 |---|---|---|---|
 | Fix anything filming exposed. README run instructions tested on a clean machine | Submit the feedback log as the feedback form | Fresh install test of the APK on a second phone | Writeup, including AI tool disclosure. Upload video to YouTube (public). Save the submission as a draft on BuilderBase |
 
-### 14 Oct (Wed) — submit
+### 14 Oct (Wed) ï¿½ submit
 
 Morning: everyone reviews the draft submission against the checklist below. **Representative submits by 18:00 IST.** APP-C publishes the build post the same day.
 
@@ -150,12 +150,12 @@ Morning: everyone reviews the draft submission against the checklist below. **Re
 
 | Time | Scene | Shows |
 |---|---|---|
-| 0:00–0:10 | Ramesh, 72, lives alone. His daughter lives in another city | The user and the problem |
-| 0:10–0:35 | Daughter photographs the prescription. AI draft appears, she fixes one time, confirms | File storage, background job, human in the loop |
-| 0:35–1:00 | 20:00 reminder on Ramesh's phone. Nobody taps. One minute later her phone alerts | Future calls, live stream across two phones |
-| 1:00–1:35 | She taps "Check in now". Ramesh hears Hindi, says "????? ????? ????? ?? ??? ???" ("I'm feeling a bit weak"). Dhatri replies, recalling earlier weakness | Voice pipeline, memory from SQL |
-| 1:35–1:50 | Weekly summary: weakness reported 3 times, flagged; 2 missed doses | Repeat rule, adherence |
-| 1:50–2:00 | Architecture: Serverpod at the centre | Stack use |
+| 0:00ï¿½0:10 | Ramesh, 72, lives alone. His daughter lives in another city | The user and the problem |
+| 0:10ï¿½0:35 | Daughter photographs the prescription. AI draft appears, she fixes one time, confirms | File storage, background job, human in the loop |
+| 0:35ï¿½1:00 | 20:00 reminder on Ramesh's phone. Nobody taps. One minute later her phone alerts | Future calls, live stream across two phones |
+| 1:00ï¿½1:35 | She taps "Check in now". Ramesh hears Hindi, says "????? ????? ????? ?? ??? ???" ("I'm feeling a bit weak"). Dhatri replies, recalling earlier weakness | Voice pipeline, memory from SQL |
+| 1:35ï¿½1:50 | Weekly summary: weakness reported 3 times, flagged; 2 missed doses | Repeat rule, adherence |
+| 1:50ï¿½2:00 | Architecture: Serverpod at the centre | Stack use |
 
 Film both phones side by side in one shot for the alert scene. A cut there looks faked.
 

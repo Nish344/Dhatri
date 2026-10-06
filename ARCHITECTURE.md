@@ -1,4 +1,4 @@
-# Dhatri — Architecture
+# Dhatri ï¿½ Architecture
 
 Dhatri turns a photo of a prescription into a dose schedule, reminds the patient, alerts the caregiver live when a dose is missed, and runs a short Hindi voice check-in that flags symptoms that keep coming back.
 
@@ -398,7 +398,7 @@ shared:
 
 Read with `session.serverpod.getPassword('geminiApiKey')`. In production, use `SERVERPOD_PASSWORD_geminiApiKey`.
 
-### Gemini — `services/gemini.dart`
+### Gemini ï¿½ `services/gemini.dart`
 
 `POST https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent`, header `x-goog-api-key`.
 
@@ -449,7 +449,7 @@ The prompt maps common abbreviations to times: OD ? 08:00, BD ? 08:00 and 20:00,
 
 System prompt rules: never diagnose, never change a dose, suggest contacting the caregiver or doctor when severity is 4 or more.
 
-### Sarvam — `services/sarvam.dart`
+### Sarvam ï¿½ `services/sarvam.dart`
 
 Header `api-subscription-key`.
 
@@ -477,7 +477,7 @@ audio (AAC from phone)
   ? return CheckInTurn, post CareUpdate(check)
 ```
 
-### Repeat rule — `services/symptom_rules.dart`
+### Repeat rule ï¿½ `services/symptom_rules.dart`
 
 For each symptom in the new check-in:
 
@@ -504,7 +504,7 @@ Packages: `serverpod_flutter`, `serverpod_auth_idp_flutter`, `image_picker`, `re
 | Sign in | both | `SignInWidget` (email). Route on `client.auth.authInfoListenable`, not in `onAuthenticated` |
 | Onboarding | both | Name + role. Patient sees `linkCode`. Caregiver types it |
 | Caregiver home | caregiver | Live alert banner, today's dose timeline, Check in now, Upload prescription, Weekly summary |
-| Prescription review | caregiver | Banner: "AI extracted this schedule — review before activating". Editable rows. Confirm button |
+| Prescription review | caregiver | Banner: "AI extracted this schedule ï¿½ review before activating". Editable rows. Confirm button |
 | Summary | caregiver | Adherence %, missed count, symptom counts, open alerts with Acknowledge |
 | Patient home | patient | Today's doses with large Taken buttons. Full-screen reminder on a `reminded` update |
 | Check-in | patient | Plays question, hold-to-talk recording, plays reply |
