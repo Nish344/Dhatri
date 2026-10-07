@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 
-/// Primary action button designed to exceed 48x48 touch targets (default: 60dp height).
+/// Primary action button designed to meet accessible touch targets with responsive auto-fit.
 class DhatriPrimaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -19,7 +19,7 @@ class DhatriPrimaryButton extends StatelessWidget {
     this.icon,
     this.backgroundColor,
     this.foregroundColor,
-    this.height = 60.0,
+    this.height = 56.0,
     this.isLoading = false,
   });
 
@@ -28,9 +28,11 @@ class DhatriPrimaryButton extends StatelessWidget {
     final bg = backgroundColor ?? AppColors.primary;
     final fg = foregroundColor ?? AppColors.textOnPrimary;
 
-    return SizedBox(
-      height: height,
-      width: double.infinity,
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        minHeight: height,
+        minWidth: double.infinity,
+      ),
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
@@ -41,12 +43,12 @@ class DhatriPrimaryButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
         child: isLoading
             ? SizedBox(
-                height: 24,
-                width: 24,
+                height: 22,
+                width: 22,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
                   valueColor: AlwaysStoppedAnimation<Color>(fg),
@@ -54,17 +56,23 @@ class DhatriPrimaryButton extends StatelessWidget {
               )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   if (icon != null) ...[
-                    Icon(icon, size: 26, color: fg),
-                    const SizedBox(width: 10),
+                    Icon(icon, size: 22, color: fg),
+                    const SizedBox(width: 8),
                   ],
                   Flexible(
                     child: Text(
                       label,
-                      style: AppTypography.primaryAction.copyWith(color: fg),
+                      style: AppTypography.primaryAction.copyWith(
+                        color: fg,
+                        fontSize: 16,
+                        height: 1.25,
+                      ),
                       textAlign: TextAlign.center,
-                      maxLines: 1,
+                      maxLines: 2,
+                      softWrap: true,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -75,7 +83,7 @@ class DhatriPrimaryButton extends StatelessWidget {
   }
 }
 
-/// Accessible Secondary/Outlined button.
+/// Accessible Secondary/Outlined button with responsive auto-fit.
 class DhatriSecondaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -87,14 +95,16 @@ class DhatriSecondaryButton extends StatelessWidget {
     required this.label,
     required this.onPressed,
     this.icon,
-    this.height = 54.0,
+    this.height = 52.0,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: height,
-      width: double.infinity,
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        minHeight: height,
+        minWidth: double.infinity,
+      ),
       child: OutlinedButton(
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
@@ -103,23 +113,26 @@ class DhatriSecondaryButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 24, color: AppColors.primary),
-              const SizedBox(width: 10),
+              Icon(icon, size: 20, color: AppColors.primary),
+              const SizedBox(width: 8),
             ],
             Flexible(
               child: Text(
                 label,
                 style: AppTypography.primaryAction.copyWith(
                   color: AppColors.primary,
-                  fontSize: 18,
+                  fontSize: 15,
+                  height: 1.25,
                 ),
-                maxLines: 1,
+                maxLines: 2,
+                softWrap: true,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
               ),
@@ -131,7 +144,7 @@ class DhatriSecondaryButton extends StatelessWidget {
   }
 }
 
-/// Extra Large Call button (70dp height) for Voice Interaction.
+/// Extra Large Call button (accessible min 68dp touch target) for Voice Interaction.
 class DhatriCallButton extends StatelessWidget {
   final String label;
   final VoidCallback onPressed;
@@ -148,8 +161,11 @@ class DhatriCallButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 72,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(
+        minHeight: 68,
+        minWidth: double.infinity,
+      ),
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
@@ -159,21 +175,26 @@ class DhatriCallButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 32, color: Colors.white),
+            Icon(icon, size: 30, color: Colors.white),
             const SizedBox(width: 12),
             Flexible(
               child: Text(
                 label,
                 style: AppTypography.displayLarge.copyWith(
-                  fontSize: 22,
+                  fontSize: 20,
                   color: Colors.white,
+                  height: 1.2,
                 ),
-                maxLines: 1,
+                maxLines: 2,
+                softWrap: true,
                 overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
               ),
             ),
           ],

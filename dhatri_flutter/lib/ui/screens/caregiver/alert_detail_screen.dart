@@ -94,7 +94,8 @@ class AlertDetailScreen extends StatelessWidget {
 
             // Action Buttons
             DhatriPrimaryButton(
-              label: '📞 Call ${alert.patientName}',
+              label: 'Call ${alert.patientName}',
+              icon: Icons.phone_rounded,
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -104,7 +105,7 @@ class AlertDetailScreen extends StatelessWidget {
                 );
               },
               backgroundColor: AppColors.callGreen,
-              height: 60,
+              height: 56,
             ),
             const SizedBox(height: 14),
             DhatriSecondaryButton(
@@ -113,7 +114,7 @@ class AlertDetailScreen extends StatelessWidget {
                 care.acknowledgeAlert(alert.id);
                 Navigator.pop(context);
               },
-              height: 54,
+              height: 50,
             ),
             const SizedBox(height: 80),
           ],

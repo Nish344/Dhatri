@@ -267,12 +267,13 @@ class ActiveCallScreen extends StatelessWidget {
                     children: [
                       Expanded(
                         child: DhatriPrimaryButton(
-                          label: isListening ? 'Listening...' : '🎙 Tap to Speak',
+                          label: isListening ? 'Listening...' : 'Tap to Speak',
+                          icon: isListening ? null : Icons.mic_rounded,
                           onPressed: isYourTurn
                               ? () => voice.submitPatientResponse(CopyHindi.patientSecondResponse)
                               : null,
                           backgroundColor: isYourTurn ? AppColors.callGreen : const Color(0xFF334155),
-                          height: 58,
+                          height: 54,
                         ),
                       ),
                       const SizedBox(width: 14),

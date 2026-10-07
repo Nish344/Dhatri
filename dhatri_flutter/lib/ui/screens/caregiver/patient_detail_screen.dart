@@ -89,7 +89,8 @@ class PatientDetailScreen extends StatelessWidget {
 
             // Remote Wellness Call Trigger (Guide §13)
             DhatriPrimaryButton(
-              label: '🎙 Initiate Wellness Call Now',
+              label: 'Initiate Wellness Call Now',
+              icon: Icons.mic_rounded,
               onPressed: () {
                 stream.triggerIncomingCall();
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -103,7 +104,7 @@ class PatientDetailScreen extends StatelessWidget {
                 Navigator.pop(context);
               },
               backgroundColor: AppColors.callGreen,
-              height: 56,
+              height: 54,
             ),
 
             const SizedBox(height: 28),

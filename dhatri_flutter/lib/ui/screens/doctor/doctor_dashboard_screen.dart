@@ -19,25 +19,30 @@ class DoctorDashboardScreen extends StatelessWidget {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Doctor Clinical Portal', style: AppTypography.pageTitle.copyWith(fontSize: 22)),
-            Text('Dr. Priya Sharma · Geriatric Medicine', style: AppTypography.supporting.copyWith(fontSize: 13)),
+            Text('Clinical Portal', style: AppTypography.sectionTitle.copyWith(fontSize: 20)),
+            Text('Dr. Priya Sharma · Geriatric Medicine', style: AppTypography.supporting.copyWith(fontSize: 12)),
           ],
         ),
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: AppColors.primaryLight,
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.lock_outline_rounded, size: 14, color: AppColors.primary),
+                const Icon(Icons.lock_outline_rounded, size: 13, color: AppColors.primary),
                 const SizedBox(width: 4),
                 Text(
                   'Read-Only',
-                  style: AppTypography.supporting.copyWith(fontSize: 12, color: AppColors.primary),
+                  style: AppTypography.supporting.copyWith(
+                    fontSize: 11,
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),

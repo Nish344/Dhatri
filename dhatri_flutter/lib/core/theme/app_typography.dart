@@ -17,33 +17,33 @@ class AppTypography {
   );
 
   static TextStyle get pageTitle => GoogleFonts.plusJakartaSans(
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
     letterSpacing: -0.3,
-    height: 1.3,
+    height: 1.25,
   );
 
   static TextStyle get sectionTitle => GoogleFonts.plusJakartaSans(
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
     letterSpacing: -0.2,
-    height: 1.35,
+    height: 1.3,
   );
 
   static TextStyle get cardTitle => GoogleFonts.plusJakartaSans(
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
     height: 1.3,
   );
 
   static TextStyle get primaryAction => GoogleFonts.plusJakartaSans(
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: FontWeight.w700,
     color: AppColors.textOnPrimary,
-    letterSpacing: 0.2,
+    letterSpacing: 0.1,
   );
 
   static TextStyle get bodyLarge => GoogleFonts.plusJakartaSans(

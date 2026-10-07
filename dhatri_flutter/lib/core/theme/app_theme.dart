@@ -26,7 +26,7 @@ class AppTheme {
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         centerTitle: false,
-        titleTextStyle: AppTypography.pageTitle.copyWith(fontSize: 22),
+        titleTextStyle: AppTypography.pageTitle.copyWith(fontSize: 20),
         systemOverlayStyle: SystemUiOverlayStyle.dark,
         surfaceTintColor: Colors.transparent,
       ),

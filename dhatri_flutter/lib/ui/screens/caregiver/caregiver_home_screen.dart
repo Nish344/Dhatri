@@ -24,8 +24,8 @@ class CaregiverHomeScreen extends StatelessWidget {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Caregiver Dashboard', style: AppTypography.pageTitle.copyWith(fontSize: 22)),
-            Text('Ananya Kumar · Primary Caregiver', style: AppTypography.supporting.copyWith(fontSize: 13)),
+            Text('Caregiver Portal', style: AppTypography.sectionTitle.copyWith(fontSize: 20)),
+            Text('Ananya Kumar · Primary Caregiver', style: AppTypography.supporting.copyWith(fontSize: 12)),
           ],
         ),
         actions: [

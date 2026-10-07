@@ -120,55 +120,57 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
               const SizedBox(height: 32),
 
               DhatriPrimaryButton(
-                label: '📷 TAKE PHOTO (DEMO RX)',
+                label: 'Take Photo (Demo Rx)',
+                icon: Icons.camera_alt_rounded,
                 onPressed: _startExtraction,
-                height: 60,
+                height: 56,
               ),
               const SizedBox(height: 14),
               DhatriSecondaryButton(
                 label: 'Choose From Gallery',
+                icon: Icons.photo_library_outlined,
                 onPressed: _startExtraction,
-                height: 54,
+                height: 52,
               ),
             ] else ...[
               // Reading & Extraction State (Guide §15)
               const SizedBox(height: 40),
               Container(
-                width: 100,
-                height: 100,
+                width: 90,
+                height: 90,
                 decoration: const BoxDecoration(
                   color: AppColors.primaryLight,
                   shape: BoxShape.circle,
                 ),
                 child: const Center(
                   child: CircularProgressIndicator(
-                    strokeWidth: 4,
+                    strokeWidth: 3.5,
                     color: AppColors.primary,
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 28),
               Text(
                 'Reading Prescription...',
-                style: AppTypography.displayLarge.copyWith(fontSize: 26),
+                style: AppTypography.displayLarge.copyWith(fontSize: 24),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
                 'AI is analyzing handwritten timings and drug schedules',
                 style: AppTypography.supporting,
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 36),
+              const SizedBox(height: 32),
               _extractionStep(
                 title: 'Extracting medicine names & strengths',
                 isDone: _readingStep >= 1,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               _extractionStep(
                 title: 'Mapping frequencies to IST reminder times',
                 isDone: _readingStep >= 2,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
               _extractionStep(
                 title: 'Preparing draft for your review',
                 isDone: _readingStep >= 3,
@@ -183,7 +185,7 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
 
   Widget _extractionStep({required String title, required bool isDone}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: isDone ? AppColors.successBg : AppColors.surface,
         borderRadius: BorderRadius.circular(14),
@@ -199,11 +201,13 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
             size: 22,
           ),
           const SizedBox(width: 12),
-          Text(
-            title,
-            style: AppTypography.bodyMedium.copyWith(
-              fontWeight: isDone ? FontWeight.w700 : FontWeight.w500,
-              color: isDone ? AppColors.success : AppColors.textSecondary,
+          Expanded(
+            child: Text(
+              title,
+              style: AppTypography.bodyMedium.copyWith(
+                fontWeight: isDone ? FontWeight.w700 : FontWeight.w500,
+                color: isDone ? AppColors.success : AppColors.textSecondary,
+              ),
             ),
           ),
         ],

@@ -119,7 +119,7 @@ class _PrescriptionReviewScreenState extends State<PrescriptionReviewScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Review Extracted Schedule'),
+        title: const Text('Review Schedule'),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -243,10 +243,11 @@ class _PrescriptionReviewScreenState extends State<PrescriptionReviewScreen> {
             const SizedBox(height: 32),
 
             DhatriPrimaryButton(
-              label: 'CONFIRM AND ACTIVATE SCHEDULE',
+              label: 'Confirm & Activate Schedule',
+              icon: Icons.check_circle_outline_rounded,
               onPressed: _isConfirming ? null : _confirm,
               isLoading: _isConfirming,
-              height: 62,
+              height: 58,
             ),
             const SizedBox(height: 80),
           ],

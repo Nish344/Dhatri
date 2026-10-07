@@ -77,27 +77,51 @@ class DhatriAlertCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
-          Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: DhatriPrimaryButton(
-                  label: '📞 CALL RAMESH',
-                  onPressed: onCallPatient,
-                  backgroundColor: AppColors.callGreen,
-                  height: 52,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: DhatriSecondaryButton(
-                  label: 'Dismiss',
-                  onPressed: onAcknowledge,
-                  height: 52,
-                ),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < 280) {
+                return Column(
+                  children: [
+                    DhatriPrimaryButton(
+                      label: 'Call ${alert.patientName}',
+                      icon: Icons.phone_rounded,
+                      onPressed: onCallPatient,
+                      backgroundColor: AppColors.callGreen,
+                      height: 48,
+                    ),
+                    const SizedBox(height: 8),
+                    DhatriSecondaryButton(
+                      label: 'Dismiss',
+                      onPressed: onAcknowledge,
+                      height: 44,
+                    ),
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: DhatriPrimaryButton(
+                      label: 'Call ${alert.patientName}',
+                      icon: Icons.phone_rounded,
+                      onPressed: onCallPatient,
+                      backgroundColor: AppColors.callGreen,
+                      height: 48,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    flex: 2,
+                    child: DhatriSecondaryButton(
+                      label: 'Dismiss',
+                      onPressed: onAcknowledge,
+                      height: 48,
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),

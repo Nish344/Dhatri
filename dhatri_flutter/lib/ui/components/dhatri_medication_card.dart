@@ -110,8 +110,9 @@ class DhatriMedicationCard extends StatelessWidget {
             const SizedBox(height: 24),
             if (isSaving)
               Container(
-                height: 62,
+                constraints: const BoxConstraints(minHeight: 56),
                 width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: AppColors.successBg,
@@ -122,25 +123,32 @@ class DhatriMedicationCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(
-                      height: 22,
-                      width: 22,
+                      height: 20,
+                      width: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2.5,
                         valueColor: AlwaysStoppedAnimation<Color>(AppColors.success),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Text(
-                      '✓ TAKEN · Saving...',
-                      style: AppTypography.primaryAction.copyWith(color: AppColors.success),
+                    const SizedBox(width: 10),
+                    Flexible(
+                      child: Text(
+                        '✓ TAKEN · Saving...',
+                        style: AppTypography.primaryAction.copyWith(
+                          color: AppColors.success,
+                          fontSize: 16,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ],
                 ),
               )
             else if (isTaken)
               Container(
-                height: 62,
+                constraints: const BoxConstraints(minHeight: 56),
                 width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: AppColors.successBg,
@@ -150,20 +158,27 @@ class DhatriMedicationCard extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 28),
-                    const SizedBox(width: 10),
-                    Text(
-                      '✓ TAKEN · Confirmed',
-                      style: AppTypography.primaryAction.copyWith(color: AppColors.success),
+                    const Icon(Icons.check_circle_rounded, color: AppColors.success, size: 24),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        '✓ TAKEN · Confirmed',
+                        style: AppTypography.primaryAction.copyWith(
+                          color: AppColors.success,
+                          fontSize: 16,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ],
                 ),
               )
             else
               DhatriPrimaryButton(
-                label: '✓ TAKE NOW',
+                label: 'Take Now',
+                icon: Icons.check_circle_rounded,
                 onPressed: onTakeNow,
-                height: 64,
+                height: 56,
                 backgroundColor: AppColors.primary,
               ),
           ],

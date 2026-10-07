@@ -56,14 +56,15 @@ class PatientHelpScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 18),
                   DhatriPrimaryButton(
-                    label: '🚨 Call 112 Now',
+                    label: 'Call 112 Now',
+                    icon: Icons.emergency_rounded,
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Calling 112 Emergency Services...')),
                       );
                     },
                     backgroundColor: AppColors.emergencyRed,
-                    height: 58,
+                    height: 54,
                   ),
                 ],
               ),
@@ -118,14 +119,15 @@ class PatientHelpScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   DhatriPrimaryButton(
-                    label: '📞 Call Ananya',
+                    label: 'Call Ananya',
+                    icon: Icons.phone_rounded,
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Calling Ananya (+91 98111 22233)...')),
                       );
                     },
                     backgroundColor: AppColors.callGreen,
-                    height: 58,
+                    height: 54,
                   ),
                 ],
               ),
@@ -158,7 +160,8 @@ class PatientHelpScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 18),
                   DhatriSecondaryButton(
-                    label: '⚠ Something Feels Wrong — Alert Ananya',
+                    label: 'Something Feels Wrong — Alert Ananya',
+                    icon: Icons.warning_amber_rounded,
                     onPressed: () {
                       care.triggerEmergencyHelp();
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -168,7 +171,7 @@ class PatientHelpScreen extends StatelessWidget {
                         ),
                       );
                     },
-                    height: 56,
+                    height: 52,
                   ),
                 ],
               ),
