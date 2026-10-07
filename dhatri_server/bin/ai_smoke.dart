@@ -6,6 +6,8 @@
 //   dart run bin/ai_smoke.dart checkin "आज फिर कमजोरी लग रही है"
 //   dart run bin/ai_smoke.dart embed
 //   dart run bin/ai_smoke.dart gate [samples-dir]   # Wed gate: pass 4/5
+//   dart run bin/ai_smoke.dart transcribe <wav...>   # Sarvam STT on files
+//   dart run bin/ai_smoke.dart bhavvaani [manifest.json]  # 5-clip STT gate
 // ignore_for_file: avoid_print
 import 'dart:convert';
 import 'dart:io';
@@ -17,10 +19,25 @@ import 'package:dhatri_server/src/services/gemini.dart';
 import 'package:dhatri_server/src/services/safety_rules.dart';
 import 'package:dhatri_server/src/services/sarvam.dart';
 
+String _key(String envName, String passwordsField) =>
+    Platform.environment[envName]?.trim().isNotEmpty == true
+    ? Platform.environment[envName]!.trim()
+    : (_readPasswordsYaml()[passwordsField] ?? '');
+
+Map<String, String> _readPasswordsYaml() {
+  final file = File('config/passwords.yaml');
+  if (!file.existsSync()) return {};
+  final out = <String, String>{};
+  for (final line in file.readAsLinesSync()) {
+    final m = RegExp(r"^\s{2}(\w+):\s*'([^']*)'\s*$").firstMatch(line);
+    if (m != null) out[m[1]!] = m[2]!;
+  }
+  return out;
+}
+
 Future<void> main(List<String> args) async {
-  final env = Platform.environment;
-  final gemini = Gemini(env['GEMINI_API_KEY'] ?? '');
-  final sarvam = SarvamVoice(env['SARVAM_API_KEY'] ?? '');
+  final gemini = Gemini(_key('GEMINI_API_KEY', 'geminiApiKey'));
+  final sarvam = SarvamVoice(_key('SARVAM_API_KEY', 'sarvamApiKey'));
   final watch = Stopwatch()..start();
 
   switch (args.firstOrNull) {
@@ -96,13 +113,58 @@ Future<void> main(List<String> args) async {
       final dir = args.skip(1).firstOrNull ?? 'samples';
       final ok = await _extractionGate(gemini, dir);
       exit(ok ? 0 : 1);
+    case 'transcribe':
+      for (final path in args.skip(1)) {
+        watch.reset();
+        final text = await sarvam.transcribe(File(path).readAsBytesSync());
+        print('== $path (${watch.elapsedMilliseconds} ms)');
+        print('transcript: "$text"');
+      }
+    case 'bhavvaani':
+      final manifest =
+          args.skip(1).firstOrNull ?? 'test_fixtures/bhavvaani_stt.json';
+      final ok = await _bhavvaaniSttGate(sarvam, manifest);
+      exit(ok ? 0 : 1);
     default:
       print(
-        'usage: dart run bin/ai_smoke.dart extract <images...> | voice | checkin <hindi text> | embed | gate [dir]',
+        'usage: dart run bin/ai_smoke.dart extract <images...> | voice | transcribe <wav...> | bhavvaani [manifest] | checkin <hindi text> | embed | gate [dir]',
       );
       exit(64);
   }
   exit(0);
+}
+
+Future<bool> _bhavvaaniSttGate(SarvamVoice sarvam, String manifestPath) async {
+  final root = jsonDecode(File(manifestPath).readAsStringSync()) as Map;
+  final dir = root['root'] as String;
+  final clips = root['clips'] as List;
+  var passed = 0;
+  for (final raw in clips) {
+    final clip = raw as Map;
+    final path = '$dir/${clip['file']}';
+    final reference = clip['reference'] as String;
+    if (!File(path).existsSync()) {
+      print('FAIL ${clip['file']} (missing $path)');
+      continue;
+    }
+    try {
+      final got = await sarvam.transcribe(File(path).readAsBytesSync());
+      if (got.trim().isEmpty) {
+        print('FAIL ${clip['file']} (empty transcript)');
+        print('  ref: $reference');
+        continue;
+      }
+      passed++;
+      print('PASS ${clip['file']}');
+      print('  ref: $reference');
+      print('  got: $got');
+    } on SarvamException catch (e) {
+      print('FAIL ${clip['file']} ($e)');
+    }
+  }
+  final need = (clips.length * 0.8).ceil();
+  print('BhavVaani STT gate: $passed / ${clips.length} (need $need+, non-empty)');
+  return passed >= need;
 }
 
 Future<bool> _extractionGate(Gemini gemini, String dirPath) async {

@@ -19,7 +19,7 @@ WhatsApp **Lazy Monks**: frontend is done; **Prajwal + Nishanth** own **backend 
 - **`samples/`** — 5 synthetic Rx JPGs + `expected.json`; **`dart run bin/ai_smoke.dart gate samples`** (live: **5/5** on 7 Oct)
 - Live smoke (Gemini on `project1-434615`, billing **off**): `embed`, `checkin`, `gate` verified
 
-Still needs **Sarvam API key** for `dart run bin/ai_smoke.dart voice` (not required for unit/integration tests).
+Live Sarvam (7 Oct): `voice` round-trip OK; `bhavvaani` STT gate **5/5** on BhavVaani train WAVs (`test_fixtures/bhavvaani_stt.json`, data under `~/mlchall/kaggle1`). Keys auto-read from `config/passwords.yaml` shared.* in `ai_smoke`.
 
 For BE to hook up:
 

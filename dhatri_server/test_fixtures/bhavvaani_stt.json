@@ -1,0 +1,10 @@
+{
+  "root": "/home/loki/mlchall/kaggle1/data/SRCASW-BhavVaani/train",
+  "clips": [
+    {"file": "audio_000001.wav", "reference": "हाँ जाओंगी"},
+    {"file": "audio_000003.wav", "reference": "मैं चार बजे घर जाओंगी"},
+    {"file": "audio_000004.wav", "reference": "बारिश में बेग को बहुत मज़ा आया।"},
+    {"file": "audio_000005.wav", "reference": "आरा आज बहुत बुरा हुआ मेरे साथ।"},
+    {"file": "audio_000010.wav", "reference": "सुबह से लेके शाम तक बस meeting, meeting, meeting"}
+  ]
+}
