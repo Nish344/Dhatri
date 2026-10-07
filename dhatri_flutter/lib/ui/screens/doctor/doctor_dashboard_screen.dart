@@ -121,7 +121,9 @@ class DoctorDashboardScreen extends StatelessWidget {
                           children: [
                             Text('3', style: AppTypography.displayLarge.copyWith(fontSize: 26, color: AppColors.warning)),
                             const SizedBox(width: 8),
-                            Text('reports\n(Max severity 3/5)', style: AppTypography.supporting.copyWith(fontSize: 11)),
+                            Expanded(
+                              child: Text('reports\n(Max severity 3/5)', style: AppTypography.supporting.copyWith(fontSize: 11)),
+                            ),
                           ],
                         ),
                       ],
@@ -146,7 +148,9 @@ class DoctorDashboardScreen extends StatelessWidget {
                           children: [
                             Text('1', style: AppTypography.displayLarge.copyWith(fontSize: 26, color: AppColors.info)),
                             const SizedBox(width: 8),
-                            Text('report\n(Severity 2/5)', style: AppTypography.supporting.copyWith(fontSize: 11)),
+                            Expanded(
+                              child: Text('report\n(Severity 2/5)', style: AppTypography.supporting.copyWith(fontSize: 11)),
+                            ),
                           ],
                         ),
                       ],

@@ -144,14 +144,17 @@ class PatientDetailScreen extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('${med.name} ${med.strength ?? ""}', style: AppTypography.cardTitle.copyWith(fontSize: 18)),
-                          const SizedBox(height: 4),
-                          Text('${med.doseText} · ${med.instructions ?? "With meals"}', style: AppTypography.supporting),
-                        ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('${med.name} ${med.strength ?? ""}', style: AppTypography.cardTitle.copyWith(fontSize: 18)),
+                            const SizedBox(height: 4),
+                            Text('${med.doseText} · ${med.instructions ?? "With meals"}', style: AppTypography.supporting),
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
                         med.times.join(', '),
                         style: AppTypography.statusLabel.copyWith(color: AppColors.primary),

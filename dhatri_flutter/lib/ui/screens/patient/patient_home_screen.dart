@@ -107,54 +107,46 @@ class PatientHomeScreen extends StatelessWidget {
           const SizedBox(height: 28),
 
           // Talk to Dhatri Voice Check-In Action
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1.5),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.mic_rounded, color: Colors.white, size: 28),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Talk to Dhatri',
-                        style: AppTypography.cardTitle.copyWith(color: AppColors.primary),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'How are you feeling today? Tap to check in in Hindi.',
-                        style: AppTypography.supporting.copyWith(fontSize: 14),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: onOpenVoiceCall,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+          InkWell(
+            onTap: onOpenVoiceCall,
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1.5),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: const Icon(Icons.mic_rounded, color: Colors.white, size: 28),
                   ),
-                  child: const Text('Start'),
-                ),
-              ],
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Talk to Dhatri',
+                          style: AppTypography.cardTitle.copyWith(color: AppColors.primary),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'How are you feeling today? Tap to check in in Hindi.',
+                          style: AppTypography.supporting.copyWith(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right_rounded, color: AppColors.primary, size: 28),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 80), // Padding for floating toolbar

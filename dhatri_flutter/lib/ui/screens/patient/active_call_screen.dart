@@ -96,11 +96,15 @@ class ActiveCallScreen extends StatelessWidget {
                               : Colors.white70,
                     ),
                   const SizedBox(width: 10),
-                  Text(
-                    voice.phaseLabel,
-                    style: AppTypography.sectionTitle.copyWith(
-                      color: isYourTurn ? const Color(0xFF34D399) : Colors.white,
-                      fontSize: 18,
+                  Flexible(
+                    child: Text(
+                      voice.phaseLabel,
+                      style: AppTypography.sectionTitle.copyWith(
+                        color: isYourTurn ? const Color(0xFF34D399) : Colors.white,
+                        fontSize: 18,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],

@@ -58,22 +58,24 @@ class CaregiverHomeScreen extends StatelessWidget {
                 children: [
                   const Icon(Icons.analytics_outlined, color: AppColors.primary, size: 28),
                   const SizedBox(width: 14),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'TODAY\'S CARE OVERVIEW',
-                        style: AppTypography.statusLabel.copyWith(
-                          color: AppColors.primary,
-                          letterSpacing: 0.8,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'TODAY\'S CARE OVERVIEW',
+                          style: AppTypography.statusLabel.copyWith(
+                            color: AppColors.primary,
+                            letterSpacing: 0.8,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        '8 patients monitored · ${care.openAlerts.length} need attention',
-                        style: AppTypography.cardTitle.copyWith(fontSize: 18),
-                      ),
-                    ],
+                        const SizedBox(height: 2),
+                        Text(
+                          '8 patients monitored · ${care.openAlerts.length} need attention',
+                          style: AppTypography.cardTitle.copyWith(fontSize: 18),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

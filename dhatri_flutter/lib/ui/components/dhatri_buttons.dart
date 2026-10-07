@@ -112,11 +112,16 @@ class DhatriSecondaryButton extends StatelessWidget {
               Icon(icon, size: 24, color: AppColors.primary),
               const SizedBox(width: 10),
             ],
-            Text(
-              label,
-              style: AppTypography.primaryAction.copyWith(
-                color: AppColors.primary,
-                fontSize: 18,
+            Flexible(
+              child: Text(
+                label,
+                style: AppTypography.primaryAction.copyWith(
+                  color: AppColors.primary,
+                  fontSize: 18,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
               ),
             ),
           ],
@@ -160,11 +165,15 @@ class DhatriCallButton extends StatelessWidget {
           children: [
             Icon(icon, size: 32, color: Colors.white),
             const SizedBox(width: 12),
-            Text(
-              label,
-              style: AppTypography.displayLarge.copyWith(
-                fontSize: 22,
-                color: Colors.white,
+            Flexible(
+              child: Text(
+                label,
+                style: AppTypography.displayLarge.copyWith(
+                  fontSize: 22,
+                  color: Colors.white,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

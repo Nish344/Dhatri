@@ -36,11 +36,15 @@ class PatientHelpScreen extends StatelessWidget {
                     children: [
                       const Icon(Icons.emergency_rounded, color: AppColors.error, size: 30),
                       const SizedBox(width: 10),
-                      Text(
-                        'MEDICAL EMERGENCY',
-                        style: AppTypography.statusLabel.copyWith(
-                          color: AppColors.error,
-                          letterSpacing: 1.0,
+                      Flexible(
+                        child: Text(
+                          'MEDICAL EMERGENCY',
+                          style: AppTypography.statusLabel.copyWith(
+                            color: AppColors.error,
+                            letterSpacing: 1.0,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -100,13 +104,15 @@ class PatientHelpScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 14),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Ananya Kumar', style: AppTypography.cardTitle),
-                          const SizedBox(height: 2),
-                          Text('Daughter · Primary Caregiver', style: AppTypography.supporting),
-                        ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Ananya Kumar', style: AppTypography.cardTitle),
+                            const SizedBox(height: 2),
+                            Text('Daughter · Primary Caregiver', style: AppTypography.supporting),
+                          ],
+                        ),
                       ),
                     ],
                   ),

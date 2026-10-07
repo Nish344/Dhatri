@@ -59,58 +59,49 @@ class _DhatriDemoToolbarState extends State<DhatriDemoToolbar> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Top control bar
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      const Text('🎬', style: TextStyle(fontSize: 18)),
-                      const SizedBox(width: 8),
-                      Text(
-                        'DEMO MODE',
-                        style: AppTypography.statusLabel.copyWith(
-                          color: const Color(0xFF38BDF8),
-                          letterSpacing: 1.0,
-                        ),
+                  const Text('🎬', style: TextStyle(fontSize: 16)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _roleChip(
+                            label: 'Patient',
+                            role: Role.patient,
+                            isSelected: auth.activeRole == Role.patient,
+                            onTap: () => auth.switchToRole(Role.patient),
+                          ),
+                          const SizedBox(width: 6),
+                          _roleChip(
+                            label: 'Caregiver',
+                            role: Role.caregiver,
+                            isSelected: auth.activeRole == Role.caregiver,
+                            onTap: () => auth.switchToRole(Role.caregiver),
+                          ),
+                          const SizedBox(width: 6),
+                          _roleChip(
+                            label: 'Doctor',
+                            role: Role.doctor,
+                            isSelected: auth.activeRole == Role.doctor,
+                            onTap: () => auth.switchToRole(Role.doctor),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                  // Role Switcher Chips
-                  Row(
-                    children: [
-                      _roleChip(
-                        label: 'Patient',
-                        role: Role.patient,
-                        isSelected: auth.activeRole == Role.patient,
-                        onTap: () => auth.switchToRole(Role.patient),
-                      ),
-                      const SizedBox(width: 6),
-                      _roleChip(
-                        label: 'Caregiver',
-                        role: Role.caregiver,
-                        isSelected: auth.activeRole == Role.caregiver,
-                        onTap: () => auth.switchToRole(Role.caregiver),
-                      ),
-                      const SizedBox(width: 6),
-                      _roleChip(
-                        label: 'Doctor',
-                        role: Role.doctor,
-                        isSelected: auth.activeRole == Role.doctor,
-                        onTap: () => auth.switchToRole(Role.doctor),
-                      ),
-                      const SizedBox(width: 6),
-                      IconButton(
-                        icon: Icon(
-                          _isExpanded ? Icons.expand_more_rounded : Icons.tune_rounded,
-                          color: Colors.white70,
-                          size: 20,
-                        ),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        onPressed: () => setState(() => _isExpanded = !_isExpanded),
-                      ),
-                    ],
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: Icon(
+                      _isExpanded ? Icons.expand_more_rounded : Icons.tune_rounded,
+                      color: Colors.white70,
+                      size: 20,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => setState(() => _isExpanded = !_isExpanded),
                   ),
                 ],
               ),
