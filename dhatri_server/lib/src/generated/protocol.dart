@@ -12,8 +12,6 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:dhatri_server/src/generated/dose_event.dart' as _iz3f95dj;
-import 'package:dhatri_server/src/generated/medication.dart' as _iaybl2va;
-import 'package:dhatri_server/src/generated/medication_draft.dart' as _i5ggnd2q;
 import 'package:dhatri_server/src/generated/patient_status.dart' as _i14rvz8t;
 import 'package:dhatri_server/src/generated/profile.dart' as _i87t4uqf;
 import 'package:dhatri_server/src/generated/timeline_item.dart' as _i2fss586;
@@ -32,6 +30,10 @@ import 'check_status.dart' as _i152b260;
 import 'check_trigger.dart' as _i06tdmkm;
 import 'dose_event.dart' as _i6sqb1u1;
 import 'dose_status.dart' as _ihnxdm4b;
+import 'future_calls_generated_models/dose_future_call_escalate_model.dart'
+    as _iegx9ko2;
+import 'future_calls_generated_models/dose_future_call_remind_model.dart'
+    as _irhelafm;
 import 'future_calls_generated_models/prescription_future_call_extract_model.dart'
     as _ivzuxvpb;
 import 'medication.dart' as _igwab1vy;
@@ -802,6 +804,12 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _ihnxdm4b.DoseStatus) {
       return _ihnxdm4b.DoseStatus.fromJson(data) as T;
     }
+    if (t == _iegx9ko2.DoseFutureCallEscalateModel) {
+      return _iegx9ko2.DoseFutureCallEscalateModel.fromJson(data) as T;
+    }
+    if (t == _irhelafm.DoseFutureCallRemindModel) {
+      return _irhelafm.DoseFutureCallRemindModel.fromJson(data) as T;
+    }
     if (t == _ivzuxvpb.PrescriptionFutureCallExtractModel) {
       return _ivzuxvpb.PrescriptionFutureCallExtractModel.fromJson(data) as T;
     }
@@ -883,6 +891,18 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (t == _is.getType<_ihnxdm4b.DoseStatus?>()) {
       return (data != null ? _ihnxdm4b.DoseStatus.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_iegx9ko2.DoseFutureCallEscalateModel?>()) {
+      return (data != null
+              ? _iegx9ko2.DoseFutureCallEscalateModel.fromJson(data)
+              : null)
+          as T;
+    }
+    if (t == _is.getType<_irhelafm.DoseFutureCallRemindModel?>()) {
+      return (data != null
+              ? _irhelafm.DoseFutureCallRemindModel.fromJson(data)
+              : null)
+          as T;
     }
     if (t == _is.getType<_ivzuxvpb.PrescriptionFutureCallExtractModel?>()) {
       return (data != null
@@ -985,18 +1005,6 @@ class Protocol extends _is.DatabaseSerializationManager {
               .toList()
           as T;
     }
-    if (t == List<_i5ggnd2q.MedicationDraft>) {
-      return (data as List)
-              .map((e) => deserialize<_i5ggnd2q.MedicationDraft>(e))
-              .toList()
-          as T;
-    }
-    if (t == List<_iaybl2va.Medication>) {
-      return (data as List)
-              .map((e) => deserialize<_iaybl2va.Medication>(e))
-              .toList()
-          as T;
-    }
     if (t == List<_i87t4uqf.Profile>) {
       return (data as List)
               .map((e) => deserialize<_i87t4uqf.Profile>(e))
@@ -1026,6 +1034,8 @@ class Protocol extends _is.DatabaseSerializationManager {
       _i06tdmkm.CheckTrigger => 'CheckTrigger',
       _i6sqb1u1.DoseEvent => 'DoseEvent',
       _ihnxdm4b.DoseStatus => 'DoseStatus',
+      _iegx9ko2.DoseFutureCallEscalateModel => 'DoseFutureCallEscalateModel',
+      _irhelafm.DoseFutureCallRemindModel => 'DoseFutureCallRemindModel',
       _ivzuxvpb.PrescriptionFutureCallExtractModel =>
         'PrescriptionFutureCallExtractModel',
       _igwab1vy.Medication => 'Medication',
@@ -1077,6 +1087,10 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'DoseEvent';
       case _ihnxdm4b.DoseStatus():
         return 'DoseStatus';
+      case _iegx9ko2.DoseFutureCallEscalateModel():
+        return 'DoseFutureCallEscalateModel';
+      case _irhelafm.DoseFutureCallRemindModel():
+        return 'DoseFutureCallRemindModel';
       case _ivzuxvpb.PrescriptionFutureCallExtractModel():
         return 'PrescriptionFutureCallExtractModel';
       case _igwab1vy.Medication():
@@ -1165,6 +1179,12 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (dataClassName == 'DoseStatus') {
       return deserialize<_ihnxdm4b.DoseStatus>(data['data']);
+    }
+    if (dataClassName == 'DoseFutureCallEscalateModel') {
+      return deserialize<_iegx9ko2.DoseFutureCallEscalateModel>(data['data']);
+    }
+    if (dataClassName == 'DoseFutureCallRemindModel') {
+      return deserialize<_irhelafm.DoseFutureCallRemindModel>(data['data']);
     }
     if (dataClassName == 'PrescriptionFutureCallExtractModel') {
       return deserialize<_ivzuxvpb.PrescriptionFutureCallExtractModel>(

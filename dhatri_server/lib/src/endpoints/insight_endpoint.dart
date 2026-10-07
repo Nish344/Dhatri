@@ -4,6 +4,7 @@ import '../generated/protocol.dart';
 import '../services/access.dart';
 import '../services/gemini.dart';
 import '../services/insight_service.dart';
+import '../services/timeline_service.dart';
 
 class InsightEndpoint extends Endpoint {
   @override
@@ -16,7 +17,7 @@ class InsightEndpoint extends Endpoint {
     try {
       gemini = Gemini.of(session);
     } on StateError {
-      // No key configured: the template summary still works.
+      // Template summary still works.
     }
     return weekInsight(session, patient!, gemini: gemini);
   }
@@ -25,5 +26,8 @@ class InsightEndpoint extends Endpoint {
     Session session,
     int patientId,
     int days,
-  ) async => throw UnimplementedError();
+  ) async {
+    await requireAccess(session, patientId, write: false);
+    return buildTimeline(session, patientId, days);
+  }
 }

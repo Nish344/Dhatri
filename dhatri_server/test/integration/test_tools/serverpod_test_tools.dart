@@ -13,24 +13,21 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _ida;
 import 'dart:io' as _idi;
-import 'dart:typed_data' as _idt;
 import 'package:dhatri_server/src/generated/alert.dart' as _i9wz7ffg;
 import 'package:dhatri_server/src/generated/care_update.dart' as _im5s3l5g;
-import 'package:dhatri_server/src/generated/check_in_turn.dart' as _i9hkrhve;
 import 'package:dhatri_server/src/generated/dose_event.dart' as _iz3f95dj;
 import 'package:dhatri_server/src/generated/future_calls.dart' as _isjznajl;
+import 'package:dhatri_server/src/generated/future_calls_generated_models/dose_future_call_escalate_model.dart'
+    as _il6rpfz2;
+import 'package:dhatri_server/src/generated/future_calls_generated_models/dose_future_call_remind_model.dart'
+    as _iet3jag9;
 import 'package:dhatri_server/src/generated/future_calls_generated_models/prescription_future_call_extract_model.dart'
     as _ixio78ip;
-import 'package:dhatri_server/src/generated/medication.dart' as _iaybl2va;
-import 'package:dhatri_server/src/generated/medication_draft.dart' as _i5ggnd2q;
 import 'package:dhatri_server/src/generated/patient_insight.dart' as _i1laycca;
 import 'package:dhatri_server/src/generated/patient_status.dart' as _i14rvz8t;
-import 'package:dhatri_server/src/generated/prescription.dart' as _if4lvn57;
 import 'package:dhatri_server/src/generated/profile.dart' as _i87t4uqf;
 import 'package:dhatri_server/src/generated/role.dart' as _is2cumq0;
 import 'package:dhatri_server/src/generated/timeline_item.dart' as _i2fss586;
-import 'package:dhatri_server/src/generated/upload_ticket.dart' as _is334b0i;
-import 'package:dhatri_server/src/generated/wellness_check.dart' as _i42mfpp5;
 import 'package:serverpod/serverpod.dart' as _is;
 import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
     as _iacs;
@@ -178,8 +175,6 @@ class TestEndpoints {
 
   late final _CareStreamEndpoint careStream;
 
-  late final _CheckInEndpoint checkIn;
-
   late final _DemoEndpoint demo;
 
   late final _DoseEndpoint dose;
@@ -187,8 +182,6 @@ class TestEndpoints {
   late final _InsightEndpoint insight;
 
   late final _PatientsEndpoint patients;
-
-  late final _PrescriptionEndpoint prescription;
 
   late final _ProfileEndpoint profile;
 }
@@ -216,10 +209,6 @@ class _InternalTestEndpoints extends TestEndpoints
       endpoints,
       serializationManager,
     );
-    checkIn = _CheckInEndpoint(
-      endpoints,
-      serializationManager,
-    );
     demo = _DemoEndpoint(
       endpoints,
       serializationManager,
@@ -236,10 +225,6 @@ class _InternalTestEndpoints extends TestEndpoints
       endpoints,
       serializationManager,
     );
-    prescription = _PrescriptionEndpoint(
-      endpoints,
-      serializationManager,
-    );
     profile = _ProfileEndpoint(
       endpoints,
       serializationManager,
@@ -248,6 +233,8 @@ class _InternalTestEndpoints extends TestEndpoints
 }
 
 class _FutureCalls {
+  late final dose = _DoseFutureCall();
+
   late final prescription = _PrescriptionFutureCall();
 }
 
@@ -686,176 +673,6 @@ class _CareStreamEndpoint {
   }
 }
 
-class _CheckInEndpoint {
-  _CheckInEndpoint(
-    this._endpointDispatch,
-    this._serializationManager,
-  );
-
-  final _is.EndpointDispatch _endpointDispatch;
-
-  final _is.SerializationManager _serializationManager;
-
-  _ida.Future<void> startNow(
-    _ist.TestSessionBuilder sessionBuilder,
-    int patientId,
-  ) async {
-    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession =
-          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
-            endpoint: 'checkIn',
-            method: 'startNow',
-          );
-      try {
-        var _localCallContext = await _endpointDispatch.getMethodCallContext(
-          createSessionCallback: (_) => _localUniqueSession,
-          endpointPath: 'checkIn',
-          methodName: 'startNow',
-          parameters: _ist.testObjectToJson({'patientId': patientId}),
-          serializationManager: _serializationManager,
-        );
-        var _localReturnValue =
-            await (_localCallContext.method.call(
-                  _localUniqueSession,
-                  _localCallContext.arguments,
-                )
-                as _ida.Future<void>);
-        return _localReturnValue;
-      } finally {
-        await _localUniqueSession.close();
-      }
-    });
-  }
-
-  _ida.Future<_i42mfpp5.WellnessCheck?> pending(
-    _ist.TestSessionBuilder sessionBuilder,
-    int patientId,
-  ) async {
-    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession =
-          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
-            endpoint: 'checkIn',
-            method: 'pending',
-          );
-      try {
-        var _localCallContext = await _endpointDispatch.getMethodCallContext(
-          createSessionCallback: (_) => _localUniqueSession,
-          endpointPath: 'checkIn',
-          methodName: 'pending',
-          parameters: _ist.testObjectToJson({'patientId': patientId}),
-          serializationManager: _serializationManager,
-        );
-        var _localReturnValue =
-            await (_localCallContext.method.call(
-                  _localUniqueSession,
-                  _localCallContext.arguments,
-                )
-                as _ida.Future<_i42mfpp5.WellnessCheck?>);
-        return _localReturnValue;
-      } finally {
-        await _localUniqueSession.close();
-      }
-    });
-  }
-
-  _ida.Future<_i9hkrhve.CheckInTurn> accept(
-    _ist.TestSessionBuilder sessionBuilder,
-    int checkId,
-  ) async {
-    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession =
-          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
-            endpoint: 'checkIn',
-            method: 'accept',
-          );
-      try {
-        var _localCallContext = await _endpointDispatch.getMethodCallContext(
-          createSessionCallback: (_) => _localUniqueSession,
-          endpointPath: 'checkIn',
-          methodName: 'accept',
-          parameters: _ist.testObjectToJson({'checkId': checkId}),
-          serializationManager: _serializationManager,
-        );
-        var _localReturnValue =
-            await (_localCallContext.method.call(
-                  _localUniqueSession,
-                  _localCallContext.arguments,
-                )
-                as _ida.Future<_i9hkrhve.CheckInTurn>);
-        return _localReturnValue;
-      } finally {
-        await _localUniqueSession.close();
-      }
-    });
-  }
-
-  _ida.Future<void> snooze(
-    _ist.TestSessionBuilder sessionBuilder,
-    int checkId,
-  ) async {
-    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession =
-          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
-            endpoint: 'checkIn',
-            method: 'snooze',
-          );
-      try {
-        var _localCallContext = await _endpointDispatch.getMethodCallContext(
-          createSessionCallback: (_) => _localUniqueSession,
-          endpointPath: 'checkIn',
-          methodName: 'snooze',
-          parameters: _ist.testObjectToJson({'checkId': checkId}),
-          serializationManager: _serializationManager,
-        );
-        var _localReturnValue =
-            await (_localCallContext.method.call(
-                  _localUniqueSession,
-                  _localCallContext.arguments,
-                )
-                as _ida.Future<void>);
-        return _localReturnValue;
-      } finally {
-        await _localUniqueSession.close();
-      }
-    });
-  }
-
-  _ida.Future<_i9hkrhve.CheckInTurn> answer(
-    _ist.TestSessionBuilder sessionBuilder,
-    int checkId,
-    _idt.ByteData audio,
-  ) async {
-    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession =
-          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
-            endpoint: 'checkIn',
-            method: 'answer',
-          );
-      try {
-        var _localCallContext = await _endpointDispatch.getMethodCallContext(
-          createSessionCallback: (_) => _localUniqueSession,
-          endpointPath: 'checkIn',
-          methodName: 'answer',
-          parameters: _ist.testObjectToJson({
-            'checkId': checkId,
-            'audio': audio,
-          }),
-          serializationManager: _serializationManager,
-        );
-        var _localReturnValue =
-            await (_localCallContext.method.call(
-                  _localUniqueSession,
-                  _localCallContext.arguments,
-                )
-                as _ida.Future<_i9hkrhve.CheckInTurn>);
-        return _localReturnValue;
-      } finally {
-        await _localUniqueSession.close();
-      }
-    });
-  }
-}
-
 class _DemoEndpoint {
   _DemoEndpoint(
     this._endpointDispatch,
@@ -1120,149 +937,6 @@ class _PatientsEndpoint {
   }
 }
 
-class _PrescriptionEndpoint {
-  _PrescriptionEndpoint(
-    this._endpointDispatch,
-    this._serializationManager,
-  );
-
-  final _is.EndpointDispatch _endpointDispatch;
-
-  final _is.SerializationManager _serializationManager;
-
-  _ida.Future<_is334b0i.UploadTicket> uploadTicket(
-    _ist.TestSessionBuilder sessionBuilder,
-    int patientId,
-  ) async {
-    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession =
-          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
-            endpoint: 'prescription',
-            method: 'uploadTicket',
-          );
-      try {
-        var _localCallContext = await _endpointDispatch.getMethodCallContext(
-          createSessionCallback: (_) => _localUniqueSession,
-          endpointPath: 'prescription',
-          methodName: 'uploadTicket',
-          parameters: _ist.testObjectToJson({'patientId': patientId}),
-          serializationManager: _serializationManager,
-        );
-        var _localReturnValue =
-            await (_localCallContext.method.call(
-                  _localUniqueSession,
-                  _localCallContext.arguments,
-                )
-                as _ida.Future<_is334b0i.UploadTicket>);
-        return _localReturnValue;
-      } finally {
-        await _localUniqueSession.close();
-      }
-    });
-  }
-
-  _ida.Future<_if4lvn57.Prescription> submit(
-    _ist.TestSessionBuilder sessionBuilder,
-    int patientId,
-    String path,
-  ) async {
-    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession =
-          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
-            endpoint: 'prescription',
-            method: 'submit',
-          );
-      try {
-        var _localCallContext = await _endpointDispatch.getMethodCallContext(
-          createSessionCallback: (_) => _localUniqueSession,
-          endpointPath: 'prescription',
-          methodName: 'submit',
-          parameters: _ist.testObjectToJson({
-            'patientId': patientId,
-            'path': path,
-          }),
-          serializationManager: _serializationManager,
-        );
-        var _localReturnValue =
-            await (_localCallContext.method.call(
-                  _localUniqueSession,
-                  _localCallContext.arguments,
-                )
-                as _ida.Future<_if4lvn57.Prescription>);
-        return _localReturnValue;
-      } finally {
-        await _localUniqueSession.close();
-      }
-    });
-  }
-
-  _ida.Future<List<_i5ggnd2q.MedicationDraft>> drafts(
-    _ist.TestSessionBuilder sessionBuilder,
-    int prescriptionId,
-  ) async {
-    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession =
-          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
-            endpoint: 'prescription',
-            method: 'drafts',
-          );
-      try {
-        var _localCallContext = await _endpointDispatch.getMethodCallContext(
-          createSessionCallback: (_) => _localUniqueSession,
-          endpointPath: 'prescription',
-          methodName: 'drafts',
-          parameters: _ist.testObjectToJson({'prescriptionId': prescriptionId}),
-          serializationManager: _serializationManager,
-        );
-        var _localReturnValue =
-            await (_localCallContext.method.call(
-                  _localUniqueSession,
-                  _localCallContext.arguments,
-                )
-                as _ida.Future<List<_i5ggnd2q.MedicationDraft>>);
-        return _localReturnValue;
-      } finally {
-        await _localUniqueSession.close();
-      }
-    });
-  }
-
-  _ida.Future<List<_iaybl2va.Medication>> confirm(
-    _ist.TestSessionBuilder sessionBuilder,
-    int prescriptionId,
-    List<_i5ggnd2q.MedicationDraft> meds,
-  ) async {
-    return _ist.callAwaitableFunctionAndHandleExceptions(() async {
-      var _localUniqueSession =
-          (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild(
-            endpoint: 'prescription',
-            method: 'confirm',
-          );
-      try {
-        var _localCallContext = await _endpointDispatch.getMethodCallContext(
-          createSessionCallback: (_) => _localUniqueSession,
-          endpointPath: 'prescription',
-          methodName: 'confirm',
-          parameters: _ist.testObjectToJson({
-            'prescriptionId': prescriptionId,
-            'meds': meds,
-          }),
-          serializationManager: _serializationManager,
-        );
-        var _localReturnValue =
-            await (_localCallContext.method.call(
-                  _localUniqueSession,
-                  _localCallContext.arguments,
-                )
-                as _ida.Future<List<_iaybl2va.Medication>>);
-        return _localReturnValue;
-      } finally {
-        await _localUniqueSession.close();
-      }
-    });
-  }
-}
-
 class _ProfileEndpoint {
   _ProfileEndpoint(
     this._endpointDispatch,
@@ -1432,6 +1106,44 @@ class _ProfileEndpoint {
         await _localUniqueSession.close();
       }
     });
+  }
+}
+
+class _DoseFutureCall {
+  Future<void> remind(
+    _ist.TestSessionBuilder sessionBuilder,
+    int doseEventId,
+  ) async {
+    var object = _iet3jag9.DoseFutureCallRemindModel(doseEventId: doseEventId);
+    var _localUniqueSession =
+        (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild();
+    try {
+      await _isjznajl.DoseRemindFutureCall().invoke(
+        _localUniqueSession,
+        object,
+      );
+    } finally {
+      await _localUniqueSession.close();
+    }
+  }
+
+  Future<void> escalate(
+    _ist.TestSessionBuilder sessionBuilder,
+    int doseEventId,
+  ) async {
+    var object = _il6rpfz2.DoseFutureCallEscalateModel(
+      doseEventId: doseEventId,
+    );
+    var _localUniqueSession =
+        (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild();
+    try {
+      await _isjznajl.DoseEscalateFutureCall().invoke(
+        _localUniqueSession,
+        object,
+      );
+    } finally {
+      await _localUniqueSession.close();
+    }
   }
 }
 

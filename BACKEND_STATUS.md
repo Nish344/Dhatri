@@ -33,12 +33,18 @@ For BE to hook up:
 - `test/unit/ai_test.dart`
 - `test/integration/check_in_test.dart`, `demo_seed_test.dart`, dose/symptom/access/memory tests
 
-## Next (BE / APP)
+## Backend core (7 Oct evening)
 
-1. Implement `requireAccess` + `ProfileEndpoint` (auth → profile, link codes)
-2. `PrescriptionEndpoint` upload + wire `PrescriptionFutureCall.extract` on `submit`
-3. `confirm` → dose events + `DoseFutureCall.remind` / `escalate`
-4. Wire Flutter to `dhatri_client` (replace mock repository behind a flag)
+- `ProfileEndpoint` register / link / myPatients / caregiverContact
+- `PrescriptionEndpoint` upload ticket, submit → extract future call, confirm → doses
+- `DoseFutureCall` remind + escalate; `DoseEndpoint.today`, `markTaken`
+- `AlertEndpoint`, `InsightEndpoint.timeline`, `PatientsEndpoint.overview`
+- `CheckIn.startNow` / snooze (caregiver-triggered pending check)
+
+## Next (APP)
+
+1. Wire Flutter to `dhatri_client` (replace mock repository behind a flag)
+2. Sign-in, onboarding, `FileUploader`, real care stream
 
 ## Run locally
 

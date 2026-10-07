@@ -14,7 +14,12 @@
 import 'dart:async' as _ida;
 import 'package:clock/clock.dart' as _io0w16m8;
 import 'package:serverpod/serverpod.dart' as _is;
+import '../future_calls/dose_future_call.dart' as _idxg13qo;
 import '../future_calls/prescription_future_call.dart' as _iyb9lbli;
+import 'future_calls_generated_models/dose_future_call_escalate_model.dart'
+    as _iegx9ko2;
+import 'future_calls_generated_models/dose_future_call_remind_model.dart'
+    as _irhelafm;
 import 'future_calls_generated_models/prescription_future_call_extract_model.dart'
     as _ivzuxvpb;
 
@@ -60,6 +65,8 @@ class FutureCalls extends _is.FutureCallDispatch<_FutureCallRef> {
     String serverId,
   ) {
     var registeredFutureCalls = <String, _is.InvokableFutureCall>{
+      'DoseRemindFutureCall': DoseRemindFutureCall(),
+      'DoseEscalateFutureCall': DoseEscalateFutureCall(),
       'PrescriptionExtractFutureCall': PrescriptionExtractFutureCall(),
     };
     _futureCallManager = futureCallManager;
@@ -181,9 +188,35 @@ class _FutureCallRef {
 
   final _InvokeFutureCall _invokeFutureCall;
 
+  late final dose = _DoseFutureCallDispatcher(_invokeFutureCall);
+
   late final prescription = _PrescriptionFutureCallDispatcher(
     _invokeFutureCall,
   );
+}
+
+class _DoseFutureCallDispatcher {
+  _DoseFutureCallDispatcher(this._invokeFutureCall);
+
+  final _InvokeFutureCall _invokeFutureCall;
+
+  Future<void> remind(int doseEventId) {
+    var object = _irhelafm.DoseFutureCallRemindModel(doseEventId: doseEventId);
+    return _invokeFutureCall(
+      'DoseRemindFutureCall',
+      object,
+    );
+  }
+
+  Future<void> escalate(int doseEventId) {
+    var object = _iegx9ko2.DoseFutureCallEscalateModel(
+      doseEventId: doseEventId,
+    );
+    return _invokeFutureCall(
+      'DoseEscalateFutureCall',
+      object,
+    );
+  }
 }
 
 class _PrescriptionFutureCallDispatcher {
@@ -199,6 +232,40 @@ class _PrescriptionFutureCallDispatcher {
       'PrescriptionExtractFutureCall',
       object,
     );
+  }
+}
+
+class DoseRemindFutureCall
+    extends _is.FutureCall<_irhelafm.DoseFutureCallRemindModel>
+    implements _is.InvokableFutureCall<_irhelafm.DoseFutureCallRemindModel> {
+  @override
+  _ida.Future<void> invoke(
+    _is.Session session,
+    _irhelafm.DoseFutureCallRemindModel? object,
+  ) async {
+    if (object != null) {
+      await _idxg13qo.DoseFutureCall().remind(
+        session,
+        object.doseEventId,
+      );
+    }
+  }
+}
+
+class DoseEscalateFutureCall
+    extends _is.FutureCall<_iegx9ko2.DoseFutureCallEscalateModel>
+    implements _is.InvokableFutureCall<_iegx9ko2.DoseFutureCallEscalateModel> {
+  @override
+  _ida.Future<void> invoke(
+    _is.Session session,
+    _iegx9ko2.DoseFutureCallEscalateModel? object,
+  ) async {
+    if (object != null) {
+      await _idxg13qo.DoseFutureCall().escalate(
+        session,
+        object.doseEventId,
+      );
+    }
   }
 }
 

@@ -12,8 +12,6 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:dhatri_client/src/protocol/dose_event.dart' as _iav2z4fb;
-import 'package:dhatri_client/src/protocol/medication.dart' as _iyn1i8v5;
-import 'package:dhatri_client/src/protocol/medication_draft.dart' as _it8rgm70;
 import 'package:dhatri_client/src/protocol/patient_status.dart' as _isnu78ia;
 import 'package:dhatri_client/src/protocol/profile.dart' as _ii1trskb;
 import 'package:dhatri_client/src/protocol/timeline_item.dart' as _ivovkn5g;
@@ -308,18 +306,6 @@ class Protocol extends _isc.SerializationManager {
     if (t == List<_isnu78ia.PatientStatus>) {
       return (data as List)
               .map((e) => deserialize<_isnu78ia.PatientStatus>(e))
-              .toList()
-          as T;
-    }
-    if (t == List<_it8rgm70.MedicationDraft>) {
-      return (data as List)
-              .map((e) => deserialize<_it8rgm70.MedicationDraft>(e))
-              .toList()
-          as T;
-    }
-    if (t == List<_iyn1i8v5.Medication>) {
-      return (data as List)
-              .map((e) => deserialize<_iyn1i8v5.Medication>(e))
               .toList()
           as T;
     }

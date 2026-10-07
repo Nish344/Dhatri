@@ -4,6 +4,7 @@ import 'package:serverpod/serverpod.dart';
 
 import '../generated/protocol.dart';
 import '../services/access.dart';
+import '../services/check_in_open.dart';
 import '../services/check_in_service.dart';
 import '../services/gemini.dart';
 import '../services/memory_service.dart';
@@ -13,8 +14,10 @@ class CheckInEndpoint extends Endpoint {
   @override
   bool get requireLogin => true;
 
-  Future<void> startNow(Session session, int patientId) async =>
-      throw UnimplementedError();
+  Future<void> startNow(Session session, int patientId) async {
+    await requireAccess(session, patientId, write: true);
+    await openCheckIn(session, patientId, trigger: CheckTrigger.caregiver);
+  }
 
   Future<WellnessCheck?> pending(Session session, int patientId) async {
     await requireAccess(session, patientId, write: false);
@@ -32,8 +35,11 @@ class CheckInEndpoint extends Endpoint {
     return acceptCheckIn(session, check, SarvamVoice.of(session));
   }
 
-  Future<void> snooze(Session session, int checkId) async =>
-      throw UnimplementedError();
+  Future<void> snooze(Session session, int checkId) async {
+    final check = await _check(session, checkId);
+    await requireAccess(session, check.patientId, write: true);
+    await snoozeCheckIn(session, checkId);
+  }
 
   Future<CheckInTurn> answer(
     Session session,
