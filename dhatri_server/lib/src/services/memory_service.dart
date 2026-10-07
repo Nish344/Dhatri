@@ -1,7 +1,9 @@
+import 'dart:io';
+
 import 'package:serverpod/serverpod.dart';
-import 'package:serverpod_serialization/serverpod_serialization.dart';
 
 import '../generated/protocol.dart';
+import 'gemini.dart';
 
 abstract class MemoryService {
   Future<List<PatientMemory>> retrieve(
@@ -21,6 +23,32 @@ abstract class MemoryService {
   );
 }
 
+/// `MEMORY_MODE=recency` falls back to SQL recency when pgvector is missing.
+MemoryService memoryServiceFor(Gemini gemini) =>
+    Platform.environment['MEMORY_MODE'] == 'recency'
+    ? RecencyMemoryService()
+    : VectorMemoryService(
+        embedQuery: (q) async => Vector(await gemini.embed(q, query: true)),
+      );
+
+Future<void> _insert(
+  Session session,
+  int patientId,
+  String kind,
+  String content,
+  int checkId,
+  Vector embedding,
+) => PatientMemory.db.insertRow(
+  session,
+  PatientMemory(
+    patientId: patientId,
+    kind: kind,
+    content: content,
+    sourceCheckId: checkId,
+    embedding: embedding,
+  ),
+);
+
 class RecencyMemoryService implements MemoryService {
   @override
   Future<List<PatientMemory>> retrieve(
@@ -28,14 +56,12 @@ class RecencyMemoryService implements MemoryService {
     int patientId,
     String query, {
     int k = 3,
-  }) async {
-    return PatientMemory.db.find(
-      session,
-      where: (t) => t.patientId.equals(patientId) & t.kind.equals('symptom'),
-      orderBy: (t) => t.createdAt.desc(),
-      limit: k,
-    );
-  }
+  }) => PatientMemory.db.find(
+    session,
+    where: (t) => t.patientId.equals(patientId) & t.kind.equals('symptom'),
+    orderBy: (t) => t.createdAt.desc(),
+    limit: k,
+  );
 
   @override
   Future<void> remember(
@@ -45,23 +71,15 @@ class RecencyMemoryService implements MemoryService {
     String content,
     int checkId,
     Vector embedding,
-  ) async {
-    await PatientMemory.db.insertRow(
-      session,
-      PatientMemory(
-        patientId: patientId,
-        kind: kind,
-        content: content,
-        sourceCheckId: checkId,
-        embedding: embedding,
-      ),
-    );
-  }
+  ) => _insert(session, patientId, kind, content, checkId, embedding);
 }
 
 class VectorMemoryService implements MemoryService {
-  VectorMemoryService({this.maxDistance = 1.0});
+  VectorMemoryService({required this.embedQuery, this.maxDistance = 0.5});
 
+  final Future<Vector> Function(String query) embedQuery;
+
+  /// Cosine distance above which a memory is treated as unrelated.
   final double maxDistance;
 
   @override
@@ -71,14 +89,17 @@ class VectorMemoryService implements MemoryService {
     String query, {
     int k = 3,
   }) async {
-    final queryVec = _placeholderEmbed(query);
-    final rows = await PatientMemory.db.find(
+    final queryVec = await embedQuery(query);
+    final since = DateTime.now().toUtc().subtract(const Duration(days: 60));
+    return PatientMemory.db.find(
       session,
-      where: (t) => t.patientId.equals(patientId),
-      orderByList: (t) => [t.embedding.distanceCosine(queryVec).asc()],
+      where: (t) =>
+          t.patientId.equals(patientId) &
+          (t.createdAt > since) &
+          (t.embedding.distanceCosine(queryVec) < maxDistance),
+      orderBy: (t) => t.embedding.distanceCosine(queryVec),
       limit: k,
     );
-    return rows;
   }
 
   @override
@@ -89,33 +110,5 @@ class VectorMemoryService implements MemoryService {
     String content,
     int checkId,
     Vector embedding,
-  ) async {
-    await PatientMemory.db.insertRow(
-      session,
-      PatientMemory(
-        patientId: patientId,
-        kind: kind,
-        content: content,
-        sourceCheckId: checkId,
-        embedding: embedding,
-      ),
-    );
-  }
-
-  /// Tests and callers pass [queryVec] via a dedicated overload in tests.
-  Future<List<PatientMemory>> retrieveWithVector(
-    Session session,
-    int patientId,
-    Vector queryVec, {
-    int k = 3,
-  }) async {
-    return PatientMemory.db.find(
-      session,
-      where: (t) => t.patientId.equals(patientId),
-      orderByList: (t) => [t.embedding.distanceCosine(queryVec).asc()],
-      limit: k,
-    );
-  }
-
-  Vector _placeholderEmbed(String query) => Vector(List.filled(768, 0.0));
+  ) => _insert(session, patientId, kind, content, checkId, embedding);
 }

@@ -11,6 +11,7 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:typed_data' as _idt;
+import 'package:dhatri_server/src/generated/future_calls.dart' as _isjznajl;
 import 'package:dhatri_server/src/generated/medication_draft.dart' as _i5ggnd2q;
 import 'package:dhatri_server/src/generated/role.dart' as _is2cumq0;
 import 'package:serverpod/serverpod.dart' as _is;
@@ -29,6 +30,7 @@ import '../endpoints/insight_endpoint.dart' as _iwdo2kkc;
 import '../endpoints/patients_endpoint.dart' as _ils7jkvy;
 import '../endpoints/prescription_endpoint.dart' as _ir96hk1b;
 import '../endpoints/profile_endpoint.dart' as _i2cx2pww;
+export 'future_calls.dart' show ServerpodFutureCallsGetter;
 
 class Endpoints extends _is.EndpointDispatch {
   @override
@@ -841,5 +843,10 @@ class Endpoints extends _is.EndpointDispatch {
       ..initializeEndpoints(server);
     modules['serverpod_auth_core'] = _iacs.Endpoints()
       ..initializeEndpoints(server);
+  }
+
+  @override
+  _is.FutureCallDispatch? get futureCalls {
+    return _isjznajl.FutureCalls();
   }
 }

@@ -32,6 +32,8 @@ import 'check_status.dart' as _i152b260;
 import 'check_trigger.dart' as _i06tdmkm;
 import 'dose_event.dart' as _i6sqb1u1;
 import 'dose_status.dart' as _ihnxdm4b;
+import 'future_calls_generated_models/prescription_future_call_extract_model.dart'
+    as _ivzuxvpb;
 import 'medication.dart' as _igwab1vy;
 import 'medication_draft.dart' as _i32wz7ni;
 import 'patient_insight.dart' as _iw8wpm46;
@@ -800,6 +802,9 @@ class Protocol extends _is.DatabaseSerializationManager {
     if (t == _ihnxdm4b.DoseStatus) {
       return _ihnxdm4b.DoseStatus.fromJson(data) as T;
     }
+    if (t == _ivzuxvpb.PrescriptionFutureCallExtractModel) {
+      return _ivzuxvpb.PrescriptionFutureCallExtractModel.fromJson(data) as T;
+    }
     if (t == _igwab1vy.Medication) {
       return _igwab1vy.Medication.fromJson(data) as T;
     }
@@ -878,6 +883,12 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (t == _is.getType<_ihnxdm4b.DoseStatus?>()) {
       return (data != null ? _ihnxdm4b.DoseStatus.fromJson(data) : null) as T;
+    }
+    if (t == _is.getType<_ivzuxvpb.PrescriptionFutureCallExtractModel?>()) {
+      return (data != null
+              ? _ivzuxvpb.PrescriptionFutureCallExtractModel.fromJson(data)
+              : null)
+          as T;
     }
     if (t == _is.getType<_igwab1vy.Medication?>()) {
       return (data != null ? _igwab1vy.Medication.fromJson(data) : null) as T;
@@ -1015,6 +1026,8 @@ class Protocol extends _is.DatabaseSerializationManager {
       _i06tdmkm.CheckTrigger => 'CheckTrigger',
       _i6sqb1u1.DoseEvent => 'DoseEvent',
       _ihnxdm4b.DoseStatus => 'DoseStatus',
+      _ivzuxvpb.PrescriptionFutureCallExtractModel =>
+        'PrescriptionFutureCallExtractModel',
       _igwab1vy.Medication => 'Medication',
       _i32wz7ni.MedicationDraft => 'MedicationDraft',
       _iw8wpm46.PatientInsight => 'PatientInsight',
@@ -1064,6 +1077,8 @@ class Protocol extends _is.DatabaseSerializationManager {
         return 'DoseEvent';
       case _ihnxdm4b.DoseStatus():
         return 'DoseStatus';
+      case _ivzuxvpb.PrescriptionFutureCallExtractModel():
+        return 'PrescriptionFutureCallExtractModel';
       case _igwab1vy.Medication():
         return 'Medication';
       case _i32wz7ni.MedicationDraft():
@@ -1150,6 +1165,11 @@ class Protocol extends _is.DatabaseSerializationManager {
     }
     if (dataClassName == 'DoseStatus') {
       return deserialize<_ihnxdm4b.DoseStatus>(data['data']);
+    }
+    if (dataClassName == 'PrescriptionFutureCallExtractModel') {
+      return deserialize<_ivzuxvpb.PrescriptionFutureCallExtractModel>(
+        data['data'],
+      );
     }
     if (dataClassName == 'Medication') {
       return deserialize<_igwab1vy.Medication>(data['data']);

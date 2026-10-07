@@ -541,7 +541,7 @@ shared:
   demoSeedToken: '...'
 ```
 
-Read with `session.serverpod.getPassword('geminiApiKey')`. In production use `SERVERPOD_PASSWORD_geminiApiKey`. Model names are config, never constants, because they change (guide §7): `GEMINI_MODEL`, `GEMINI_EMBED_MODEL`, `GEMINI_EMBED_DIM=768`, `SARVAM_STT_MODEL`, `SARVAM_TTS_MODEL`, `SARVAM_SPEAKER`. Spike S6 confirms the working values on 6 Oct.
+Read with `session.serverpod.getPassword('geminiApiKey')`. In production use `SERVERPOD_PASSWORD_geminiApiKey`. Model names are config, never constants, because they change (guide §7): `GEMINI_MODEL`, `GEMINI_EMBED_MODEL`, `GEMINI_EMBED_DIM=768`, `SARVAM_STT_MODEL`, `SARVAM_TTS_MODEL`, `SARVAM_SPEAKER`, `MAX_TURNS=2`. Defaults in code, checked against vendor docs on 7 Oct (live check with `dart run bin/ai_smoke.dart`): `gemini-3.5-flash`, `gemini-embedding-001` (768 via `outputDimensionality`, task type `RETRIEVAL_DOCUMENT`/`RETRIEVAL_QUERY`), `saaras:v3` (`mode=transcribe`), `bulbul:v3`, speaker `priya`.
 
 ### Gemini — `services/gemini.dart`
 
@@ -595,7 +595,7 @@ current transcript
 ```dart
 abstract class MemoryService {
   Future<List<PatientMemory>> retrieve(Session s, int patientId, String query, {int k = 3});
-  Future<void> remember(Session s, int patientId, String kind, String content, int checkId);
+  Future<void> remember(Session s, int patientId, String kind, String content, int checkId, Vector embedding);
 }
 ```
 
