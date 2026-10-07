@@ -1,0 +1,17 @@
+class: Profile
+table: profile
+fields:
+  authUserId: String?
+  name: String
+  role: Role
+  age: int?
+  phone: String?
+  caregiverId: int?
+  doctorId: int?
+  linkCode: String?
+indexes:
+  profile_auth_idx:
+    fields: authUserId
+    unique: true
+  profile_link_idx:
+    fields: linkCode

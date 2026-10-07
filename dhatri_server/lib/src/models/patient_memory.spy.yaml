@@ -1,0 +1,19 @@
+class: PatientMemory
+table: patient_memory
+fields:
+  patientId: int
+  kind: String
+  content: String
+  sourceCheckId: int?
+  createdAt: DateTime, default=now
+  embedding: Vector(768)
+indexes:
+  memory_patient_idx:
+    fields: patientId, createdAt
+  memory_embedding_hnsw_idx:
+    fields: embedding
+    type: hnsw
+    distanceFunction: cosine
+    parameters:
+      m: 16
+      ef_construction: 64

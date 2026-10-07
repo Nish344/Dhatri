@@ -1,0 +1,13 @@
+class: Medication
+table: medication
+fields:
+  patientId: int
+  prescriptionId: int
+  name: String
+  strength: String?
+  doseText: String
+  instructions: String?
+  times: List<String>
+  startDate: DateTime
+  endDate: DateTime
+  active: bool, default=true

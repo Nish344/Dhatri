@@ -1,0 +1,6 @@
+enum: AlertKind
+values:
+  - missedDose
+  - repeatedSymptom
+  - severeSymptom
+  - patientHelp

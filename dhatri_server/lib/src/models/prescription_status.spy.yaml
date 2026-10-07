@@ -1,0 +1,7 @@
+enum: PrescriptionStatus
+values:
+  - uploaded
+  - extracting
+  - extracted
+  - confirmed
+  - failed

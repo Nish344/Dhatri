@@ -1,0 +1,15 @@
+class: DoseEvent
+table: dose_event
+fields:
+  patientId: int
+  medicationId: int
+  scheduledAt: DateTime
+  status: DoseStatus
+  remindedAt: DateTime?
+  takenAt: DateTime?
+indexes:
+  dose_once_idx:
+    fields: medicationId, scheduledAt
+    unique: true
+  dose_patient_time_idx:
+    fields: patientId, scheduledAt

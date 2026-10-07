@@ -1,0 +1,10 @@
+class: Prescription
+table: prescription
+fields:
+  patientId: int
+  storageId: String
+  path: String
+  status: PrescriptionStatus
+  extractedJson: String?
+  error: String?
+  createdAt: DateTime, default=now

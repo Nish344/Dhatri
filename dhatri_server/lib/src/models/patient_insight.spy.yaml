@@ -1,0 +1,14 @@
+class: PatientInsight
+fields:
+  patient: Profile
+  adherencePct: int?
+  prevAdherencePct: int?
+  dosesTaken: int
+  dosesMissed: int
+  checkIns: int
+  symptoms: List<SymptomCount>
+  openAlerts: List<Alert>
+  reviewRecommended: bool
+  aiSummary: String
+  latestCheck: WellnessCheck?
+  generatedAt: DateTime

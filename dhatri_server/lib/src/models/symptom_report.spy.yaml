@@ -1,0 +1,11 @@
+class: SymptomReport
+table: symptom_report
+fields:
+  patientId: int
+  checkId: int
+  symptom: String
+  severity: int
+  reportedAt: DateTime, default=now
+indexes:
+  symptom_lookup_idx:
+    fields: patientId, symptom, reportedAt

@@ -1,0 +1,6 @@
+enum: PatientState
+values:
+  - allGood
+  - checkInNeeded
+  - medicationMissed
+  - attention

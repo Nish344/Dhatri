@@ -1,0 +1,7 @@
+class: CheckInTurn
+fields:
+  checkId: int
+  turnIndex: int
+  text: String
+  audio: ByteData
+  done: bool

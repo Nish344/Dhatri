@@ -1,0 +1,7 @@
+class: PatientStatus
+fields:
+  patient: Profile
+  state: PatientState
+  headline: String
+  nextDose: DoseEvent?
+  openAlerts: int

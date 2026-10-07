@@ -1,0 +1,14 @@
+class: WellnessCheck
+table: wellness_check
+fields:
+  patientId: int
+  status: CheckStatus
+  trigger: CheckTrigger
+  turnCount: int, default=0
+  transcript: String?
+  replyText: String?
+  mood: String?
+  summaryEn: String?
+  memoryUsed: List<String>?
+  createdAt: DateTime, default=now
+  completedAt: DateTime?
