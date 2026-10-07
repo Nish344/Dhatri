@@ -1,0 +1,6 @@
+enum: CheckStatus
+values:
+  - pending
+  - active
+  - completed
+  - snoozed

@@ -1,0 +1,9 @@
+class: MedicationDraft
+fields:
+  name: String
+  strength: String?
+  doseText: String
+  instructions: String?
+  times: List<String>
+  durationDays: int
+  uncertain: bool

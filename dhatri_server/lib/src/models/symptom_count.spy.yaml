@@ -1,0 +1,5 @@
+class: SymptomCount
+fields:
+  symptom: String
+  count: int
+  maxSeverity: int

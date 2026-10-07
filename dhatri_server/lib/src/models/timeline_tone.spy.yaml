@@ -1,0 +1,6 @@
+enum: TimelineTone
+values:
+  - good
+  - neutral
+  - warning
+  - missed

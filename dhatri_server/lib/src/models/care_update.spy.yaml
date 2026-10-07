@@ -1,0 +1,7 @@
+class: CareUpdate
+fields:
+  patientId: int
+  doseEvent: DoseEvent?
+  alert: Alert?
+  check: WellnessCheck?
+  prescription: Prescription?

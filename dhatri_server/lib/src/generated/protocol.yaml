@@ -1,0 +1,44 @@
+emailIdp:
+  - login:
+  - startRegistration:
+  - verifyRegistrationCode:
+  - finishRegistration:
+  - startPasswordReset:
+  - verifyPasswordResetCode:
+  - finishPasswordReset:
+  - hasAccount:
+jwtRefresh:
+  - refreshAccessToken:
+alert:
+  - acknowledge:
+  - needHelp:
+careStream:
+  - watch:
+checkIn:
+  - startNow:
+  - pending:
+  - accept:
+  - snooze:
+  - answer:
+demo:
+  - seed:
+  - reset:
+dose:
+  - today:
+  - markTaken:
+insight:
+  - week:
+  - timeline:
+patients:
+  - overview:
+prescription:
+  - uploadTicket:
+  - submit:
+  - drafts:
+  - confirm:
+profile:
+  - me:
+  - register:
+  - link:
+  - myPatients:
+  - caregiverContact:

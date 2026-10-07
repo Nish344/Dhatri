@@ -1,0 +1,4 @@
+enum: CheckTrigger
+values:
+  - daily
+  - caregiver

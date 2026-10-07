@@ -1,0 +1,14 @@
+class: Alert
+table: alert
+fields:
+  patientId: int
+  kind: AlertKind
+  priority: AlertPriority
+  doseEventId: int?
+  symptom: String?
+  message: String
+  createdAt: DateTime, default=now
+  acknowledgedAt: DateTime?
+indexes:
+  alert_open_idx:
+    fields: patientId, acknowledgedAt

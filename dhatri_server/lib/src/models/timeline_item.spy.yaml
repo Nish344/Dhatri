@@ -1,0 +1,7 @@
+class: TimelineItem
+fields:
+  at: DateTime
+  kind: TimelineKind
+  tone: TimelineTone
+  title: String
+  detail: String?

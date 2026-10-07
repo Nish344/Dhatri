@@ -1,0 +1,6 @@
+enum: DoseStatus
+values:
+  - scheduled
+  - reminded
+  - taken
+  - missed
