@@ -5,6 +5,7 @@
 //   dart run bin/ai_smoke.dart voice                    # TTS -> STT round trip
 //   dart run bin/ai_smoke.dart checkin "आज फिर कमजोरी लग रही है"
 //   dart run bin/ai_smoke.dart embed
+//   dart run bin/ai_smoke.dart gate [samples-dir]   # Wed gate: pass 4/5
 // ignore_for_file: avoid_print
 import 'dart:convert';
 import 'dart:io';
@@ -91,13 +92,68 @@ Future<void> main(List<String> args) async {
       print(
         'walk note vs Hindi weakness query: ${_cos(c, b).toStringAsFixed(3)} distance',
       );
+    case 'gate':
+      final dir = args.skip(1).firstOrNull ?? 'samples';
+      final ok = await _extractionGate(gemini, dir);
+      exit(ok ? 0 : 1);
     default:
       print(
-        'usage: dart run bin/ai_smoke.dart extract <images...> | voice | checkin <hindi text> | embed',
+        'usage: dart run bin/ai_smoke.dart extract <images...> | voice | checkin <hindi text> | embed | gate [dir]',
       );
       exit(64);
   }
   exit(0);
+}
+
+Future<bool> _extractionGate(Gemini gemini, String dirPath) async {
+  final specFile = File('$dirPath/expected.json');
+  if (!specFile.existsSync()) {
+    print('missing $dirPath/expected.json');
+    return false;
+  }
+  final spec = jsonDecode(specFile.readAsStringSync()) as Map<String, dynamic>;
+  var passed = 0;
+  final total = spec.length;
+  for (final entry in spec.entries) {
+    final fileName = entry.key;
+    final rules = entry.value as Map<String, dynamic>;
+    final path = '$dirPath/$fileName';
+    if (!File(path).existsSync()) {
+      print('FAIL $fileName (file missing)');
+      continue;
+    }
+    final ext = fileName.split('.').last.toLowerCase();
+    try {
+      final json = await gemini.extractPrescription(
+        File(path).readAsBytesSync(),
+        ext == 'png' ? 'image/png' : 'image/jpeg',
+      );
+      final root = jsonDecode(json) as Map<String, dynamic>;
+      if (root['unreadable'] == true) {
+        print('FAIL $fileName (unreadable)');
+        continue;
+      }
+      final drafts = parseDrafts(json);
+      final names = drafts.map((d) => d.name.toLowerCase()).join(' ');
+      final must = [
+        for (final m in (rules['mustInclude'] as List? ?? const [])) '$m'.toLowerCase(),
+      ];
+      final minMeds = (rules['minMedications'] as num?)?.toInt() ?? must.length;
+      final missing = must.where((m) => !names.contains(m)).toList();
+      if (drafts.length < minMeds || missing.isNotEmpty) {
+        print(
+          'FAIL $fileName (drafts=${drafts.length}, missing=$missing, names=$names)',
+        );
+        continue;
+      }
+      passed++;
+      print('PASS $fileName');
+    } on GeminiException catch (e) {
+      print('FAIL $fileName ($e)');
+    }
+  }
+  print('Gate: $passed / $total (need ${(total * 0.8).ceil()}+)');
+  return passed >= (total * 0.8).ceil();
 }
 
 double _cos(List<double> a, List<double> b) {

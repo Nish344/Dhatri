@@ -110,7 +110,7 @@ class Gemini {
   final http.Client _http;
 
   static final _env = Platform.environment;
-  final model = _env['GEMINI_MODEL'] ?? 'gemini-3.5-flash';
+  final model = _env['GEMINI_MODEL'] ?? 'gemini-3.5-flash-lite';
   final embedModel = _env['GEMINI_EMBED_MODEL'] ?? 'gemini-embedding-001';
   final embedDim = int.parse(_env['GEMINI_EMBED_DIM'] ?? '768');
 

@@ -1,0 +1,18 @@
+{
+  "simple_metformin.jpg": {
+    "mustInclude": ["Metformin"]
+  },
+  "simple_amlodipine.jpg": {
+    "mustInclude": ["Amlodipine"]
+  },
+  "multi_diabetes_htn.jpg": {
+    "mustInclude": ["Metformin", "Amlodipine", "Atorvastatin"]
+  },
+  "multi_three_times.jpg": {
+    "mustInclude": ["Amoxicillin", "Cetirizine", "Paracetamol"]
+  },
+  "hard_handwriting_style.jpg": {
+    "mustInclude": ["Metformin", "Glimepiride", "Telmisartan"],
+    "minMedications": 3
+  }
+}
