@@ -18,6 +18,9 @@ import 'package:dhatri_server/src/generated/alert.dart' as _i9wz7ffg;
 import 'package:dhatri_server/src/generated/care_update.dart' as _im5s3l5g;
 import 'package:dhatri_server/src/generated/check_in_turn.dart' as _i9hkrhve;
 import 'package:dhatri_server/src/generated/dose_event.dart' as _iz3f95dj;
+import 'package:dhatri_server/src/generated/future_calls.dart' as _isjznajl;
+import 'package:dhatri_server/src/generated/future_calls_generated_models/prescription_future_call_extract_model.dart'
+    as _ixio78ip;
 import 'package:dhatri_server/src/generated/medication.dart' as _iaybl2va;
 import 'package:dhatri_server/src/generated/medication_draft.dart' as _i5ggnd2q;
 import 'package:dhatri_server/src/generated/patient_insight.dart' as _i1laycca;
@@ -165,6 +168,8 @@ void withServerpod(
 }
 
 class TestEndpoints {
+  late final futureCalls = _FutureCalls();
+
   late final _EmailIdpEndpoint emailIdp;
 
   late final _JwtRefreshEndpoint jwtRefresh;
@@ -240,6 +245,10 @@ class _InternalTestEndpoints extends TestEndpoints
       serializationManager,
     );
   }
+}
+
+class _FutureCalls {
+  late final prescription = _PrescriptionFutureCall();
 }
 
 class _EmailIdpEndpoint {
@@ -1423,5 +1432,26 @@ class _ProfileEndpoint {
         await _localUniqueSession.close();
       }
     });
+  }
+}
+
+class _PrescriptionFutureCall {
+  Future<void> extract(
+    _ist.TestSessionBuilder sessionBuilder,
+    int prescriptionId,
+  ) async {
+    var object = _ixio78ip.PrescriptionFutureCallExtractModel(
+      prescriptionId: prescriptionId,
+    );
+    var _localUniqueSession =
+        (sessionBuilder as _ist.InternalTestSessionBuilder).internalBuild();
+    try {
+      await _isjznajl.PrescriptionExtractFutureCall().invoke(
+        _localUniqueSession,
+        object,
+      );
+    } finally {
+      await _localUniqueSession.close();
+    }
   }
 }

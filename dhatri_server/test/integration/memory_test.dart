@@ -1,14 +1,16 @@
 import 'package:dhatri_server/src/generated/protocol.dart';
 import 'package:dhatri_server/src/services/memory_service.dart';
-import 'package:serverpod_serialization/serverpod_serialization.dart';
+import 'package:serverpod/serverpod.dart';
 import 'package:test/test.dart';
 
 import 'fixtures.dart';
 import 'test_tools/serverpod_test_tools.dart';
 
-Vector _vec(double first) {
+/// Unit vector pointing mostly along [axis], so cosine distance is meaningful.
+Vector _vec(int axis, [double lean = 0]) {
   final v = List<double>.filled(768, 0.0);
-  v[0] = first;
+  v[axis] = 1;
+  v[(axis + 1) % 768] = lean;
   return Vector(v);
 }
 
@@ -35,7 +37,7 @@ void main() {
         'symptom',
         'weakness week 1',
         1,
-        _vec(1),
+        _vec(0),
       );
       await mem.remember(
         session,
@@ -43,7 +45,7 @@ void main() {
         'symptom',
         'other patient note',
         2,
-        _vec(2),
+        _vec(0),
       );
 
       final forA = await mem.retrieve(session, a.id!, 'weak');
@@ -51,7 +53,8 @@ void main() {
       expect(forA.any((m) => m.content.contains('weakness')), isTrue);
     });
 
-    test('vector retrieval returns nearest weakness memory', () async {
+    test('vector retrieval returns the nearest memory, own patient only, '
+        'and drops unrelated ones', () async {
       final session = sessionBuilder.build();
       final patient = await insertProfile(
         session,
@@ -59,31 +62,45 @@ void main() {
         name: 'Ramesh',
         role: Role.patient,
       );
-      final vectorMem = VectorMemoryService();
-      await vectorMem.remember(
+      final other = await insertProfile(
+        session,
+        authUserId: 'mem-v-other',
+        name: 'Sita',
+        role: Role.patient,
+      );
+      // "I feel weak again" embeds close to axis 0.
+      final mem = VectorMemoryService(embedQuery: (_) async => _vec(0, 0.1));
+      await mem.remember(
         session,
         patient.id!,
         'symptom',
         'Patient reported weakness',
         1,
-        _vec(1.0),
+        _vec(0),
       );
-      await vectorMem.remember(
+      await mem.remember(
         session,
         patient.id!,
         'note',
         'Unrelated appetite note',
         2,
-        _vec(0.1),
+        _vec(5),
+      );
+      await mem.remember(
+        session,
+        other.id!,
+        'symptom',
+        'Other patient weakness',
+        3,
+        _vec(0),
       );
 
-      final hits = await vectorMem.retrieveWithVector(
+      final hits = await mem.retrieve(
         session,
         patient.id!,
-        _vec(0.95),
-        k: 2,
+        'I feel weak again',
       );
-      expect(hits.first.content, contains('weakness'));
+      expect(hits.map((m) => m.content), ['Patient reported weakness']);
     });
   });
 }
