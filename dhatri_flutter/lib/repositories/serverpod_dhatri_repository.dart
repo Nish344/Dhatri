@@ -24,13 +24,8 @@ class ServerpodDhatriRepository implements DhatriRepository {
 
   @override
   Future<List<PatientStatus>> getOverview() async {
-    try {
-      final list = await client.patients.overview();
-      return list.map(PatientStatus.fromProtocol).toList();
-    } catch (e) {
-      // Fallback to sample overview if access restricted
-      return MockDatabase.rameshStatusList;
-    }
+    final list = await client.patients.overview();
+    return list.map(PatientStatus.fromProtocol).toList();
   }
 
   @override
@@ -44,56 +39,36 @@ class ServerpodDhatriRepository implements DhatriRepository {
 
   @override
   Future<List<DoseEvent>> getTodayDoses(int patientId) async {
-    try {
-      final list = await client.dose.today(patientId);
-      if (list.isNotEmpty) {
-        return list.map(DoseEvent.fromProtocol).toList();
-      }
-    } catch (_) {}
-    return MockDatabase.defaultDoses;
+    final list = await client.dose.today(patientId);
+    return list.map(DoseEvent.fromProtocol).toList();
   }
 
   @override
   Future<void> markTaken(int doseEventId) async {
-    try {
-      await client.dose.markTaken(doseEventId);
-    } catch (_) {}
+    await client.dose.markTaken(doseEventId);
   }
 
   @override
   Future<List<TimelineItem>> getTimeline(int patientId) async {
-    try {
-      final list = await client.insight.timeline(patientId, 7);
-      if (list.isNotEmpty) {
-        return list.map(TimelineItem.fromProtocol).toList();
-      }
-    } catch (_) {}
-    return MockDatabase.defaultTimeline;
+    final list = await client.insight.timeline(patientId, 7);
+    return list.map(TimelineItem.fromProtocol).toList();
   }
 
   @override
   Future<PatientInsight> getWeeklyInsight(int patientId) async {
-    try {
-      final ins = await client.insight.week(patientId);
-      return PatientInsight.fromProtocol(ins);
-    } catch (_) {}
-    return MockDatabase.defaultInsight;
+    final ins = await client.insight.week(patientId);
+    return PatientInsight.fromProtocol(ins);
   }
 
   @override
   Future<List<Alert>> getOpenAlerts() async {
-    try {
-      final ins = await client.insight.week(1);
-      return ins.openAlerts.map(Alert.fromProtocol).toList();
-    } catch (_) {}
-    return MockDatabase.defaultAlerts;
+    final ins = await client.insight.week(1);
+    return ins.openAlerts.map(Alert.fromProtocol).toList();
   }
 
   @override
   Future<void> acknowledgeAlert(int alertId) async {
-    try {
-      await client.alert.acknowledge(alertId);
-    } catch (_) {}
+    await client.alert.acknowledge(alertId);
   }
 
   @override

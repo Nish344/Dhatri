@@ -61,7 +61,9 @@ class HybridDhatriRepository extends ChangeNotifier implements DhatriRepository 
   @override
   Future<Profile> getCurrentProfile() async {
     if (isLiveBackend) {
-      return serverpodRepo.getCurrentProfile();
+      try {
+        return await serverpodRepo.getCurrentProfile();
+      } catch (_) {}
     }
     return mockRepo.getCurrentProfile();
   }
@@ -80,7 +82,9 @@ class HybridDhatriRepository extends ChangeNotifier implements DhatriRepository 
   @override
   Future<Profile?> getCaregiverContact(int patientId) async {
     if (isLiveBackend) {
-      return serverpodRepo.getCaregiverContact(patientId);
+      try {
+        return await serverpodRepo.getCaregiverContact(patientId);
+      } catch (_) {}
     }
     return mockRepo.getCaregiverContact(patientId);
   }
@@ -99,7 +103,9 @@ class HybridDhatriRepository extends ChangeNotifier implements DhatriRepository 
   @override
   Future<void> markTaken(int doseEventId) async {
     if (isLiveBackend) {
-      await serverpodRepo.markTaken(doseEventId);
+      try {
+        await serverpodRepo.markTaken(doseEventId);
+      } catch (_) {}
     }
     // Also update mock state in case of instant toggle
     await mockRepo.markTaken(doseEventId);
@@ -140,7 +146,9 @@ class HybridDhatriRepository extends ChangeNotifier implements DhatriRepository 
   @override
   Future<void> acknowledgeAlert(int alertId) async {
     if (isLiveBackend) {
-      await serverpodRepo.acknowledgeAlert(alertId);
+      try {
+        await serverpodRepo.acknowledgeAlert(alertId);
+      } catch (_) {}
     }
     await mockRepo.acknowledgeAlert(alertId);
   }
@@ -148,7 +156,9 @@ class HybridDhatriRepository extends ChangeNotifier implements DhatriRepository 
   @override
   Future<void> triggerEmergencyHelp(int patientId) async {
     if (isLiveBackend) {
-      await serverpodRepo.triggerEmergencyHelp(patientId);
+      try {
+        await serverpodRepo.triggerEmergencyHelp(patientId);
+      } catch (_) {}
     }
     await mockRepo.triggerEmergencyHelp(patientId);
   }

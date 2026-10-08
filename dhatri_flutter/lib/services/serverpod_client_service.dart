@@ -20,6 +20,9 @@ class DhatriAuthKeyManager extends AuthenticationKeyManager {
   Future<void> remove() async {
     _key = null;
   }
+
+  @override
+  Future<String?> toHeaderValue(String? key) async => key;
 }
 
 /// Service managing the Serverpod Client, connection status,
@@ -65,7 +68,7 @@ class ServerpodClientService extends ChangeNotifier {
     _client = Client(
       _serverUrl.endsWith('/') ? _serverUrl : '$_serverUrl/',
       connectionTimeout: const Duration(seconds: 5),
-    )..authenticationKeyManager = _authManager;
+    )..authKeyProvider = _authManager;
   }
 
   Future<void> updateServerUrl(String newUrl) async {
