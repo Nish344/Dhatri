@@ -126,13 +126,15 @@ class DhatriRoleSwitcherSheet extends StatelessWidget {
             name: 'Ramesh Kumar (72 yrs)',
             roleDescription: 'Patient · Accessible UI, Hindi voice check-in, dose tracker',
             isSelected: auth.activeRole == Role.patient,
-            onSelect: () {
-              auth.switchToRole(Role.patient);
-              care.loadAll();
+            onSelect: () async {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Switched to Patient view (Ramesh Kumar)')),
-              );
+              await auth.switchToRole(Role.patient);
+              await care.loadAll();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Switched to Patient view (Ramesh Kumar)')),
+                );
+              }
             },
           ),
           const SizedBox(height: 12),
@@ -145,13 +147,15 @@ class DhatriRoleSwitcherSheet extends StatelessWidget {
             name: 'Ananya Kumar',
             roleDescription: 'Caregiver · Triage alerts, prescription upload, remote check-in',
             isSelected: auth.activeRole == Role.caregiver,
-            onSelect: () {
-              auth.switchToRole(Role.caregiver);
-              care.loadAll();
+            onSelect: () async {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Switched to Caregiver view (Ananya Kumar)')),
-              );
+              await auth.switchToRole(Role.caregiver);
+              await care.loadAll();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Switched to Caregiver view (Ananya Kumar)')),
+                );
+              }
             },
           ),
           const SizedBox(height: 12),
@@ -164,13 +168,15 @@ class DhatriRoleSwitcherSheet extends StatelessWidget {
             name: 'Dr. Priya Sharma',
             roleDescription: 'Doctor · Clinical longitudinal timeline & adherence analysis',
             isSelected: auth.activeRole == Role.doctor,
-            onSelect: () {
-              auth.switchToRole(Role.doctor);
-              care.loadAll();
+            onSelect: () async {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Switched to Doctor clinical view (Dr. Priya Sharma)')),
-              );
+              await auth.switchToRole(Role.doctor);
+              await care.loadAll();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Switched to Doctor clinical view (Dr. Priya Sharma)')),
+                );
+              }
             },
           ),
           const SizedBox(height: 24),

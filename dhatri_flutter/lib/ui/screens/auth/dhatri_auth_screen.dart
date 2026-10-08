@@ -7,6 +7,7 @@ import '../../../services/serverpod_client_service.dart';
 import '../../../state/auth_state.dart';
 import '../../../state/care_state.dart';
 import '../../components/dhatri_buttons.dart';
+import 'onboarding_screen.dart';
 
 class DhatriAuthScreen extends StatefulWidget {
   const DhatriAuthScreen({super.key});
@@ -62,8 +63,17 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
     final auth = context.read<AuthState>();
     final care = context.read<CareState>();
 
-    await auth.signInWithEmail(email, password, _selectedEmailRole);
-    await care.loadAll();
+    final ok = await auth.signInWithEmail(email, password, _selectedEmailRole);
+    if (!ok && mounted && auth.authError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Login failed: ${auth.authError}'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+    } else {
+      await care.loadAll();
+    }
     if (mounted) setState(() => _isLoading = false);
   }
 
@@ -405,6 +415,19 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
               child: Text(
                 'Uses Serverpod 4.0 JWT authentication',
                 style: AppTypography.supporting.copyWith(fontSize: 12),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Center(
+              child: TextButton.icon(
+                icon: const Icon(Icons.person_add_outlined, size: 18),
+                label: const Text('New user? Register your profile directly'),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+                  );
+                },
               ),
             ),
           ],

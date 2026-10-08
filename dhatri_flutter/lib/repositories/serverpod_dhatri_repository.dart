@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
+import 'package:http/http.dart' as http;
 import 'package:dhatri_client/dhatri_client.dart' as protocol;
 import '../models/models.dart';
 import 'dhatri_repository.dart';
@@ -38,6 +39,12 @@ class ServerpodDhatriRepository implements DhatriRepository {
   }
 
   @override
+  Future<List<Profile>> getMyPatients() async {
+    final list = await client.profile.myPatients();
+    return list.map(Profile.fromProtocol).toList();
+  }
+
+  @override
   Future<List<PatientStatus>> getOverview() async {
     final list = await client.patients.overview();
     return list.map(PatientStatus.fromProtocol).toList();
@@ -73,9 +80,13 @@ class ServerpodDhatriRepository implements DhatriRepository {
   }
 
   @override
-  Future<List<Alert>> getOpenAlerts() async {
-    final ins = await client.insight.week(1);
-    return ins.openAlerts.map(Alert.fromProtocol).toList();
+  Future<List<Alert>> getOpenAlerts([int? patientId]) async {
+    final pid = patientId ?? 1;
+    final ins = await client.insight.week(pid);
+    final patientName = ins.patient.name;
+    return ins.openAlerts
+        .map((a) => Alert.fromProtocol(a, patientName: patientName))
+        .toList();
   }
 
   @override
@@ -92,6 +103,23 @@ class ServerpodDhatriRepository implements DhatriRepository {
   Future<UploadTicket> getPrescriptionUploadTicket(int patientId) async {
     final ticket = await client.prescription.uploadTicket(patientId);
     return UploadTicket(path: ticket.path, description: ticket.description);
+  }
+
+  @override
+  Future<bool> uploadPrescriptionBytes(UploadTicket ticket, List<int> bytes) async {
+    try {
+      final uploader = protocol.FileUploader(ticket.description);
+      final stream = Stream.value(bytes);
+      return await uploader.upload(stream, bytes.length);
+    } catch (_) {
+      try {
+        final uri = Uri.parse(ticket.description);
+        final res = await http.put(uri, body: bytes);
+        return res.statusCode >= 200 && res.statusCode < 300;
+      } catch (_) {
+        return false;
+      }
+    }
   }
 
   @override
@@ -121,12 +149,11 @@ class ServerpodDhatriRepository implements DhatriRepository {
     int patientId,
     String storagePath,
   ) async {
-    final ticket = await client.prescription.uploadTicket(patientId);
-    final rx = await client.prescription.submit(patientId, ticket.path);
+    final rx = await client.prescription.submit(patientId, storagePath);
 
-    // Poll for Gemini OCR background processing (up to 5 retries)
-    for (int i = 0; i < 5; i++) {
-      await Future.delayed(const Duration(milliseconds: 1200));
+    // Poll for Gemini OCR background processing (up to 8 retries)
+    for (int i = 0; i < 8; i++) {
+      await Future.delayed(const Duration(milliseconds: 1500));
       final drafts = await client.prescription.drafts(rx.id!);
       if (drafts.isNotEmpty) {
         return drafts.map(MedicationDraft.fromProtocol).toList();
@@ -146,19 +173,23 @@ class ServerpodDhatriRepository implements DhatriRepository {
 
   // --- Real AI Voice Check-In (Sarvam STT + Gemini) ---
 
+  @override
   Future<void> startCheckIn(int patientId) async {
     await client.checkIn.startNow(patientId);
   }
 
+  @override
   Future<WellnessCheck?> getPendingCheckIn(int patientId) async {
     final c = await client.checkIn.pending(patientId);
     return c != null ? WellnessCheck.fromProtocol(c) : null;
   }
 
+  @override
   Future<protocol.CheckInTurn> acceptCheckIn(int checkId) async {
     return client.checkIn.accept(checkId);
   }
 
+  @override
   Future<protocol.CheckInTurn> answerCheckInText(
     int checkId,
     String transcript,
@@ -166,6 +197,7 @@ class ServerpodDhatriRepository implements DhatriRepository {
     return client.checkIn.answerText(checkId, transcript);
   }
 
+  @override
   Future<protocol.CheckInTurn> answerCheckInAudio(
     int checkId,
     ByteData audio,
@@ -173,6 +205,7 @@ class ServerpodDhatriRepository implements DhatriRepository {
     return client.checkIn.answer(checkId, audio);
   }
 
+  @override
   Future<void> snoozeCheckIn(int checkId) async {
     await client.checkIn.snooze(checkId);
   }

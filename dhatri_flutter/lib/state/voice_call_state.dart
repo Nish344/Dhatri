@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../core/constants/copy_hindi.dart';
-import '../repositories/serverpod_dhatri_repository.dart';
+import '../repositories/dhatri_repository.dart';
 import '../services/voice_audio_service.dart';
 
 enum CallUIPhase {
@@ -17,7 +17,7 @@ enum CallUIPhase {
 }
 
 class VoiceCallState extends ChangeNotifier {
-  final ServerpodDhatriRepository repository;
+  final DhatriRepository repository;
   final VoiceAudioService _voiceService = VoiceAudioService();
 
   CallUIPhase _phase = CallUIPhase.ended;
@@ -296,6 +296,21 @@ class VoiceCallState extends ChangeNotifier {
       repository.snoozeCheckIn(_activeCheck!.id).catchError((_) {});
     }
     _phase = CallUIPhase.ended;
+    notifyListeners();
+  }
+
+  /// Resets call state back to idle
+  void resetCall() {
+    _voiceService.stopSpeaking();
+    _voiceService.stopListening();
+    _phase = CallUIPhase.ended;
+    _activeCheck = null;
+    _currentTurn = 0;
+    _currentDhatriText = CopyHindi.greetingQuestion;
+    _currentPatientSpeech = '';
+    _rememberedContext = [];
+    _isDone = false;
+    _voiceErrorMessage = null;
     notifyListeners();
   }
 

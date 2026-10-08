@@ -5,6 +5,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../state/care_state.dart';
 import '../../../state/auth_state.dart';
 import '../../../models/models.dart';
+import '../../../repositories/dhatri_repository.dart';
 import '../../components/dhatri_alert_card.dart';
 import '../../components/dhatri_patient_card.dart';
 import 'alert_detail_screen.dart';
@@ -14,6 +15,74 @@ import '../../components/dhatri_role_switcher.dart';
 
 class CaregiverHomeScreen extends StatelessWidget {
   const CaregiverHomeScreen({super.key});
+
+  void _showLinkPatientDialog(BuildContext context) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Link Patient with Code'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Enter the 6-digit link code shown on the patient\'s profile (e.g. 482910 for Ramesh Kumar).',
+              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              decoration: const InputDecoration(
+                labelText: '6-digit Link Code',
+                hintText: 'e.g. 482910',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final code = controller.text.trim();
+              if (code.isEmpty) return;
+              Navigator.pop(ctx);
+              try {
+                final repo = context.read<DhatriRepository>();
+                final care = context.read<CareState>();
+                final linked = await repo.linkWithCode(code);
+                await care.loadAll();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('✓ Successfully linked with ${linked.name}!'),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to link patient: $e'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Link Patient'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +100,11 @@ class CaregiverHomeScreen extends StatelessWidget {
         ),
         actions: [
           const DhatriRoleSwitcherButton(),
+          IconButton(
+            icon: const Icon(Icons.person_add_link_rounded),
+            tooltip: 'Link Patient with Code',
+            onPressed: () => _showLinkPatientDialog(context),
+          ),
           IconButton(
             icon: const Icon(Icons.document_scanner_rounded),
             tooltip: 'Add Prescription',
@@ -140,34 +214,69 @@ class CaregiverHomeScreen extends StatelessWidget {
             const SizedBox(height: 28),
 
             // ALL PATIENTS LIST
-            Text(
-              'ALL MONITORED PATIENTS',
-              style: AppTypography.statusLabel.copyWith(
-                color: AppColors.textSecondary,
-                letterSpacing: 0.8,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'ALL MONITORED PATIENTS',
+                  style: AppTypography.statusLabel.copyWith(
+                    color: AppColors.textSecondary,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                TextButton.icon(
+                  icon: const Icon(Icons.add_link_rounded, size: 18),
+                  label: const Text('Link Patient'),
+                  onPressed: () => _showLinkPatientDialog(context),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: care.overview.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final status = care.overview[index];
-                return DhatriPatientCard(
-                  status: status,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PatientDetailScreen(status: status),
+            if (care.overview.isNotEmpty)
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: care.overview.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final status = care.overview[index];
+                  return DhatriPatientCard(
+                    status: status,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PatientDetailScreen(status: status),
+                        ),
+                      );
+                    },
+                  );
+                },
+              )
+            else
+              DhatriPatientCard(
+                status: const PatientStatus(
+                  patient: AuthState.defaultPatient,
+                  state: PatientState.attention,
+                  headline: 'Weakness reported · Check-in recommended',
+                  openAlerts: 1,
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PatientDetailScreen(
+                        status: PatientStatus(
+                          patient: AuthState.defaultPatient,
+                          state: PatientState.attention,
+                          headline: 'Weakness reported · Check-in recommended',
+                          openAlerts: 1,
+                        ),
                       ),
-                    );
-                  },
-                );
-              },
-            ),
+                    ),
+                  );
+                },
+              ),
 
             const SizedBox(height: 80),
           ],

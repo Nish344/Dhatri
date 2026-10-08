@@ -10,7 +10,7 @@ import '../../components/dhatri_status_chip.dart';
 import '../../components/dhatri_memory_card.dart';
 import '../../components/dhatri_timeline_item.dart';
 
-class PatientDetailScreen extends StatelessWidget {
+class PatientDetailScreen extends StatefulWidget {
   final PatientStatus status;
 
   const PatientDetailScreen({
@@ -19,10 +19,25 @@ class PatientDetailScreen extends StatelessWidget {
   });
 
   @override
+  State<PatientDetailScreen> createState() => _PatientDetailScreenState();
+}
+
+class _PatientDetailScreenState extends State<PatientDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<CareState>().setActivePatientId(widget.status.patient.id);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final care = context.watch<CareState>();
     final voice = context.read<VoiceCallState>();
-    final patient = status.patient;
+    final patient = widget.status.patient;
 
     final memories = care.patientInsight?.latestCheck?.memoryUsed ??
         (care.patientInsight?.aiSummary != null

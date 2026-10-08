@@ -22,7 +22,14 @@ class DhatriAuthKeyManager extends AuthenticationKeyManager {
   }
 
   @override
-  Future<String?> toHeaderValue(String? key) async => key;
+  Future<String?> toHeaderValue(String? key) async {
+    if (key == null || key.trim().isEmpty) return null;
+    final token = key.trim();
+    if (token.toLowerCase().startsWith('bearer ')) {
+      return token;
+    }
+    return 'Bearer $token';
+  }
 }
 
 /// Service managing the Serverpod Client, connection status,
@@ -150,7 +157,39 @@ class ServerpodClientService extends ChangeNotifier {
     }
   }
 
-  /// Sets auth key for session simulation.
+  /// Real email login with Serverpod's Email IDP.
+  /// Stores issued JWT token in the auth key manager.
+  Future<bool> signIn(String email, String password) async {
+    try {
+      final res = await _client.emailIdp.login(
+        email: email.trim(),
+        password: password,
+      );
+      await _authManager.put(res.key);
+      _lastError = null;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _lastError = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  /// Sign out by clearing the JWT token.
+  Future<void> signOut() async {
+    await _authManager.remove();
+    _lastError = null;
+    notifyListeners();
+  }
+
+  /// Check whether an auth key is currently stored.
+  Future<bool> get isAuthenticated async {
+    final key = await _authManager.get();
+    return key != null && key.isNotEmpty;
+  }
+
+  /// Sets auth key for session simulation or test token override.
   void setAuthKey(String? key) {
     if (key == null) {
       _authManager.remove();

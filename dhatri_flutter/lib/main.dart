@@ -11,7 +11,9 @@ import 'state/voice_call_state.dart';
 import 'models/models.dart';
 
 import 'ui/components/dhatri_connection_banner.dart';
+import 'ui/components/dhatri_demo_controller.dart';
 import 'ui/screens/auth/dhatri_auth_screen.dart';
+import 'ui/screens/auth/onboarding_screen.dart';
 import 'ui/screens/patient/patient_shell.dart';
 import 'ui/screens/caregiver/caregiver_shell.dart';
 import 'ui/screens/doctor/doctor_shell.dart';
@@ -66,6 +68,10 @@ class DhatriRootShell extends StatelessWidget {
       return const DhatriAuthScreen();
     }
 
+    if (auth.needsOnboarding) {
+      return const OnboardingScreen();
+    }
+
     Widget currentRoleView;
     switch (auth.activeRole) {
       case Role.patient:
@@ -82,13 +88,18 @@ class DhatriRootShell extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         top: false,
-        child: Column(
+        child: Stack(
           children: [
-            DhatriConnectionBanner(
-              isOnline: clientService.isOnline,
-              serverUrl: clientService.serverUrl,
+            Column(
+              children: [
+                DhatriConnectionBanner(
+                  isOnline: clientService.isOnline,
+                  serverUrl: clientService.serverUrl,
+                ),
+                Expanded(child: currentRoleView),
+              ],
             ),
-            Expanded(child: currentRoleView),
+            const DhatriDemoController(),
           ],
         ),
       ),

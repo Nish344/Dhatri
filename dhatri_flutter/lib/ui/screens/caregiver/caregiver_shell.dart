@@ -22,7 +22,7 @@ class _CaregiverShellState extends State<CaregiverShell> {
 
     final pages = [
       const CaregiverHomeScreen(),
-      const PatientHealthScreen(), // Reused for caregiver timeline monitoring
+      const PatientHealthScreen(showAppBar: true), // Reused for caregiver timeline monitoring
       const PrescriptionUploadScreen(),
     ];
 

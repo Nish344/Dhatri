@@ -12,15 +12,11 @@ class PatientHelpScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final care = context.read<CareState>();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Help & Contacts'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             // Emergency 112 Card
             Container(
               padding: const EdgeInsets.all(22),
@@ -180,8 +176,7 @@ class PatientHelpScreen extends StatelessWidget {
             const SizedBox(height: 80),
           ],
         ),
-      ),
-    );
+      );
   }
 }
 

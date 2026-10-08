@@ -3,9 +3,16 @@ import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../repositories/dhatri_repository.dart';
 
+enum CareStreamStatus { live, reconnecting, offline }
+
 class CareState extends ChangeNotifier {
   final DhatriRepository repository;
   StreamSubscription<CareUpdate>? _streamSubscription;
+  Timer? _reconnectTimer;
+  Timer? _retryTimer;
+
+  int _activePatientId = 1;
+  CareStreamStatus _streamStatus = CareStreamStatus.offline;
 
   List<DoseEvent> _todayDoses = [];
   List<Alert> _openAlerts = [];
@@ -13,17 +20,17 @@ class CareState extends ChangeNotifier {
   PatientInsight? _patientInsight;
   List<PatientStatus> _overview = [];
 
-  // Local optimistic states: doseId -> 'saving' | 'saved'
+  // Local optimistic states: doseId -> 'saving' | 'saved' | 'retry'
   final Map<int, String> _optimisticDoseStatus = {};
+  final Set<int> _pendingSyncDoseIds = {};
 
   CareState({required this.repository}) {
-    if (repository is ChangeNotifier) {
-      (repository as ChangeNotifier).addListener(loadAll);
-    }
     loadAll();
     _subscribeToStream();
   }
 
+  int get activePatientId => _activePatientId;
+  CareStreamStatus get streamStatus => _streamStatus;
   List<DoseEvent> get todayDoses => _todayDoses;
   List<Alert> get openAlerts => _openAlerts;
   List<TimelineItem> get timeline => _timeline;
@@ -39,27 +46,70 @@ class CareState extends ChangeNotifier {
 
   String? getOptimisticStatus(int doseId) => _optimisticDoseStatus[doseId];
 
+  void setActivePatientId(int patientId) {
+    if (_activePatientId == patientId) return;
+    _activePatientId = patientId;
+    notifyListeners();
+    loadAll();
+    _subscribeToStream();
+  }
+
   Future<void> loadAll() async {
     try {
-      _todayDoses = await repository.getTodayDoses(1);
+      _todayDoses = await repository.getTodayDoses(_activePatientId);
     } catch (_) {}
+
     try {
-      _openAlerts = await repository.getOpenAlerts();
+      _openAlerts = await repository.getOpenAlerts(_activePatientId);
     } catch (_) {}
+
     try {
-      _timeline = await repository.getTimeline(1);
+      _timeline = await repository.getTimeline(_activePatientId);
     } catch (_) {}
+
     try {
-      _patientInsight = await repository.getWeeklyInsight(1);
+      _patientInsight = await repository.getWeeklyInsight(_activePatientId);
     } catch (_) {}
+
     try {
       _overview = await repository.getOverview();
     } catch (_) {}
+
     notifyListeners();
   }
 
   void _subscribeToStream() {
-    _streamSubscription = repository.watchPatient(1).listen((update) {
+    _streamSubscription?.cancel();
+    _reconnectTimer?.cancel();
+
+    try {
+      _streamStatus = CareStreamStatus.live;
+      notifyListeners();
+
+      _streamSubscription = repository.watchPatient(_activePatientId).listen(
+        (update) {
+          _streamStatus = CareStreamStatus.live;
+          loadAll();
+        },
+        onError: (err) {
+          _scheduleStreamReconnect();
+        },
+        onDone: () {
+          _scheduleStreamReconnect();
+        },
+      );
+    } catch (_) {
+      _scheduleStreamReconnect();
+    }
+  }
+
+  void _scheduleStreamReconnect() {
+    _streamStatus = CareStreamStatus.reconnecting;
+    notifyListeners();
+
+    _reconnectTimer?.cancel();
+    _reconnectTimer = Timer(const Duration(seconds: 2), () {
+      _subscribeToStream();
       loadAll();
     });
   }
@@ -73,6 +123,7 @@ class CareState extends ChangeNotifier {
     try {
       await repository.markTaken(doseId);
       _optimisticDoseStatus[doseId] = 'saved';
+      _pendingSyncDoseIds.remove(doseId);
       notifyListeners();
 
       // Clear local label after 3 seconds
@@ -81,9 +132,38 @@ class CareState extends ChangeNotifier {
         notifyListeners();
       });
     } catch (e) {
-      _optimisticDoseStatus.remove(doseId);
+      // Guide §29: "Will sync when connected"
+      _optimisticDoseStatus[doseId] = 'retry';
+      _pendingSyncDoseIds.add(doseId);
       notifyListeners();
+      _scheduleRetryPendingSync();
     }
+  }
+
+  void _scheduleRetryPendingSync() {
+    if (_retryTimer != null && _retryTimer!.isActive) return;
+    _retryTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      if (_pendingSyncDoseIds.isEmpty) {
+        timer.cancel();
+        return;
+      }
+      final ids = List<int>.from(_pendingSyncDoseIds);
+      for (final id in ids) {
+        try {
+          await repository.markTaken(id);
+          _pendingSyncDoseIds.remove(id);
+          _optimisticDoseStatus[id] = 'saved';
+          notifyListeners();
+          Future.delayed(const Duration(seconds: 3), () {
+            _optimisticDoseStatus.remove(id);
+            notifyListeners();
+          });
+        } catch (_) {}
+      }
+      if (_pendingSyncDoseIds.isEmpty) {
+        timer.cancel();
+      }
+    });
   }
 
   Future<void> acknowledgeAlert(int alertId) async {
@@ -92,17 +172,15 @@ class CareState extends ChangeNotifier {
   }
 
   Future<void> triggerEmergencyHelp() async {
-    await repository.triggerEmergencyHelp(1);
+    await repository.triggerEmergencyHelp(_activePatientId);
     await loadAll();
   }
 
   @override
   void dispose() {
-    if (repository is ChangeNotifier) {
-      (repository as ChangeNotifier).removeListener(loadAll);
-    }
     _streamSubscription?.cancel();
+    _reconnectTimer?.cancel();
+    _retryTimer?.cancel();
     super.dispose();
   }
 }
-

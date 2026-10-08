@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_typography.dart';
+import '../../../state/care_state.dart';
 import '../../../state/voice_call_state.dart';
 import 'patient_home_screen.dart';
 import 'patient_medicines_screen.dart';
@@ -23,6 +25,7 @@ class _PatientShellState extends State<PatientShell> {
   @override
   Widget build(BuildContext context) {
     final voice = context.watch<VoiceCallState>();
+    final care = context.watch<CareState>();
 
     // 1. Phone-style Incoming Call full-screen overlay
     if (voice.phase == CallUIPhase.incoming) {
@@ -42,40 +45,59 @@ class _PatientShellState extends State<PatientShell> {
     // 3. Normal Patient Navigation Shell
     final pages = [
       PatientHomeScreen(
-        onOpenVoiceCall: () => voice.startDirectCall(1),
+        onOpenVoiceCall: () => voice.startDirectCall(care.activePatientId),
       ),
       const PatientMedicinesScreen(),
       const PatientHealthScreen(),
       const PatientHelpScreen(),
     ];
 
+    String tabTitle;
+    switch (_currentIndex) {
+      case 0:
+        tabTitle = 'Dhātrī';
+        break;
+      case 1:
+        tabTitle = 'Today\'s Medicines';
+        break;
+      case 2:
+        tabTitle = 'Health History';
+        break;
+      case 3:
+        tabTitle = 'Help & Contact';
+        break;
+      default:
+        tabTitle = 'Dhātrī';
+    }
+
     return Scaffold(
-      appBar: _currentIndex == 0
-          ? AppBar(
-              title: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: AppColors.primaryLight,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Text('🌿', style: TextStyle(fontSize: 20)),
-                  ),
-                  const SizedBox(width: 10),
-                  const Text('Dhātrī'),
-                ],
-              ),
-              actions: [
-                const DhatriRoleSwitcherButton(),
-                IconButton(
-                  icon: const Icon(Icons.help_outline_rounded),
-                  tooltip: 'Help',
-                  onPressed: () => setState(() => _currentIndex = 3),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            if (_currentIndex == 0) ...[
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  borderRadius: BorderRadius.circular(10),
                 ),
-              ],
-            )
-          : null,
+                child: const Text('🌿', style: TextStyle(fontSize: 20)),
+              ),
+              const SizedBox(width: 10),
+            ],
+            Text(tabTitle, style: AppTypography.sectionTitle.copyWith(fontSize: 20)),
+          ],
+        ),
+        actions: [
+          const DhatriRoleSwitcherButton(),
+          if (_currentIndex != 3)
+            IconButton(
+              icon: const Icon(Icons.help_outline_rounded),
+              tooltip: 'Help',
+              onPressed: () => setState(() => _currentIndex = 3),
+            ),
+        ],
+      ),
       body: IndexedStack(
         index: _currentIndex,
         children: pages,
@@ -109,4 +131,3 @@ class _PatientShellState extends State<PatientShell> {
     );
   }
 }
-

@@ -111,63 +111,75 @@ class DoctorDashboardScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
+            if (insight != null && insight.symptoms.isNotEmpty)
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: insight.symptoms.map((sym) {
+                  final isSevere = sym.maxSeverity >= 4;
+                  final isRepeated = sym.count >= 3;
+                  final accentColor = isSevere
+                      ? AppColors.error
+                      : (isRepeated ? AppColors.warning : AppColors.info);
+                  final borderColor = isSevere
+                      ? AppColors.errorBorder
+                      : (isRepeated ? AppColors.warningBorder : AppColors.cardBorder);
+
+                  return Container(
+                    width: (MediaQuery.of(context).size.width - 52) / 2,
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.warningBorder, width: 1.5),
+                      border: Border.all(color: borderColor, width: 1.5),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Weakness', style: AppTypography.cardTitle.copyWith(fontSize: 18)),
+                        Text(
+                          sym.symptom.isNotEmpty
+                              ? sym.symptom[0].toUpperCase() + sym.symptom.substring(1)
+                              : 'Symptom',
+                          style: AppTypography.cardTitle.copyWith(fontSize: 18),
+                        ),
                         const SizedBox(height: 6),
                         Row(
                           children: [
-                            Text('3', style: AppTypography.displayLarge.copyWith(fontSize: 26, color: AppColors.warning)),
+                            Text(
+                              '${sym.count}',
+                              style: AppTypography.displayLarge.copyWith(
+                                fontSize: 26,
+                                color: accentColor,
+                              ),
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
-                              child: Text('reports\n(Max severity 3/5)', style: AppTypography.supporting.copyWith(fontSize: 11)),
+                              child: Text(
+                                'report${sym.count > 1 ? "s" : ""}\n(Max severity ${sym.maxSeverity}/5)',
+                                style: AppTypography.supporting.copyWith(fontSize: 11),
+                              ),
                             ),
                           ],
                         ),
                       ],
                     ),
-                  ),
+                  );
+                }).toList(),
+              )
+            else
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.cardBorder),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppColors.cardBorder),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Dizziness', style: AppTypography.cardTitle.copyWith(fontSize: 18)),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Text('1', style: AppTypography.displayLarge.copyWith(fontSize: 26, color: AppColors.info)),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text('report\n(Severity 2/5)', style: AppTypography.supporting.copyWith(fontSize: 11)),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                child: Text(
+                  'No recurring symptoms reported this week.',
+                  style: AppTypography.supporting,
                 ),
-              ],
-            ),
+              ),
 
             const SizedBox(height: 28),
 
