@@ -10,6 +10,7 @@ import '../../components/dhatri_patient_card.dart';
 import 'alert_detail_screen.dart';
 import 'patient_detail_screen.dart';
 import 'prescription_upload_screen.dart';
+import '../../components/dhatri_role_switcher.dart';
 
 class CaregiverHomeScreen extends StatelessWidget {
   const CaregiverHomeScreen({super.key});
@@ -29,6 +30,7 @@ class CaregiverHomeScreen extends StatelessWidget {
           ],
         ),
         actions: [
+          const DhatriRoleSwitcherButton(),
           IconButton(
             icon: const Icon(Icons.document_scanner_rounded),
             tooltip: 'Add Prescription',

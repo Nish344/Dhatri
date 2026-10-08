@@ -6,6 +6,7 @@ import '../../../state/care_state.dart';
 import '../../../state/auth_state.dart';
 import '../../components/dhatri_insight_card.dart';
 import '../../components/dhatri_timeline_item.dart';
+import '../../components/dhatri_role_switcher.dart';
 
 class DoctorDashboardScreen extends StatelessWidget {
   const DoctorDashboardScreen({super.key});
@@ -26,6 +27,7 @@ class DoctorDashboardScreen extends StatelessWidget {
           ],
         ),
         actions: [
+          const DhatriRoleSwitcherButton(),
           Container(
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

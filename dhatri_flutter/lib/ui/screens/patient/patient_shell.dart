@@ -8,6 +8,7 @@ import 'patient_health_screen.dart';
 import 'patient_help_screen.dart';
 import 'incoming_call_screen.dart';
 import 'active_call_screen.dart';
+import '../../components/dhatri_role_switcher.dart';
 
 class PatientShell extends StatefulWidget {
   const PatientShell({super.key});
@@ -69,6 +70,7 @@ class _PatientShellState extends State<PatientShell> {
                 ],
               ),
               actions: [
+                const DhatriRoleSwitcherButton(),
                 IconButton(
                   icon: const Icon(Icons.help_outline_rounded),
                   tooltip: 'Help',

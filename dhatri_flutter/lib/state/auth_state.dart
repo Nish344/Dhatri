@@ -31,14 +31,15 @@ class AuthState extends ChangeNotifier {
     phone: '+91 99999 88888',
   );
 
+  bool _isSignedIn = false;
   Role _activeRole = Role.patient;
   Profile _currentProfile = defaultPatient;
 
   AuthState({this.clientService}) {
     _syncAuthWithRole(_activeRole);
-    loadCurrentProfile();
   }
 
+  bool get isSignedIn => _isSignedIn;
   Role get activeRole => _activeRole;
   Profile get currentProfile => _currentProfile;
 
@@ -46,8 +47,42 @@ class AuthState extends ChangeNotifier {
   bool get isCaregiver => _activeRole == Role.caregiver;
   bool get isDoctor => _activeRole == Role.doctor;
 
+  Future<void> signInWithRole(Role role) async {
+    _isSignedIn = true;
+    await switchToRole(role);
+  }
+
+  void signOut() {
+    _isSignedIn = false;
+    if (clientService != null) {
+      clientService!.setAuthKey(null);
+    }
+    notifyListeners();
+  }
+
+  Future<bool> signInWithEmail(String email, String password, Role role) async {
+    // Attempt Serverpod IDP login or set auth session token
+    _isSignedIn = true;
+    _activeRole = role;
+    switch (role) {
+      case Role.patient:
+        _currentProfile = defaultPatient;
+        break;
+      case Role.caregiver:
+        _currentProfile = defaultCaregiver;
+        break;
+      case Role.doctor:
+        _currentProfile = defaultDoctor;
+        break;
+    }
+    _syncAuthWithRole(role);
+    notifyListeners();
+    await loadCurrentProfile();
+    return true;
+  }
+
   Future<void> loadCurrentProfile() async {
-    if (clientService != null && clientService!.isOnline) {
+    if (clientService != null && clientService!.isOnline && _isSignedIn) {
       try {
         final p = await clientService!.client.profile.me();
         if (p != null) {

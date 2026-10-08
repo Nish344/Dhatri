@@ -11,6 +11,7 @@ import 'state/voice_call_state.dart';
 import 'models/models.dart';
 
 import 'ui/components/dhatri_connection_banner.dart';
+import 'ui/screens/auth/dhatri_auth_screen.dart';
 import 'ui/screens/patient/patient_shell.dart';
 import 'ui/screens/caregiver/caregiver_shell.dart';
 import 'ui/screens/doctor/doctor_shell.dart';
@@ -60,6 +61,10 @@ class DhatriRootShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthState>();
     final clientService = context.watch<ServerpodClientService>();
+
+    if (!auth.isSignedIn) {
+      return const DhatriAuthScreen();
+    }
 
     Widget currentRoleView;
     switch (auth.activeRole) {
