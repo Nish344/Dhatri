@@ -74,7 +74,7 @@ class PatientDetailScreen extends StatelessWidget {
                           style: AppTypography.supporting,
                         ),
                         const SizedBox(height: 8),
-                        DhatriStatusChip(state: status.state),
+                        DhatriStatusChip.fromPatientState(status.state),
                       ],
                     ),
                   ),
