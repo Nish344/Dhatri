@@ -1,4 +1,5 @@
-/// Domain models matching ARCHITECTURE.md §4.
+/// Domain models matching ARCHITECTURE.md §4 and synchronized with dhatri_client protocol.
+import 'package:dhatri_client/dhatri_client.dart' as protocol;
 
 enum Role { patient, caregiver, doctor }
 
@@ -43,6 +44,34 @@ class Profile {
     this.linkCode,
   });
 
+  factory Profile.fromProtocol(protocol.Profile p) {
+    return Profile(
+      id: p.id ?? 1,
+      authUserId: p.authUserId,
+      name: p.name,
+      role: Role.values.byName(p.role.name),
+      age: p.age,
+      phone: p.phone,
+      caregiverId: p.caregiverId,
+      doctorId: p.doctorId,
+      linkCode: p.linkCode,
+    );
+  }
+
+  protocol.Profile toProtocol() {
+    return protocol.Profile(
+      id: id,
+      authUserId: authUserId,
+      name: name,
+      role: protocol.Role.values.byName(role.name),
+      age: age,
+      phone: phone,
+      caregiverId: caregiverId,
+      doctorId: doctorId,
+      linkCode: linkCode,
+    );
+  }
+
   Profile copyWith({
     int? id,
     String? authUserId,
@@ -86,6 +115,30 @@ class MedicationDraft {
     required this.durationDays,
     required this.uncertain,
   });
+
+  factory MedicationDraft.fromProtocol(protocol.MedicationDraft p) {
+    return MedicationDraft(
+      name: p.name,
+      strength: p.strength,
+      doseText: p.doseText,
+      instructions: p.instructions,
+      times: List<String>.from(p.times),
+      durationDays: p.durationDays,
+      uncertain: p.uncertain,
+    );
+  }
+
+  protocol.MedicationDraft toProtocol() {
+    return protocol.MedicationDraft(
+      name: name,
+      strength: strength,
+      doseText: doseText,
+      instructions: instructions,
+      times: times,
+      durationDays: durationDays,
+      uncertain: uncertain,
+    );
+  }
 }
 
 class Prescription {
@@ -108,6 +161,32 @@ class Prescription {
     this.error,
     required this.createdAt,
   });
+
+  factory Prescription.fromProtocol(protocol.Prescription p) {
+    return Prescription(
+      id: p.id ?? 0,
+      patientId: p.patientId,
+      storageId: p.storageId,
+      path: p.path,
+      status: PrescriptionStatus.values.byName(p.status.name),
+      extractedJson: p.extractedJson,
+      error: p.error,
+      createdAt: p.createdAt.toLocal(),
+    );
+  }
+
+  protocol.Prescription toProtocol() {
+    return protocol.Prescription(
+      id: id,
+      patientId: patientId,
+      storageId: storageId,
+      path: path,
+      status: protocol.PrescriptionStatus.values.byName(status.name),
+      extractedJson: extractedJson,
+      error: error,
+      createdAt: createdAt.toUtc(),
+    );
+  }
 
   Prescription copyWith({
     PrescriptionStatus? status,
@@ -153,6 +232,38 @@ class Medication {
     required this.endDate,
     this.active = true,
   });
+
+  factory Medication.fromProtocol(protocol.Medication p) {
+    return Medication(
+      id: p.id ?? 0,
+      patientId: p.patientId,
+      prescriptionId: p.prescriptionId,
+      name: p.name,
+      strength: p.strength,
+      doseText: p.doseText,
+      instructions: p.instructions,
+      times: List<String>.from(p.times),
+      startDate: p.startDate.toLocal(),
+      endDate: p.endDate.toLocal(),
+      active: p.active,
+    );
+  }
+
+  protocol.Medication toProtocol() {
+    return protocol.Medication(
+      id: id,
+      patientId: patientId,
+      prescriptionId: prescriptionId,
+      name: name,
+      strength: strength,
+      doseText: doseText,
+      instructions: instructions,
+      times: times,
+      startDate: startDate.toUtc(),
+      endDate: endDate.toUtc(),
+      active: active,
+    );
+  }
 }
 
 class DoseEvent {
@@ -179,6 +290,51 @@ class DoseEvent {
     this.remindedAt,
     this.takenAt,
   });
+
+  factory DoseEvent.fromProtocol(
+    protocol.DoseEvent p, {
+    String? medicationName,
+    String? doseText,
+    String? instructions,
+  }) {
+    return DoseEvent(
+      id: p.id ?? 0,
+      patientId: p.patientId,
+      medicationId: p.medicationId,
+      medicationName: medicationName ?? _defaultMedName(p.medicationId),
+      doseText: doseText ?? '1 tablet',
+      instructions: instructions ?? 'With water',
+      scheduledAt: p.scheduledAt.toLocal(),
+      status: DoseStatus.values.byName(p.status.name),
+      remindedAt: p.remindedAt?.toLocal(),
+      takenAt: p.takenAt?.toLocal(),
+    );
+  }
+
+  static String _defaultMedName(int medId) {
+    switch (medId) {
+      case 1:
+        return 'Metformin 500 mg';
+      case 2:
+        return 'Amlodipine 5 mg';
+      case 3:
+        return 'Atorvastatin 20 mg';
+      default:
+        return 'Prescription Medicine';
+    }
+  }
+
+  protocol.DoseEvent toProtocol() {
+    return protocol.DoseEvent(
+      id: id,
+      patientId: patientId,
+      medicationId: medicationId,
+      scheduledAt: scheduledAt.toUtc(),
+      status: protocol.DoseStatus.values.byName(status.name),
+      remindedAt: remindedAt?.toUtc(),
+      takenAt: takenAt?.toUtc(),
+    );
+  }
 
   DoseEvent copyWith({
     DoseStatus? status,
@@ -229,6 +385,23 @@ class WellnessCheck {
     this.completedAt,
   });
 
+  factory WellnessCheck.fromProtocol(protocol.WellnessCheck p) {
+    return WellnessCheck(
+      id: p.id ?? 0,
+      patientId: p.patientId,
+      status: CheckStatus.values.byName(p.status.name),
+      trigger: CheckTrigger.values.byName(p.trigger.name),
+      turnCount: p.turnCount,
+      transcript: p.transcript,
+      replyText: p.replyText,
+      mood: p.mood,
+      summaryEn: p.summaryEn,
+      memoryUsed: p.memoryUsed != null ? List<String>.from(p.memoryUsed!) : null,
+      createdAt: p.createdAt.toLocal(),
+      completedAt: p.completedAt?.toLocal(),
+    );
+  }
+
   WellnessCheck copyWith({
     CheckStatus? status,
     int? turnCount,
@@ -272,6 +445,17 @@ class SymptomReport {
     required this.severity,
     required this.reportedAt,
   });
+
+  factory SymptomReport.fromProtocol(protocol.SymptomReport p) {
+    return SymptomReport(
+      id: p.id ?? 0,
+      patientId: p.patientId,
+      checkId: p.checkId,
+      symptom: p.symptom,
+      severity: p.severity,
+      reportedAt: p.reportedAt.toLocal(),
+    );
+  }
 }
 
 class PatientMemory {
@@ -290,6 +474,17 @@ class PatientMemory {
     this.sourceCheckId,
     required this.createdAt,
   });
+
+  factory PatientMemory.fromProtocol(protocol.PatientMemory p) {
+    return PatientMemory(
+      id: p.id ?? 0,
+      patientId: p.patientId,
+      kind: p.kind,
+      content: p.content,
+      sourceCheckId: p.sourceCheckId,
+      createdAt: p.createdAt.toLocal(),
+    );
+  }
 }
 
 class Alert {
@@ -316,6 +511,21 @@ class Alert {
     required this.createdAt,
     this.acknowledgedAt,
   });
+
+  factory Alert.fromProtocol(protocol.Alert p, {String? patientName}) {
+    return Alert(
+      id: p.id ?? 0,
+      patientId: p.patientId,
+      patientName: patientName ?? 'Ramesh Kumar',
+      kind: AlertKind.values.byName(p.kind.name),
+      priority: AlertPriority.values.byName(p.priority.name),
+      doseEventId: p.doseEventId,
+      symptom: p.symptom,
+      message: p.message,
+      createdAt: p.createdAt.toLocal(),
+      acknowledgedAt: p.acknowledgedAt?.toLocal(),
+    );
+  }
 
   Alert copyWith({
     DateTime? acknowledgedAt,
@@ -349,6 +559,16 @@ class CareUpdate {
     this.check,
     this.prescription,
   });
+
+  factory CareUpdate.fromProtocol(protocol.CareUpdate p) {
+    return CareUpdate(
+      patientId: p.patientId,
+      doseEvent: p.doseEvent != null ? DoseEvent.fromProtocol(p.doseEvent!) : null,
+      alert: p.alert != null ? Alert.fromProtocol(p.alert!) : null,
+      check: p.check != null ? WellnessCheck.fromProtocol(p.check!) : null,
+      prescription: p.prescription != null ? Prescription.fromProtocol(p.prescription!) : null,
+    );
+  }
 }
 
 class TimelineItem {
@@ -365,6 +585,16 @@ class TimelineItem {
     required this.title,
     this.detail,
   });
+
+  factory TimelineItem.fromProtocol(protocol.TimelineItem p) {
+    return TimelineItem(
+      at: p.at.toLocal(),
+      kind: TimelineKind.values.byName(p.kind.name),
+      tone: TimelineTone.values.byName(p.tone.name),
+      title: p.title,
+      detail: p.detail,
+    );
+  }
 }
 
 class SymptomCount {
@@ -377,6 +607,14 @@ class SymptomCount {
     required this.count,
     required this.maxSeverity,
   });
+
+  factory SymptomCount.fromProtocol(protocol.SymptomCount p) {
+    return SymptomCount(
+      symptom: p.symptom,
+      count: p.count,
+      maxSeverity: p.maxSeverity,
+    );
+  }
 }
 
 class PatientInsight {
@@ -407,6 +645,23 @@ class PatientInsight {
     this.latestCheck,
     required this.generatedAt,
   });
+
+  factory PatientInsight.fromProtocol(protocol.PatientInsight p) {
+    return PatientInsight(
+      patient: Profile.fromProtocol(p.patient),
+      adherencePct: p.adherencePct,
+      prevAdherencePct: p.prevAdherencePct,
+      dosesTaken: p.dosesTaken,
+      dosesMissed: p.dosesMissed,
+      checkIns: p.checkIns,
+      symptoms: p.symptoms.map(SymptomCount.fromProtocol).toList(),
+      openAlerts: p.openAlerts.map(Alert.fromProtocol).toList(),
+      reviewRecommended: p.reviewRecommended,
+      aiSummary: p.aiSummary,
+      latestCheck: p.latestCheck != null ? WellnessCheck.fromProtocol(p.latestCheck!) : null,
+      generatedAt: p.generatedAt.toLocal(),
+    );
+  }
 }
 
 class PatientStatus {
@@ -423,5 +678,14 @@ class PatientStatus {
     this.nextDose,
     required this.openAlerts,
   });
-}
 
+  factory PatientStatus.fromProtocol(protocol.PatientStatus p) {
+    return PatientStatus(
+      patient: Profile.fromProtocol(p.patient),
+      state: PatientState.values.byName(p.state.name),
+      headline: p.headline,
+      nextDose: p.nextDose != null ? DoseEvent.fromProtocol(p.nextDose!) : null,
+      openAlerts: p.openAlerts,
+    );
+  }
+}

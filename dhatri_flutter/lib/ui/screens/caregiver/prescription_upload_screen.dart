@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../models/models.dart';
+import '../../../repositories/dhatri_repository.dart';
 import '../../components/dhatri_buttons.dart';
 import 'prescription_review_screen.dart';
 
@@ -15,28 +18,32 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
   bool _isReading = false;
   int _readingStep = 0;
 
-  void _startExtraction() {
+  Future<void> _startExtraction() async {
     setState(() {
       _isReading = true;
       _readingStep = 1;
     });
 
-    Future.delayed(const Duration(milliseconds: 700), () {
-      if (mounted) setState(() => _readingStep = 2);
-    });
+    final repo = context.read<DhatriRepository>();
+    // Initiate background extraction via Serverpod / Gemini or mock fallback
+    final extractFuture = repo.extractDraftsFromPrescription('rx_demo_photo.jpg');
 
-    Future.delayed(const Duration(milliseconds: 1400), () {
-      if (mounted) setState(() => _readingStep = 3);
-    });
+    await Future.delayed(const Duration(milliseconds: 700));
+    if (mounted) setState(() => _readingStep = 2);
 
-    Future.delayed(const Duration(milliseconds: 2100), () {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const PrescriptionReviewScreen()),
-        );
-      }
-    });
+    await Future.delayed(const Duration(milliseconds: 700));
+    if (mounted) setState(() => _readingStep = 3);
+
+    final drafts = await extractFuture;
+
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PrescriptionReviewScreen(initialDrafts: drafts),
+        ),
+      );
+    }
   }
 
   @override

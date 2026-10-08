@@ -5,6 +5,8 @@ import '../mock_engine/mock_voice_engine.dart';
 import '../mock_engine/mock_prescription_samples.dart';
 
 abstract class DhatriRepository {
+  bool get isLiveBackend;
+
   // Profiles
   Future<Profile> getCurrentProfile();
   Future<List<PatientStatus>> getOverview();
@@ -41,6 +43,9 @@ class MockDhatriRepository implements DhatriRepository {
     required this.careStream,
     required this.voiceEngine,
   });
+
+  @override
+  bool get isLiveBackend => false;
 
   @override
   Future<Profile> getCurrentProfile() async => MockDatabase.ramesh;

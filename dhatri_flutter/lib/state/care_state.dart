@@ -17,6 +17,9 @@ class CareState extends ChangeNotifier {
   final Map<int, String> _optimisticDoseStatus = {};
 
   CareState({required this.repository}) {
+    if (repository is ChangeNotifier) {
+      (repository as ChangeNotifier).addListener(loadAll);
+    }
     loadAll();
     _subscribeToStream();
   }
@@ -85,6 +88,9 @@ class CareState extends ChangeNotifier {
 
   @override
   void dispose() {
+    if (repository is ChangeNotifier) {
+      (repository as ChangeNotifier).removeListener(loadAll);
+    }
     _streamSubscription?.cancel();
     super.dispose();
   }

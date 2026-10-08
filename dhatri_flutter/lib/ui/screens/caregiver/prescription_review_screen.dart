@@ -9,7 +9,12 @@ import '../../../state/care_state.dart';
 import '../../components/dhatri_buttons.dart';
 
 class PrescriptionReviewScreen extends StatefulWidget {
-  const PrescriptionReviewScreen({super.key});
+  final List<MedicationDraft>? initialDrafts;
+
+  const PrescriptionReviewScreen({
+    super.key,
+    this.initialDrafts,
+  });
 
   @override
   State<PrescriptionReviewScreen> createState() => _PrescriptionReviewScreenState();
@@ -22,7 +27,9 @@ class _PrescriptionReviewScreenState extends State<PrescriptionReviewScreen> {
   @override
   void initState() {
     super.initState();
-    _drafts = MockPrescriptionSamples.getSampleDrafts();
+    _drafts = (widget.initialDrafts != null && widget.initialDrafts!.isNotEmpty)
+        ? widget.initialDrafts!
+        : MockPrescriptionSamples.getSampleDrafts();
   }
 
   void _showEditSheet(int index) {

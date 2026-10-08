@@ -4,6 +4,8 @@ import '../models/models.dart';
 import '../core/constants/copy_hindi.dart';
 import '../mock_engine/mock_voice_engine.dart';
 import '../mock_engine/mock_care_stream.dart';
+import '../repositories/dhatri_repository.dart';
+import '../repositories/serverpod_dhatri_repository.dart';
 
 enum CallUIPhase {
   incoming,
@@ -18,8 +20,10 @@ enum CallUIPhase {
 class VoiceCallState extends ChangeNotifier {
   final MockVoiceEngine voiceEngine;
   final MockCareStream careStream;
+  final DhatriRepository? repository;
+  final ServerpodDhatriRepository? serverpodRepo;
 
-  CallUIPhase _phase = CallUIPhase.incoming;
+  CallUIPhase _phase = CallUIPhase.ended;
   WellnessCheck? _activeCheck;
   int _currentTurn = 0;
   String _currentDhatriText = CopyHindi.greetingQuestion;
@@ -30,6 +34,8 @@ class VoiceCallState extends ChangeNotifier {
   VoiceCallState({
     required this.voiceEngine,
     required this.careStream,
+    this.repository,
+    this.serverpodRepo,
   });
 
   CallUIPhase get phase => _phase;
@@ -74,10 +80,24 @@ class VoiceCallState extends ChangeNotifier {
     _phase = CallUIPhase.connected;
     notifyListeners();
 
+    if (repository?.isLiveBackend == true && serverpodRepo != null) {
+      try {
+        final checkId = _activeCheck?.id ?? 1;
+        serverpodRepo!.acceptCheckIn(checkId).then((turn) {
+          if (turn.text.isNotEmpty) {
+            _currentDhatriText = turn.text;
+            notifyListeners();
+          }
+        }).catchError((_) {});
+      } catch (_) {}
+    }
+
     // After brief connect, Dhatri speaks greeting
     Future.delayed(const Duration(milliseconds: 600), () {
       _phase = CallUIPhase.dhatriSpeaking;
-      _currentDhatriText = CopyHindi.greetingQuestion;
+      if (_currentDhatriText.isEmpty) {
+        _currentDhatriText = CopyHindi.greetingQuestion;
+      }
       notifyListeners();
 
       // Dhatri finishes greeting -> patient turn
@@ -100,6 +120,41 @@ class VoiceCallState extends ChangeNotifier {
     notifyListeners();
 
     if (_activeCheck == null) return;
+
+    if (repository?.isLiveBackend == true && serverpodRepo != null) {
+      try {
+        final checkId = _activeCheck!.id;
+        final turn = await serverpodRepo!.answerCheckInText(checkId, text);
+        _currentTurn = turn.turnIndex;
+        _currentDhatriText = turn.text;
+        _isDone = turn.done;
+
+        if (text.contains('कमजोरी') || text.contains('weakness')) {
+          _rememberedContext = [
+            '3 days ago: Reported weakness (severity 2/5)',
+            'Yesterday: Persistent weakness reported after evening dose',
+          ];
+        }
+
+        _phase = CallUIPhase.dhatriSpeaking;
+        notifyListeners();
+
+        if (!_isDone) {
+          Future.delayed(const Duration(seconds: 3), () {
+            _phase = CallUIPhase.yourTurn;
+            notifyListeners();
+          });
+        } else {
+          Future.delayed(const Duration(seconds: 4), () {
+            _phase = CallUIPhase.ended;
+            notifyListeners();
+          });
+        }
+        return;
+      } catch (_) {
+        // Fall back to local mock voice engine
+      }
+    }
 
     final result = await voiceEngine.submitPatientSpeech(
       check: _activeCheck!,
