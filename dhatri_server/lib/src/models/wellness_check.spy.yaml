@@ -4,7 +4,12 @@ fields:
   patientId: int
   status: CheckStatus
   trigger: CheckTrigger
+  ### Patient speech turns after accept (ARCHITECTURE §7).
   turnCount: int, default=0
+  ### Times ring re-posted while still pending/snoozed (max 2).
+  ringCount: int, default=0
+  ### Times the patient tapped Remind later (max 2).
+  snoozeCount: int, default=0
   transcript: String?
   replyText: String?
   mood: String?

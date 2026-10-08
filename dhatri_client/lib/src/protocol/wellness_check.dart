@@ -23,6 +23,8 @@ abstract class WellnessCheck
     required this.status,
     required this.trigger,
     int? turnCount,
+    int? ringCount,
+    int? snoozeCount,
     this.transcript,
     this.replyText,
     this.mood,
@@ -31,6 +33,8 @@ abstract class WellnessCheck
     DateTime? createdAt,
     this.completedAt,
   }) : turnCount = turnCount ?? 0,
+       ringCount = ringCount ?? 0,
+       snoozeCount = snoozeCount ?? 0,
        createdAt = createdAt ?? DateTime.now();
 
   factory WellnessCheck({
@@ -39,6 +43,8 @@ abstract class WellnessCheck
     required _i152b260.CheckStatus status,
     required _i06tdmkm.CheckTrigger trigger,
     int? turnCount,
+    int? ringCount,
+    int? snoozeCount,
     String? transcript,
     String? replyText,
     String? mood,
@@ -59,6 +65,8 @@ abstract class WellnessCheck
         (jsonSerialization['trigger'] as String),
       ),
       turnCount: jsonSerialization['turnCount'] as int?,
+      ringCount: jsonSerialization['ringCount'] as int?,
+      snoozeCount: jsonSerialization['snoozeCount'] as int?,
       transcript: jsonSerialization['transcript'] as String?,
       replyText: jsonSerialization['replyText'] as String?,
       mood: jsonSerialization['mood'] as String?,
@@ -90,7 +98,14 @@ abstract class WellnessCheck
 
   _i06tdmkm.CheckTrigger trigger;
 
+  /// Patient speech turns after accept (ARCHITECTURE §7).
   int turnCount;
+
+  /// Times ring re-posted while still pending/snoozed (max 2).
+  int ringCount;
+
+  /// Times the patient tapped Remind later (max 2).
+  int snoozeCount;
 
   String? transcript;
 
@@ -115,6 +130,8 @@ abstract class WellnessCheck
     _i152b260.CheckStatus? status,
     _i06tdmkm.CheckTrigger? trigger,
     int? turnCount,
+    int? ringCount,
+    int? snoozeCount,
     String? transcript,
     String? replyText,
     String? mood,
@@ -132,6 +149,8 @@ abstract class WellnessCheck
       'status': status.toJson(),
       'trigger': trigger.toJson(),
       'turnCount': turnCount,
+      'ringCount': ringCount,
+      'snoozeCount': snoozeCount,
       if (transcript != null) 'transcript': transcript,
       if (replyText != null) 'replyText': replyText,
       if (mood != null) 'mood': mood,
@@ -151,6 +170,8 @@ abstract class WellnessCheck
       'status': status.toJson(),
       'trigger': trigger.toJson(),
       'turnCount': turnCount,
+      'ringCount': ringCount,
+      'snoozeCount': snoozeCount,
       if (transcript != null) 'transcript': transcript,
       if (replyText != null) 'replyText': replyText,
       if (mood != null) 'mood': mood,
@@ -176,6 +197,8 @@ class _WellnessCheckImpl extends WellnessCheck {
     required _i152b260.CheckStatus status,
     required _i06tdmkm.CheckTrigger trigger,
     int? turnCount,
+    int? ringCount,
+    int? snoozeCount,
     String? transcript,
     String? replyText,
     String? mood,
@@ -189,6 +212,8 @@ class _WellnessCheckImpl extends WellnessCheck {
          status: status,
          trigger: trigger,
          turnCount: turnCount,
+         ringCount: ringCount,
+         snoozeCount: snoozeCount,
          transcript: transcript,
          replyText: replyText,
          mood: mood,
@@ -208,6 +233,8 @@ class _WellnessCheckImpl extends WellnessCheck {
     _i152b260.CheckStatus? status,
     _i06tdmkm.CheckTrigger? trigger,
     int? turnCount,
+    int? ringCount,
+    int? snoozeCount,
     Object? transcript = _Undefined,
     Object? replyText = _Undefined,
     Object? mood = _Undefined,
@@ -222,6 +249,8 @@ class _WellnessCheckImpl extends WellnessCheck {
       status: status ?? this.status,
       trigger: trigger ?? this.trigger,
       turnCount: turnCount ?? this.turnCount,
+      ringCount: ringCount ?? this.ringCount,
+      snoozeCount: snoozeCount ?? this.snoozeCount,
       transcript: transcript is String? ? transcript : this.transcript,
       replyText: replyText is String? ? replyText : this.replyText,
       mood: mood is String? ? mood : this.mood,

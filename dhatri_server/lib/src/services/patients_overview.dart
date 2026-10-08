@@ -48,8 +48,7 @@ Future<PatientStatus> _statusFor(Session session, Profile patient) async {
   final patientId = patient.id!;
   final openAlerts = await Alert.db.count(
     session,
-    where: (t) =>
-        t.patientId.equals(patientId) & t.acknowledgedAt.equals(null),
+    where: (t) => t.patientId.equals(patientId) & t.acknowledgedAt.equals(null),
   );
   final missed = await Alert.db.findFirstRow(
     session,

@@ -58,6 +58,24 @@ class CheckInEndpoint extends Endpoint {
     );
   }
 
+  /// Hindi tap-to-answer fallback when speech recognition is unreliable.
+  Future<CheckInTurn> answerText(
+    Session session,
+    int checkId,
+    String transcript,
+  ) async {
+    final check = await _check(session, checkId);
+    final gemini = Gemini.of(session);
+    return answerCheckInWithTranscript(
+      session,
+      check,
+      transcript,
+      gemini: gemini,
+      voice: SarvamVoice.of(session),
+      memory: memoryServiceFor(gemini),
+    );
+  }
+
   Future<WellnessCheck> _check(Session session, int checkId) async {
     final check = await WellnessCheck.db.findById(session, checkId);
     if (check == null) throw ArgumentError('Check-in not found');

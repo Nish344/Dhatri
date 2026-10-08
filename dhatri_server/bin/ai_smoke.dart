@@ -163,7 +163,9 @@ Future<bool> _bhavvaaniSttGate(SarvamVoice sarvam, String manifestPath) async {
     }
   }
   final need = (clips.length * 0.8).ceil();
-  print('BhavVaani STT gate: $passed / ${clips.length} (need $need+, non-empty)');
+  print(
+    'BhavVaani STT gate: $passed / ${clips.length} (need $need+, non-empty)',
+  );
   return passed >= need;
 }
 
@@ -198,7 +200,8 @@ Future<bool> _extractionGate(Gemini gemini, String dirPath) async {
       final drafts = parseDrafts(json);
       final names = drafts.map((d) => d.name.toLowerCase()).join(' ');
       final must = [
-        for (final m in (rules['mustInclude'] as List? ?? const [])) '$m'.toLowerCase(),
+        for (final m in (rules['mustInclude'] as List? ?? const []))
+          '$m'.toLowerCase(),
       ];
       final minMeds = (rules['minMedications'] as num?)?.toInt() ?? must.length;
       final missing = must.where((m) => !names.contains(m)).toList();

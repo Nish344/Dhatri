@@ -36,7 +36,10 @@ Future<void> remindDose(Session session, int doseEventId) async {
       .escalate(doseEventId);
 }
 
-Future<void> scheduleDoseReminders(Session session, Iterable<int> doseEventIds) async {
+Future<void> scheduleDoseReminders(
+  Session session,
+  Iterable<int> doseEventIds,
+) async {
   final now = DateTime.now().toUtc();
   for (final id in doseEventIds) {
     final event = await DoseEvent.db.findById(session, id);

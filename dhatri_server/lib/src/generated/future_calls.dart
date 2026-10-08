@@ -13,9 +13,15 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _ida;
 import 'package:clock/clock.dart' as _io0w16m8;
+import 'package:dhatri_server/src/generated/check_trigger.dart' as _i2nd0i1y;
 import 'package:serverpod/serverpod.dart' as _is;
+import '../future_calls/check_in_future_call.dart' as _igshuy6k;
 import '../future_calls/dose_future_call.dart' as _idxg13qo;
 import '../future_calls/prescription_future_call.dart' as _iyb9lbli;
+import 'future_calls_generated_models/check_in_future_call_open_model.dart'
+    as _ie10p2ff;
+import 'future_calls_generated_models/check_in_future_call_ring_model.dart'
+    as _ik839svv;
 import 'future_calls_generated_models/dose_future_call_escalate_model.dart'
     as _iegx9ko2;
 import 'future_calls_generated_models/dose_future_call_remind_model.dart'
@@ -65,6 +71,8 @@ class FutureCalls extends _is.FutureCallDispatch<_FutureCallRef> {
     String serverId,
   ) {
     var registeredFutureCalls = <String, _is.InvokableFutureCall>{
+      'CheckInOpenFutureCall': CheckInOpenFutureCall(),
+      'CheckInRingFutureCall': CheckInRingFutureCall(),
       'DoseRemindFutureCall': DoseRemindFutureCall(),
       'DoseEscalateFutureCall': DoseEscalateFutureCall(),
       'PrescriptionExtractFutureCall': PrescriptionExtractFutureCall(),
@@ -188,11 +196,41 @@ class _FutureCallRef {
 
   final _InvokeFutureCall _invokeFutureCall;
 
+  late final checkIn = _CheckInFutureCallDispatcher(_invokeFutureCall);
+
   late final dose = _DoseFutureCallDispatcher(_invokeFutureCall);
 
   late final prescription = _PrescriptionFutureCallDispatcher(
     _invokeFutureCall,
   );
+}
+
+class _CheckInFutureCallDispatcher {
+  _CheckInFutureCallDispatcher(this._invokeFutureCall);
+
+  final _InvokeFutureCall _invokeFutureCall;
+
+  Future<void> open(
+    int patientId,
+    _i2nd0i1y.CheckTrigger trigger,
+  ) {
+    var object = _ie10p2ff.CheckInFutureCallOpenModel(
+      patientId: patientId,
+      trigger: trigger,
+    );
+    return _invokeFutureCall(
+      'CheckInOpenFutureCall',
+      object,
+    );
+  }
+
+  Future<void> ring(int checkId) {
+    var object = _ik839svv.CheckInFutureCallRingModel(checkId: checkId);
+    return _invokeFutureCall(
+      'CheckInRingFutureCall',
+      object,
+    );
+  }
 }
 
 class _DoseFutureCallDispatcher {
@@ -232,6 +270,41 @@ class _PrescriptionFutureCallDispatcher {
       'PrescriptionExtractFutureCall',
       object,
     );
+  }
+}
+
+class CheckInOpenFutureCall
+    extends _is.FutureCall<_ie10p2ff.CheckInFutureCallOpenModel>
+    implements _is.InvokableFutureCall<_ie10p2ff.CheckInFutureCallOpenModel> {
+  @override
+  _ida.Future<void> invoke(
+    _is.Session session,
+    _ie10p2ff.CheckInFutureCallOpenModel? object,
+  ) async {
+    if (object != null) {
+      await _igshuy6k.CheckInFutureCall().open(
+        session,
+        object.patientId,
+        object.trigger,
+      );
+    }
+  }
+}
+
+class CheckInRingFutureCall
+    extends _is.FutureCall<_ik839svv.CheckInFutureCallRingModel>
+    implements _is.InvokableFutureCall<_ik839svv.CheckInFutureCallRingModel> {
+  @override
+  _ida.Future<void> invoke(
+    _is.Session session,
+    _ik839svv.CheckInFutureCallRingModel? object,
+  ) async {
+    if (object != null) {
+      await _igshuy6k.CheckInFutureCall().ring(
+        session,
+        object.checkId,
+      );
+    }
   }
 }
 

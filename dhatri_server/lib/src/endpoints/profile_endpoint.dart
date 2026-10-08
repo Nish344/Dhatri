@@ -16,8 +16,7 @@ class ProfileEndpoint extends Endpoint {
     Role role,
     int? age,
     String? phone,
-  ) async =>
-      registerProfile(session, name, role, age, phone);
+  ) async => registerProfile(session, name, role, age, phone);
 
   Future<Profile> link(Session session, String code) async =>
       linkWithCode(session, code);

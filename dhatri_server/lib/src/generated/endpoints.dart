@@ -10,7 +10,9 @@
 // ignore_for_file: invalid_use_of_internal_member
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
+import 'dart:typed_data' as _idt;
 import 'package:dhatri_server/src/generated/future_calls.dart' as _isjznajl;
+import 'package:dhatri_server/src/generated/medication_draft.dart' as _i5ggnd2q;
 import 'package:dhatri_server/src/generated/role.dart' as _is2cumq0;
 import 'package:serverpod/serverpod.dart' as _is;
 import 'package:serverpod_auth_core_server/serverpod_auth_core_server.dart'
@@ -21,10 +23,12 @@ import '../auth/email_idp_endpoint.dart' as _iuc1hd5t;
 import '../auth/jwt_refresh_endpoint.dart' as _inwq3ztq;
 import '../endpoints/alert_endpoint.dart' as _i7qz57d6;
 import '../endpoints/care_stream_endpoint.dart' as _iyvwz1e0;
+import '../endpoints/check_in_endpoint.dart' as _i87fx0af;
 import '../endpoints/demo_endpoint.dart' as _irow5ity;
 import '../endpoints/dose_endpoint.dart' as _izftciif;
 import '../endpoints/insight_endpoint.dart' as _iwdo2kkc;
 import '../endpoints/patients_endpoint.dart' as _ils7jkvy;
+import '../endpoints/prescription_endpoint.dart' as _ir96hk1b;
 import '../endpoints/profile_endpoint.dart' as _i2cx2pww;
 export 'future_calls.dart' show ServerpodFutureCallsGetter;
 
@@ -56,6 +60,12 @@ class Endpoints extends _is.EndpointDispatch {
           'careStream',
           null,
         ),
+      'checkIn': _i87fx0af.CheckInEndpoint()
+        ..initialize(
+          server,
+          'checkIn',
+          null,
+        ),
       'demo': _irow5ity.DemoEndpoint()
         ..initialize(
           server,
@@ -78,6 +88,12 @@ class Endpoints extends _is.EndpointDispatch {
         ..initialize(
           server,
           'patients',
+          null,
+        ),
+      'prescription': _ir96hk1b.PrescriptionEndpoint()
+        ..initialize(
+          server,
+          'prescription',
           null,
         ),
       'profile': _i2cx2pww.ProfileEndpoint()
@@ -365,6 +381,138 @@ class Endpoints extends _is.EndpointDispatch {
         ),
       },
     );
+    connectors['checkIn'] = _is.EndpointConnector(
+      name: 'checkIn',
+      endpoint: endpoints['checkIn']!,
+      methodConnectors: {
+        'startNow': _is.MethodConnector(
+          name: 'startNow',
+          params: {
+            'patientId': _is.ParameterDescription(
+              name: 'patientId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['checkIn'] as _i87fx0af.CheckInEndpoint).startNow(
+                    session,
+                    params['patientId'],
+                  ),
+        ),
+        'pending': _is.MethodConnector(
+          name: 'pending',
+          params: {
+            'patientId': _is.ParameterDescription(
+              name: 'patientId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['checkIn'] as _i87fx0af.CheckInEndpoint).pending(
+                    session,
+                    params['patientId'],
+                  ),
+        ),
+        'accept': _is.MethodConnector(
+          name: 'accept',
+          params: {
+            'checkId': _is.ParameterDescription(
+              name: 'checkId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['checkIn'] as _i87fx0af.CheckInEndpoint).accept(
+                    session,
+                    params['checkId'],
+                  ),
+        ),
+        'snooze': _is.MethodConnector(
+          name: 'snooze',
+          params: {
+            'checkId': _is.ParameterDescription(
+              name: 'checkId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['checkIn'] as _i87fx0af.CheckInEndpoint).snooze(
+                    session,
+                    params['checkId'],
+                  ),
+        ),
+        'answer': _is.MethodConnector(
+          name: 'answer',
+          params: {
+            'checkId': _is.ParameterDescription(
+              name: 'checkId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+            'audio': _is.ParameterDescription(
+              name: 'audio',
+              type: _is.getType<_idt.ByteData>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['checkIn'] as _i87fx0af.CheckInEndpoint).answer(
+                    session,
+                    params['checkId'],
+                    params['audio'],
+                  ),
+        ),
+        'answerText': _is.MethodConnector(
+          name: 'answerText',
+          params: {
+            'checkId': _is.ParameterDescription(
+              name: 'checkId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+            'transcript': _is.ParameterDescription(
+              name: 'transcript',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async => (endpoints['checkIn'] as _i87fx0af.CheckInEndpoint)
+                  .answerText(
+                    session,
+                    params['checkId'],
+                    params['transcript'],
+                  ),
+        ),
+      },
+    );
     connectors['demo'] = _is.EndpointConnector(
       name: 'demo',
       endpoint: endpoints['demo']!,
@@ -513,6 +661,104 @@ class Endpoints extends _is.EndpointDispatch {
                 Map<String, dynamic> params,
               ) async => (endpoints['patients'] as _ils7jkvy.PatientsEndpoint)
                   .overview(session),
+        ),
+      },
+    );
+    connectors['prescription'] = _is.EndpointConnector(
+      name: 'prescription',
+      endpoint: endpoints['prescription']!,
+      methodConnectors: {
+        'uploadTicket': _is.MethodConnector(
+          name: 'uploadTicket',
+          params: {
+            'patientId': _is.ParameterDescription(
+              name: 'patientId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['prescription'] as _ir96hk1b.PrescriptionEndpoint)
+                      .uploadTicket(
+                        session,
+                        params['patientId'],
+                      ),
+        ),
+        'submit': _is.MethodConnector(
+          name: 'submit',
+          params: {
+            'patientId': _is.ParameterDescription(
+              name: 'patientId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+            'path': _is.ParameterDescription(
+              name: 'path',
+              type: _is.getType<String>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['prescription'] as _ir96hk1b.PrescriptionEndpoint)
+                      .submit(
+                        session,
+                        params['patientId'],
+                        params['path'],
+                      ),
+        ),
+        'drafts': _is.MethodConnector(
+          name: 'drafts',
+          params: {
+            'prescriptionId': _is.ParameterDescription(
+              name: 'prescriptionId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['prescription'] as _ir96hk1b.PrescriptionEndpoint)
+                      .drafts(
+                        session,
+                        params['prescriptionId'],
+                      ),
+        ),
+        'confirm': _is.MethodConnector(
+          name: 'confirm',
+          params: {
+            'prescriptionId': _is.ParameterDescription(
+              name: 'prescriptionId',
+              type: _is.getType<int>(),
+              nullable: false,
+            ),
+            'meds': _is.ParameterDescription(
+              name: 'meds',
+              type: _is.getType<List<_i5ggnd2q.MedicationDraft>>(),
+              nullable: false,
+            ),
+          },
+          call:
+              (
+                _is.Session session,
+                Map<String, dynamic> params,
+              ) async =>
+                  (endpoints['prescription'] as _ir96hk1b.PrescriptionEndpoint)
+                      .confirm(
+                        session,
+                        params['prescriptionId'],
+                        params['meds'],
+                      ),
         ),
       },
     );

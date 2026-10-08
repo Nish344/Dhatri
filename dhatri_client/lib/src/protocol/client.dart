@@ -11,14 +11,21 @@
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _ida;
+import 'dart:typed_data' as _idt;
 import 'package:dhatri_client/src/protocol/alert.dart' as _inc575eh;
 import 'package:dhatri_client/src/protocol/care_update.dart' as _iayxhvpt;
+import 'package:dhatri_client/src/protocol/check_in_turn.dart' as _ie8i12iu;
 import 'package:dhatri_client/src/protocol/dose_event.dart' as _iav2z4fb;
+import 'package:dhatri_client/src/protocol/medication.dart' as _iyn1i8v5;
+import 'package:dhatri_client/src/protocol/medication_draft.dart' as _it8rgm70;
 import 'package:dhatri_client/src/protocol/patient_insight.dart' as _ixe9aai8;
 import 'package:dhatri_client/src/protocol/patient_status.dart' as _isnu78ia;
+import 'package:dhatri_client/src/protocol/prescription.dart' as _i10iuu6d;
 import 'package:dhatri_client/src/protocol/profile.dart' as _ii1trskb;
 import 'package:dhatri_client/src/protocol/role.dart' as _i14s3qox;
 import 'package:dhatri_client/src/protocol/timeline_item.dart' as _ivovkn5g;
+import 'package:dhatri_client/src/protocol/upload_ticket.dart' as _ic8ggen5;
+import 'package:dhatri_client/src/protocol/wellness_check.dart' as _ixcmz0zn;
 import 'package:http/http.dart' as _i85jenna;
 import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart'
     as _iacc;
@@ -294,6 +301,65 @@ class EndpointCareStream extends _isc.EndpointRef {
 }
 
 /// {@category Endpoint}
+class EndpointCheckIn extends _isc.EndpointRef {
+  EndpointCheckIn(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'checkIn';
+
+  _ida.Future<void> startNow(int patientId) => caller.callServerEndpoint<void>(
+    'checkIn',
+    'startNow',
+    {'patientId': patientId},
+  );
+
+  _ida.Future<_ixcmz0zn.WellnessCheck?> pending(int patientId) =>
+      caller.callServerEndpoint<_ixcmz0zn.WellnessCheck?>(
+        'checkIn',
+        'pending',
+        {'patientId': patientId},
+      );
+
+  _ida.Future<_ie8i12iu.CheckInTurn> accept(int checkId) =>
+      caller.callServerEndpoint<_ie8i12iu.CheckInTurn>(
+        'checkIn',
+        'accept',
+        {'checkId': checkId},
+      );
+
+  _ida.Future<void> snooze(int checkId) => caller.callServerEndpoint<void>(
+    'checkIn',
+    'snooze',
+    {'checkId': checkId},
+  );
+
+  _ida.Future<_ie8i12iu.CheckInTurn> answer(
+    int checkId,
+    _idt.ByteData audio,
+  ) => caller.callServerEndpoint<_ie8i12iu.CheckInTurn>(
+    'checkIn',
+    'answer',
+    {
+      'checkId': checkId,
+      'audio': audio,
+    },
+  );
+
+  /// Hindi tap-to-answer fallback when speech recognition is unreliable.
+  _ida.Future<_ie8i12iu.CheckInTurn> answerText(
+    int checkId,
+    String transcript,
+  ) => caller.callServerEndpoint<_ie8i12iu.CheckInTurn>(
+    'checkIn',
+    'answerText',
+    {
+      'checkId': checkId,
+      'transcript': transcript,
+    },
+  );
+}
+
+/// {@category Endpoint}
 class EndpointDemo extends _isc.EndpointRef {
   EndpointDemo(_isc.EndpointCaller caller) : super(caller);
 
@@ -375,6 +441,52 @@ class EndpointPatients extends _isc.EndpointRef {
         'overview',
         {},
       );
+}
+
+/// {@category Endpoint}
+class EndpointPrescription extends _isc.EndpointRef {
+  EndpointPrescription(_isc.EndpointCaller caller) : super(caller);
+
+  @override
+  String get name => 'prescription';
+
+  _ida.Future<_ic8ggen5.UploadTicket> uploadTicket(int patientId) =>
+      caller.callServerEndpoint<_ic8ggen5.UploadTicket>(
+        'prescription',
+        'uploadTicket',
+        {'patientId': patientId},
+      );
+
+  _ida.Future<_i10iuu6d.Prescription> submit(
+    int patientId,
+    String path,
+  ) => caller.callServerEndpoint<_i10iuu6d.Prescription>(
+    'prescription',
+    'submit',
+    {
+      'patientId': patientId,
+      'path': path,
+    },
+  );
+
+  _ida.Future<List<_it8rgm70.MedicationDraft>> drafts(int prescriptionId) =>
+      caller.callServerEndpoint<List<_it8rgm70.MedicationDraft>>(
+        'prescription',
+        'drafts',
+        {'prescriptionId': prescriptionId},
+      );
+
+  _ida.Future<List<_iyn1i8v5.Medication>> confirm(
+    int prescriptionId,
+    List<_it8rgm70.MedicationDraft> meds,
+  ) => caller.callServerEndpoint<List<_iyn1i8v5.Medication>>(
+    'prescription',
+    'confirm',
+    {
+      'prescriptionId': prescriptionId,
+      'meds': meds,
+    },
+  );
 }
 
 /// {@category Endpoint}
@@ -471,10 +583,12 @@ class Client extends _isc.ServerpodClientShared {
     jwtRefresh = EndpointJwtRefresh(this);
     alert = EndpointAlert(this);
     careStream = EndpointCareStream(this);
+    checkIn = EndpointCheckIn(this);
     demo = EndpointDemo(this);
     dose = EndpointDose(this);
     insight = EndpointInsight(this);
     patients = EndpointPatients(this);
+    prescription = EndpointPrescription(this);
     profile = EndpointProfile(this);
     modules = Modules(this);
   }
@@ -487,6 +601,8 @@ class Client extends _isc.ServerpodClientShared {
 
   late final EndpointCareStream careStream;
 
+  late final EndpointCheckIn checkIn;
+
   late final EndpointDemo demo;
 
   late final EndpointDose dose;
@@ -494,6 +610,8 @@ class Client extends _isc.ServerpodClientShared {
   late final EndpointInsight insight;
 
   late final EndpointPatients patients;
+
+  late final EndpointPrescription prescription;
 
   late final EndpointProfile profile;
 
@@ -505,10 +623,12 @@ class Client extends _isc.ServerpodClientShared {
     'jwtRefresh': jwtRefresh,
     'alert': alert,
     'careStream': careStream,
+    'checkIn': checkIn,
     'demo': demo,
     'dose': dose,
     'insight': insight,
     'patients': patients,
+    'prescription': prescription,
     'profile': profile,
   };
 
