@@ -22,6 +22,7 @@ import 'ui/screens/doctor/doctor_shell.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  Provider.debugCheckInvalidValueType = null;
 
   // 1. Initialize Serverpod client service & backend repository
   final clientService = ServerpodClientService();
