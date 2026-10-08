@@ -1,10 +1,8 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../core/constants/copy_hindi.dart';
-import '../mock_engine/mock_voice_engine.dart';
-import '../mock_engine/mock_care_stream.dart';
-import '../repositories/dhatri_repository.dart';
 import '../repositories/serverpod_dhatri_repository.dart';
 
 enum CallUIPhase {
@@ -18,10 +16,7 @@ enum CallUIPhase {
 }
 
 class VoiceCallState extends ChangeNotifier {
-  final MockVoiceEngine voiceEngine;
-  final MockCareStream careStream;
-  final DhatriRepository? repository;
-  final ServerpodDhatriRepository? serverpodRepo;
+  final ServerpodDhatriRepository repository;
 
   CallUIPhase _phase = CallUIPhase.ended;
   WellnessCheck? _activeCheck;
@@ -31,12 +26,7 @@ class VoiceCallState extends ChangeNotifier {
   List<String> _rememberedContext = [];
   bool _isDone = false;
 
-  VoiceCallState({
-    required this.voiceEngine,
-    required this.careStream,
-    this.repository,
-    this.serverpodRepo,
-  });
+  VoiceCallState({required this.repository});
 
   CallUIPhase get phase => _phase;
   WellnessCheck? get activeCheck => _activeCheck;
@@ -76,21 +66,27 @@ class VoiceCallState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> triggerCheckIn(int patientId) async {
+    try {
+      await repository.startCheckIn(patientId);
+      final check = await repository.getPendingCheckIn(patientId);
+      if (check != null) {
+        receiveIncomingCall(check);
+      }
+    } catch (_) {}
+  }
+
   void acceptCall() {
     _phase = CallUIPhase.connected;
     notifyListeners();
 
-    if (repository?.isLiveBackend == true && serverpodRepo != null) {
-      try {
-        final checkId = _activeCheck?.id ?? 1;
-        serverpodRepo!.acceptCheckIn(checkId).then((turn) {
-          if (turn.text.isNotEmpty) {
-            _currentDhatriText = turn.text;
-            notifyListeners();
-          }
-        }).catchError((_) {});
-      } catch (_) {}
-    }
+    final checkId = _activeCheck?.id ?? 1;
+    repository.acceptCheckIn(checkId).then((turn) {
+      if (turn.text.isNotEmpty) {
+        _currentDhatriText = turn.text;
+        notifyListeners();
+      }
+    }).catchError((_) {});
 
     // After brief connect, Dhatri speaks greeting
     Future.delayed(const Duration(milliseconds: 600), () {
@@ -121,73 +117,83 @@ class VoiceCallState extends ChangeNotifier {
 
     if (_activeCheck == null) return;
 
-    if (repository?.isLiveBackend == true && serverpodRepo != null) {
-      try {
-        final checkId = _activeCheck!.id;
-        final turn = await serverpodRepo!.answerCheckInText(checkId, text);
-        _currentTurn = turn.turnIndex;
-        _currentDhatriText = turn.text;
-        _isDone = turn.done;
+    try {
+      final checkId = _activeCheck!.id;
+      final turn = await repository.answerCheckInText(checkId, text);
+      _currentTurn = turn.turnIndex;
+      _currentDhatriText = turn.text;
+      _isDone = turn.done;
 
-        if (text.contains('कमजोरी') || text.contains('weakness')) {
-          _rememberedContext = [
-            '3 days ago: Reported weakness (severity 2/5)',
-            'Yesterday: Persistent weakness reported after evening dose',
-          ];
-        }
-
-        _phase = CallUIPhase.dhatriSpeaking;
-        notifyListeners();
-
-        if (!_isDone) {
-          Future.delayed(const Duration(seconds: 3), () {
-            _phase = CallUIPhase.yourTurn;
-            notifyListeners();
-          });
-        } else {
-          Future.delayed(const Duration(seconds: 4), () {
-            _phase = CallUIPhase.ended;
-            notifyListeners();
-          });
-        }
-        return;
-      } catch (_) {
-        // Fall back to local mock voice engine
+      if (text.contains('कमजोरी') || text.contains('weakness')) {
+        _rememberedContext = [
+          '3 days ago: Reported weakness (severity 2/5)',
+          'Yesterday: Persistent weakness reported after evening dose',
+        ];
       }
-    }
 
-    final result = await voiceEngine.submitPatientSpeech(
-      check: _activeCheck!,
-      currentTurn: _currentTurn,
-      patientSpeechHindi: text,
-    );
+      _phase = CallUIPhase.dhatriSpeaking;
+      notifyListeners();
 
-    _currentTurn = result.turnIndex;
-    _currentDhatriText = result.dhatriTextHindi;
-    _rememberedContext = result.rememberedContext;
-    _isDone = result.isDone;
-
-    _phase = CallUIPhase.dhatriSpeaking;
-    notifyListeners();
-
-    if (!_isDone) {
-      // Allow user to respond to turn 2
+      if (!_isDone) {
+        Future.delayed(const Duration(seconds: 3), () {
+          _phase = CallUIPhase.yourTurn;
+          notifyListeners();
+        });
+      } else {
+        Future.delayed(const Duration(seconds: 4), () {
+          _phase = CallUIPhase.ended;
+          notifyListeners();
+        });
+      }
+    } catch (_) {
+      // In case of network interruption, gracefully advance turn
+      _phase = CallUIPhase.dhatriSpeaking;
+      notifyListeners();
       Future.delayed(const Duration(seconds: 3), () {
         _phase = CallUIPhase.yourTurn;
         notifyListeners();
       });
-    } else {
-      // Call completes after closing sentence
-      Future.delayed(const Duration(seconds: 4), () {
-        _phase = CallUIPhase.ended;
-        notifyListeners();
-      });
+    }
+  }
+
+  Future<void> submitAudioResponse(ByteData audio) async {
+    _phase = CallUIPhase.thinking;
+    notifyListeners();
+
+    if (_activeCheck == null) return;
+
+    try {
+      final checkId = _activeCheck!.id;
+      final turn = await repository.answerCheckInAudio(checkId, audio);
+      _currentTurn = turn.turnIndex;
+      _currentDhatriText = turn.text;
+      _isDone = turn.done;
+
+      _phase = CallUIPhase.dhatriSpeaking;
+      notifyListeners();
+
+      if (!_isDone) {
+        Future.delayed(const Duration(seconds: 3), () {
+          _phase = CallUIPhase.yourTurn;
+          notifyListeners();
+        });
+      } else {
+        Future.delayed(const Duration(seconds: 4), () {
+          _phase = CallUIPhase.ended;
+          notifyListeners();
+        });
+      }
+    } catch (_) {
+      _phase = CallUIPhase.yourTurn;
+      notifyListeners();
     }
   }
 
   void endCall() {
+    if (_activeCheck != null && !_isDone) {
+      repository.snoozeCheckIn(_activeCheck!.id).catchError((_) {});
+    }
     _phase = CallUIPhase.ended;
     notifyListeners();
   }
 }
-

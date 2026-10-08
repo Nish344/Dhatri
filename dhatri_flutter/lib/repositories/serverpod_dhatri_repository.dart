@@ -1,8 +1,7 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:dhatri_client/dhatri_client.dart' as protocol;
 import '../models/models.dart';
-import '../mock_engine/mock_database.dart';
-import '../mock_engine/mock_prescription_samples.dart';
 import 'dhatri_repository.dart';
 
 class ServerpodDhatriRepository implements DhatriRepository {
@@ -11,15 +10,31 @@ class ServerpodDhatriRepository implements DhatriRepository {
   ServerpodDhatriRepository({required this.client});
 
   @override
-  bool get isLiveBackend => true;
+  Future<Profile?> getCurrentProfile() async {
+    final p = await client.profile.me();
+    return p != null ? Profile.fromProtocol(p) : null;
+  }
 
   @override
-  Future<Profile> getCurrentProfile() async {
-    try {
-      final p = await client.profile.me();
-      if (p != null) return Profile.fromProtocol(p);
-    } catch (_) {}
-    return MockDatabase.ramesh;
+  Future<Profile> registerProfile(
+    String name,
+    Role role,
+    int? age,
+    String? phone,
+  ) async {
+    final p = await client.profile.register(
+      name,
+      protocol.Role.values.byName(role.name),
+      age,
+      phone,
+    );
+    return Profile.fromProtocol(p);
+  }
+
+  @override
+  Future<Profile> linkWithCode(String code) async {
+    final p = await client.profile.link(code);
+    return Profile.fromProtocol(p);
   }
 
   @override
@@ -30,11 +45,8 @@ class ServerpodDhatriRepository implements DhatriRepository {
 
   @override
   Future<Profile?> getCaregiverContact(int patientId) async {
-    try {
-      final c = await client.profile.caregiverContact(patientId);
-      if (c != null) return Profile.fromProtocol(c);
-    } catch (_) {}
-    return MockDatabase.ananya;
+    final c = await client.profile.caregiverContact(patientId);
+    return c != null ? Profile.fromProtocol(c) : null;
   }
 
   @override
@@ -73,32 +85,54 @@ class ServerpodDhatriRepository implements DhatriRepository {
 
   @override
   Future<void> triggerEmergencyHelp(int patientId) async {
-    try {
-      await client.alert.needHelp(patientId);
-    } catch (_) {}
+    await client.alert.needHelp(patientId);
   }
 
   @override
-  Future<List<MedicationDraft>> extractDraftsFromPrescription(String path) async {
-    try {
-      final ticket = await client.prescription.uploadTicket(1);
-      final rx = await client.prescription.submit(1, ticket.path);
-      // Wait briefly for background Gemini extraction
-      await Future.delayed(const Duration(milliseconds: 1500));
+  Future<UploadTicket> getPrescriptionUploadTicket(int patientId) async {
+    final ticket = await client.prescription.uploadTicket(patientId);
+    return UploadTicket(path: ticket.path, description: ticket.description);
+  }
+
+  @override
+  Future<Prescription> submitPrescription(int patientId, String storagePath) async {
+    final rx = await client.prescription.submit(patientId, storagePath);
+    return Prescription.fromProtocol(rx);
+  }
+
+  @override
+  Future<List<MedicationDraft>> getPrescriptionDrafts(int prescriptionId) async {
+    final drafts = await client.prescription.drafts(prescriptionId);
+    return drafts.map(MedicationDraft.fromProtocol).toList();
+  }
+
+  @override
+  Future<List<Medication>> confirmPrescription(
+    int prescriptionId,
+    List<MedicationDraft> drafts,
+  ) async {
+    final protoDrafts = drafts.map((d) => d.toProtocol()).toList();
+    final meds = await client.prescription.confirm(prescriptionId, protoDrafts);
+    return meds.map(Medication.fromProtocol).toList();
+  }
+
+  @override
+  Future<List<MedicationDraft>> extractDraftsFromPrescription(
+    int patientId,
+    String storagePath,
+  ) async {
+    final ticket = await client.prescription.uploadTicket(patientId);
+    final rx = await client.prescription.submit(patientId, ticket.path);
+
+    // Poll for Gemini OCR background processing (up to 5 retries)
+    for (int i = 0; i < 5; i++) {
+      await Future.delayed(const Duration(milliseconds: 1200));
       final drafts = await client.prescription.drafts(rx.id!);
       if (drafts.isNotEmpty) {
         return drafts.map(MedicationDraft.fromProtocol).toList();
       }
-    } catch (_) {}
-    return MockPrescriptionSamples.getSampleDrafts();
-  }
-
-  @override
-  Future<void> confirmPrescription(List<MedicationDraft> drafts) async {
-    try {
-      final protoDrafts = drafts.map((d) => d.toProtocol()).toList();
-      await client.prescription.confirm(1, protoDrafts);
-    } catch (_) {}
+    }
+    return [];
   }
 
   @override
@@ -110,14 +144,15 @@ class ServerpodDhatriRepository implements DhatriRepository {
     }
   }
 
-  // --- Real AI Voice Check-In Extensions ---
+  // --- Real AI Voice Check-In (Sarvam STT + Gemini) ---
 
   Future<void> startCheckIn(int patientId) async {
     await client.checkIn.startNow(patientId);
   }
 
-  Future<protocol.WellnessCheck?> getPendingCheckIn(int patientId) async {
-    return client.checkIn.pending(patientId);
+  Future<WellnessCheck?> getPendingCheckIn(int patientId) async {
+    final c = await client.checkIn.pending(patientId);
+    return c != null ? WellnessCheck.fromProtocol(c) : null;
   }
 
   Future<protocol.CheckInTurn> acceptCheckIn(int checkId) async {
@@ -131,8 +166,14 @@ class ServerpodDhatriRepository implements DhatriRepository {
     return client.checkIn.answerText(checkId, transcript);
   }
 
+  Future<protocol.CheckInTurn> answerCheckInAudio(
+    int checkId,
+    ByteData audio,
+  ) async {
+    return client.checkIn.answer(checkId, audio);
+  }
+
   Future<void> snoozeCheckIn(int checkId) async {
     await client.checkIn.snooze(checkId);
   }
 }
-

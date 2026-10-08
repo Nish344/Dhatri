@@ -689,3 +689,21 @@ class PatientStatus {
     );
   }
 }
+
+class UploadTicket {
+  final String path;
+  final String description;
+
+  const UploadTicket({
+    required this.path,
+    required this.description,
+  });
+
+  factory UploadTicket.fromProtocol(protocol.UploadTicket p) {
+    return UploadTicket(
+      path: p.path,
+      description: p.description,
+    );
+  }
+}
+

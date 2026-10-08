@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../state/care_state.dart';
+import '../../../state/auth_state.dart';
 import '../../components/dhatri_insight_card.dart';
 import '../../components/dhatri_timeline_item.dart';
 
@@ -12,6 +13,7 @@ class DoctorDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final care = context.watch<CareState>();
+    final auth = context.watch<AuthState>();
     final insight = care.patientInsight;
 
     return Scaffold(
@@ -20,7 +22,7 @@ class DoctorDashboardScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Clinical Portal', style: AppTypography.sectionTitle.copyWith(fontSize: 20)),
-            Text('Dr. Priya Sharma · Geriatric Medicine', style: AppTypography.supporting.copyWith(fontSize: 12)),
+            Text('${auth.currentProfile.name} · Geriatric Medicine', style: AppTypography.supporting.copyWith(fontSize: 12)),
           ],
         ),
         actions: [

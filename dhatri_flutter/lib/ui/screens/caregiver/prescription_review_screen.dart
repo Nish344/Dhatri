@@ -3,16 +3,17 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../models/models.dart';
-import '../../../mock_engine/mock_prescription_samples.dart';
 import '../../../repositories/dhatri_repository.dart';
 import '../../../state/care_state.dart';
 import '../../components/dhatri_buttons.dart';
 
 class PrescriptionReviewScreen extends StatefulWidget {
+  final int? prescriptionId;
   final List<MedicationDraft>? initialDrafts;
 
   const PrescriptionReviewScreen({
     super.key,
+    this.prescriptionId,
     this.initialDrafts,
   });
 
@@ -27,9 +28,7 @@ class _PrescriptionReviewScreenState extends State<PrescriptionReviewScreen> {
   @override
   void initState() {
     super.initState();
-    _drafts = (widget.initialDrafts != null && widget.initialDrafts!.isNotEmpty)
-        ? widget.initialDrafts!
-        : MockPrescriptionSamples.getSampleDrafts();
+    _drafts = widget.initialDrafts != null ? List.from(widget.initialDrafts!) : [];
   }
 
   void _showEditSheet(int index) {
@@ -108,7 +107,7 @@ class _PrescriptionReviewScreenState extends State<PrescriptionReviewScreen> {
     final repo = context.read<DhatriRepository>();
     final care = context.read<CareState>();
 
-    await repo.confirmPrescription(_drafts);
+    await repo.confirmPrescription(widget.prescriptionId ?? 1, _drafts);
     await care.loadAll();
 
     if (mounted) {

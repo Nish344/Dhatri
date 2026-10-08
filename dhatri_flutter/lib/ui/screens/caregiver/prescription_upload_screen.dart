@@ -25,8 +25,8 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
     });
 
     final repo = context.read<DhatriRepository>();
-    // Initiate background extraction via Serverpod / Gemini or mock fallback
-    final extractFuture = repo.extractDraftsFromPrescription('rx_demo_photo.jpg');
+    // Initiate background extraction via Serverpod / Gemini OCR
+    final extractFuture = repo.extractDraftsFromPrescription(1, 'rx_photo.jpg');
 
     await Future.delayed(const Duration(milliseconds: 700));
     if (mounted) setState(() => _readingStep = 2);
@@ -99,7 +99,7 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
 
               const SizedBox(height: 28),
 
-              // Sample Prescriptions Available for Demo
+              // Supported formats info banner
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -109,11 +109,11 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.document_scanner_rounded, color: AppColors.primary),
+                    const Icon(Icons.info_outline_rounded, color: AppColors.primary),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Demo Sample Ready: Dr. S.K. Verma Clinic (Metformin, Amlodipine & Atorvastatin)',
+                        'Supports printed and clear handwritten doctor prescriptions in Hindi & English.',
                         style: AppTypography.supporting.copyWith(
                           color: AppColors.primaryDark,
                           fontWeight: FontWeight.w600,
@@ -127,7 +127,7 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
               const SizedBox(height: 32),
 
               DhatriPrimaryButton(
-                label: 'Take Photo (Demo Rx)',
+                label: 'Take Photo',
                 icon: Icons.camera_alt_rounded,
                 onPressed: _startExtraction,
                 height: 56,

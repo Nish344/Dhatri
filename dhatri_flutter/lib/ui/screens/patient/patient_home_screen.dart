@@ -4,8 +4,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../../state/care_state.dart';
+import '../../../state/auth_state.dart';
 import '../../../state/voice_call_state.dart';
-import '../../../mock_engine/mock_database.dart';
 import '../../components/dhatri_medication_card.dart';
 import '../../components/dhatri_buttons.dart';
 
@@ -17,11 +17,20 @@ class PatientHomeScreen extends StatelessWidget {
     required this.onOpenVoiceCall,
   });
 
+  String _timeOfDayGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
   @override
   Widget build(BuildContext context) {
     final care = context.watch<CareState>();
+    final auth = context.watch<AuthState>();
     final nextDose = care.nextDose;
     final now = DateTime.now();
+    final patientName = auth.currentProfile.name;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -30,7 +39,7 @@ class PatientHomeScreen extends StatelessWidget {
         children: [
           // Greeting & Date
           Text(
-            'Good evening, Ramesh',
+            '${_timeOfDayGreeting()}, $patientName',
             style: AppTypography.pageTitle,
           ),
           const SizedBox(height: 4),

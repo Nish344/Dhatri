@@ -229,7 +229,7 @@ class ActiveCallScreen extends StatelessWidget {
                 children: [
                   // Quick Answer Chips for Demo Testing
                   Text(
-                    'Quick Hindi Responses (Tap to test):',
+                    'त्वरित उत्तर (Quick Responses):',
                     style: AppTypography.supporting.copyWith(color: const Color(0xFF94A3B8), fontSize: 13),
                   ),
                   const SizedBox(height: 10),

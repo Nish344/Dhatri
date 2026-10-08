@@ -42,11 +42,7 @@ class _PatientShellState extends State<PatientShell> {
     final pages = [
       PatientHomeScreen(
         onOpenVoiceCall: () {
-          voice.receiveIncomingCall(
-            // Fallback check if not started
-            voice.activeCheck ??
-                context.read<VoiceCallState>().voiceEngine.db.wellnessChecks.first,
-          );
+          voice.triggerCheckIn(1);
           voice.acceptCall();
         },
       ),

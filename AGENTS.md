@@ -47,4 +47,10 @@ If the user asks you to test the app:
 
 The app is launched from `dhatri_flutter/lib/driver.dart`, which starts the Flutter driver extension with text entry emulation turned off so the app stays usable by hand. To let the driver type, set `enableTextEntryEmulation: true` there and `hot_restart` the app.
 
-IMPORTANT: After building the first version of the app, update this AGENTS.md file with information about the app we're building. KEEP the info about the MCP server and the checklist. Remove this paragraph.
+## Dhātrī Application Architecture
+
+Dhātrī is an intelligent AI-powered healthcare & medication adherence companion for Indian elder care:
+- **Flutter Frontend (`dhatri_flutter`)**: Multi-role UI supporting Patient (elderly-accessible, high-contrast, large typography, audio check-ins in Hindi), Caregiver (family monitoring dashboard, alert management, prescription upload), and Doctor (clinical review and patient vitals).
+- **Serverpod Backend (`dhatri_server`)**: Full production backend with endpoints for doses (`dose`), alerts (`alert`), clinical insights (`insight`), prescriptions (`prescription`), patients (`patients`), check-ins (`checkIn`), profiles (`profile`), and real-time care updates (`careStream`).
+- **Communication**: Frontend communicates exclusively via `ServerpodDhatriRepository` and `ServerpodClientService` directly connecting to Serverpod endpoints with JWT auth and real-time WebSocket streaming.
+
