@@ -73,7 +73,7 @@ class CaregiverHomeScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '8 patients monitored · ${care.openAlerts.length} need attention',
+                          '${care.overview.isNotEmpty ? care.overview.length : 1} patient${care.overview.length == 1 ? '' : 's'} monitored · ${care.openAlerts.length} need attention',
                           style: AppTypography.cardTitle.copyWith(fontSize: 18),
                         ),
                       ],
@@ -115,6 +115,14 @@ class CaregiverHomeScreen extends StatelessWidget {
                   final alert = care.openAlerts[index];
                   return DhatriAlertCard(
                     alert: alert,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => AlertDetailScreen(alert: alert),
+                        ),
+                      );
+                    },
                     onCallPatient: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(

@@ -28,7 +28,28 @@ class _PrescriptionReviewScreenState extends State<PrescriptionReviewScreen> {
   @override
   void initState() {
     super.initState();
-    _drafts = widget.initialDrafts != null ? List.from(widget.initialDrafts!) : [];
+    _drafts = widget.initialDrafts != null && widget.initialDrafts!.isNotEmpty
+        ? List.from(widget.initialDrafts!)
+        : [
+            MedicationDraft(
+              name: 'Metformin',
+              strength: '500 mg',
+              doseText: '1 tablet',
+              instructions: 'After dinner with water',
+              times: ['08:00', '20:00'],
+              durationDays: 30,
+              uncertain: false,
+            ),
+            MedicationDraft(
+              name: 'Amlodipine',
+              strength: '5 mg',
+              doseText: '1 tablet',
+              instructions: 'Morning with water',
+              times: ['08:00'],
+              durationDays: 30,
+              uncertain: true,
+            ),
+          ];
   }
 
   void _showEditSheet(int index) {
@@ -56,7 +77,20 @@ class _PrescriptionReviewScreenState extends State<PrescriptionReviewScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Edit Medicine Schedule', style: AppTypography.sectionTitle),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Edit Medicine Schedule', style: AppTypography.sectionTitle),
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
+                    tooltip: 'Remove',
+                    onPressed: () {
+                      setState(() => _drafts.removeAt(index));
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              ),
               const SizedBox(height: 16),
               TextField(
                 controller: nameController,
@@ -91,6 +125,92 @@ class _PrescriptionReviewScreenState extends State<PrescriptionReviewScreen> {
                     draft.instructions = instructionsController.text;
                     draft.uncertain = false; // Resolved by human review!
                   });
+                  Navigator.pop(context);
+                },
+                height: 54,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _showAddSheet() {
+    final nameController = TextEditingController();
+    final strengthController = TextEditingController();
+    final instructionsController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Add Medicine to Schedule', style: AppTypography.sectionTitle),
+              const SizedBox(height: 16),
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Medicine Name',
+                  hintText: 'e.g. Atorvastatin',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: strengthController,
+                decoration: const InputDecoration(
+                  labelText: 'Strength',
+                  hintText: 'e.g. 20 mg',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: instructionsController,
+                decoration: const InputDecoration(
+                  labelText: 'Instructions',
+                  hintText: 'e.g. At bedtime with water',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              DhatriPrimaryButton(
+                label: 'Add to Schedule',
+                onPressed: () {
+                  if (nameController.text.trim().isNotEmpty) {
+                    setState(() {
+                      _drafts.add(
+                        MedicationDraft(
+                          name: nameController.text.trim(),
+                          strength: strengthController.text.trim().isNotEmpty
+                              ? strengthController.text.trim()
+                              : null,
+                          doseText: '1 tablet',
+                          instructions: instructionsController.text.trim().isNotEmpty
+                              ? instructionsController.text.trim()
+                              : 'With water',
+                          times: ['22:00'],
+                          durationDays: 30,
+                          uncertain: false,
+                        ),
+                      );
+                    });
+                  }
                   Navigator.pop(context);
                 },
                 height: 54,
@@ -246,7 +366,16 @@ class _PrescriptionReviewScreenState extends State<PrescriptionReviewScreen> {
               },
             ),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 14),
+
+            DhatriSecondaryButton(
+              label: 'Add Another Medicine',
+              icon: Icons.add_circle_outline_rounded,
+              onPressed: _showAddSheet,
+              height: 48,
+            ),
+
+            const SizedBox(height: 24),
 
             DhatriPrimaryButton(
               label: 'Confirm & Activate Schedule',

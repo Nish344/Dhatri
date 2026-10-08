@@ -40,11 +40,21 @@ class CareState extends ChangeNotifier {
   String? getOptimisticStatus(int doseId) => _optimisticDoseStatus[doseId];
 
   Future<void> loadAll() async {
-    _todayDoses = await repository.getTodayDoses(1);
-    _openAlerts = await repository.getOpenAlerts();
-    _timeline = await repository.getTimeline(1);
-    _patientInsight = await repository.getWeeklyInsight(1);
-    _overview = await repository.getOverview();
+    try {
+      _todayDoses = await repository.getTodayDoses(1);
+    } catch (_) {}
+    try {
+      _openAlerts = await repository.getOpenAlerts();
+    } catch (_) {}
+    try {
+      _timeline = await repository.getTimeline(1);
+    } catch (_) {}
+    try {
+      _patientInsight = await repository.getWeeklyInsight(1);
+    } catch (_) {}
+    try {
+      _overview = await repository.getOverview();
+    } catch (_) {}
     notifyListeners();
   }
 

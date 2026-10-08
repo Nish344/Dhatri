@@ -9,12 +9,14 @@ class DhatriAlertCard extends StatelessWidget {
   final Alert alert;
   final VoidCallback onCallPatient;
   final VoidCallback onAcknowledge;
+  final VoidCallback? onTap;
 
   const DhatriAlertCard({
     super.key,
     required this.alert,
     required this.onCallPatient,
     required this.onAcknowledge,
+    this.onTap,
   });
 
   @override
@@ -23,12 +25,15 @@ class DhatriAlertCard extends StatelessWidget {
     final borderColor = isMissedDose ? AppColors.error : AppColors.warning;
     final bgColor = isMissedDose ? AppColors.errorBg.withOpacity(0.4) : AppColors.warningBg.withOpacity(0.4);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: borderColor, width: 2),
-      ),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: borderColor, width: 2),
+        ),
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -125,6 +130,7 @@ class DhatriAlertCard extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }
