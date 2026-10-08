@@ -61,46 +61,52 @@ class ActiveCallScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Explicit State Banner (Guide §10)
+            // Explicit State Banner
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
               color: isThinking
-                  ? const Color(0xFF6366F1).withOpacity(0.2)
-                  : isYourTurn
-                      ? AppColors.callGreen.withOpacity(0.2)
-                      : isDhatriSpeaking
-                          ? AppColors.primary.withOpacity(0.3)
-                          : Colors.white.withOpacity(0.06),
+                  ? const Color(0xFF6366F1).withOpacity(0.25)
+                  : isListening
+                      ? const Color(0xFF10B981).withOpacity(0.25)
+                      : isYourTurn
+                          ? AppColors.callGreen.withOpacity(0.2)
+                          : isDhatriSpeaking
+                              ? AppColors.primary.withOpacity(0.3)
+                              : Colors.white.withOpacity(0.06),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (isThinking)
                     const SizedBox(
-                      width: 16,
-                      height: 16,
+                      width: 18,
+                      height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF818CF8)),
                     )
                   else
                     Icon(
-                      isYourTurn
+                      isListening
                           ? Icons.mic_rounded
-                          : isDhatriSpeaking
-                              ? Icons.volume_up_rounded
-                              : Icons.phone_in_talk_rounded,
+                          : isYourTurn
+                              ? Icons.mic_none_rounded
+                              : isDhatriSpeaking
+                                  ? Icons.volume_up_rounded
+                                  : Icons.phone_in_talk_rounded,
                       size: 20,
-                      color: isYourTurn
+                      color: isListening
                           ? const Color(0xFF34D399)
-                          : isDhatriSpeaking
-                              ? const Color(0xFF38BDF8)
-                              : Colors.white70,
+                          : isYourTurn
+                              ? const Color(0xFF34D399)
+                              : isDhatriSpeaking
+                                  ? const Color(0xFF38BDF8)
+                                  : Colors.white70,
                     ),
                   const SizedBox(width: 10),
                   Flexible(
                     child: Text(
-                      voice.phaseLabel,
+                      isListening ? 'आपकी आवाज़ सुन रही हूँ... (Listening...)' : voice.phaseLabel,
                       style: AppTypography.sectionTitle.copyWith(
-                        color: isYourTurn ? const Color(0xFF34D399) : Colors.white,
+                        color: (isListening || isYourTurn) ? const Color(0xFF34D399) : Colors.white,
                         fontSize: 18,
                       ),
                       maxLines: 1,
@@ -111,18 +117,18 @@ class ActiveCallScreen extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
             // Animated Waveform
             SizedBox(
-              height: 50,
+              height: 48,
               child: DhatriAudioWaveform(
                 isPulsing: isDhatriSpeaking || isListening,
                 waveColor: isDhatriSpeaking ? const Color(0xFF38BDF8) : const Color(0xFF34D399),
               ),
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
 
             // Scrollable Dialogue & Memory Display
             Expanded(
@@ -137,7 +143,10 @@ class ActiveCallScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: const Color(0xFF1E293B),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFF334155), width: 1.5),
+                        border: Border.all(
+                          color: isDhatriSpeaking ? const Color(0xFF38BDF8) : const Color(0xFF334155),
+                          width: isDhatriSpeaking ? 2.0 : 1.5,
+                        ),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,6 +161,25 @@ class ActiveCallScreen extends StatelessWidget {
                                   color: const Color(0xFF38BDF8),
                                 ),
                               ),
+                              const Spacer(),
+                              if (isDhatriSpeaking)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF38BDF8).withOpacity(0.18),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Row(
+                                    children: [
+                                      Icon(Icons.volume_up_rounded, size: 14, color: Color(0xFF38BDF8)),
+                                      SizedBox(width: 4),
+                                      Text(
+                                        'बोल रही हैं...',
+                                        style: TextStyle(color: Color(0xFF38BDF8), fontSize: 11),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                             ],
                           ),
                           const SizedBox(height: 12),
@@ -167,8 +195,8 @@ class ActiveCallScreen extends StatelessWidget {
                       ),
                     ),
 
-                    // Patient Response Bubble
-                    if (voice.currentPatientSpeech.isNotEmpty) ...[
+                    // Patient Live Speech Bubble
+                    if (isListening || voice.currentPatientSpeech.isNotEmpty) ...[
                       const SizedBox(height: 16),
                       Align(
                         alignment: Alignment.centerRight,
@@ -177,23 +205,50 @@ class ActiveCallScreen extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: AppColors.callGreen.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: AppColors.callGreen.withOpacity(0.5)),
+                            border: Border.all(
+                              color: isListening ? const Color(0xFF34D399) : AppColors.callGreen.withOpacity(0.5),
+                              width: isListening ? 2 : 1.2,
+                            ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(
-                                'आप (Ramesh)',
-                                style: AppTypography.statusLabel.copyWith(
-                                  color: const Color(0xFF34D399),
-                                ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (isListening) ...[
+                                    const SizedBox(
+                                      width: 12,
+                                      height: 12,
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF34D399)),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'माइक चालू है (Live Mic)...',
+                                      style: AppTypography.statusLabel.copyWith(
+                                        color: const Color(0xFF34D399),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                  ],
+                                  Text(
+                                    'आप (You)',
+                                    style: AppTypography.statusLabel.copyWith(
+                                      color: const Color(0xFF34D399),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 8),
                               Text(
-                                voice.currentPatientSpeech,
+                                voice.currentPatientSpeech.isNotEmpty
+                                    ? voice.currentPatientSpeech
+                                    : 'बोलिए, धात्री सुन रही हैं... (Speak now...)',
                                 style: AppTypography.hindiBody.copyWith(
-                                  color: Colors.white,
+                                  color: voice.currentPatientSpeech.isNotEmpty ? Colors.white : Colors.white60,
                                   fontSize: 20,
+                                  fontStyle: voice.currentPatientSpeech.isEmpty ? FontStyle.italic : FontStyle.normal,
                                 ),
                               ),
                             ],
@@ -202,7 +257,32 @@ class ActiveCallScreen extends StatelessWidget {
                       ),
                     ],
 
-                    // Patient Memory Recalled Context Card (Guide §23)
+                    // Microphone Permission / Error Notice
+                    if (voice.voiceErrorMessage != null) ...[
+                      const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: Colors.amber.withOpacity(0.5)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.info_outline_rounded, color: Colors.amber, size: 20),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                voice.voiceErrorMessage!,
+                                style: const TextStyle(color: Colors.amber, fontSize: 13),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+
+                    // Patient Memory Recalled Context Card
                     if (voice.rememberedContext.isNotEmpty) ...[
                       const SizedBox(height: 20),
                       DhatriMemoryCard(
@@ -227,7 +307,7 @@ class ActiveCallScreen extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Quick Answer Chips for Demo Testing
+                  // Quick Answer Chips (One-tap alternatives in Hindi)
                   Text(
                     'त्वरित उत्तर (Quick Responses):',
                     style: AppTypography.supporting.copyWith(color: const Color(0xFF94A3B8), fontSize: 13),
@@ -239,47 +319,87 @@ class ActiveCallScreen extends StatelessWidget {
                     children: [
                       _hindiChip(
                         text: CopyHindi.patientAnsWeakness,
-                        enabled: isYourTurn,
+                        enabled: isYourTurn || isListening,
                         onTap: () => voice.submitPatientResponse(CopyHindi.patientAnsWeakness),
                       ),
                       _hindiChip(
                         text: CopyHindi.patientAnsGood,
-                        enabled: isYourTurn,
+                        enabled: isYourTurn || isListening,
                         onTap: () => voice.submitPatientResponse(CopyHindi.patientAnsGood),
                       ),
                       _hindiChip(
                         text: CopyHindi.patientAnsMedicineTaken,
-                        enabled: isYourTurn,
+                        enabled: isYourTurn || isListening,
                         onTap: () => voice.submitPatientResponse(CopyHindi.patientAnsMedicineTaken),
                       ),
                       _hindiChip(
                         text: CopyHindi.patientAnsDizzy,
-                        enabled: isYourTurn,
+                        enabled: isYourTurn || isListening,
                         onTap: () => voice.submitPatientResponse(CopyHindi.patientAnsDizzy),
                       ),
                     ],
                   ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 18),
 
-                  // Mic Button & End Call Button
+                  // Real Microphone Audio Action Button + Fallback Keyboard + End Call
                   Row(
                     children: [
+                      // Primary Button: Directly activates mic or stops and submits live speech!
                       Expanded(
-                        child: DhatriPrimaryButton(
-                          label: isListening ? 'Listening...' : 'Tap to Speak',
-                          icon: isListening ? null : Icons.mic_rounded,
-                          onPressed: isYourTurn
-                              ? () => _showVoiceInputSheet(context, voice)
-                              : null,
-                          backgroundColor: isYourTurn ? AppColors.callGreen : const Color(0xFF334155),
-                          height: 54,
+                        child: isListening
+                            ? DhatriPrimaryButton(
+                                label: 'बोलना समाप्त करें (Stop & Send)',
+                                icon: Icons.stop_circle_rounded,
+                                onPressed: () => voice.stopListeningAndSubmit(),
+                                backgroundColor: const Color(0xFFEF4444), // Prominent stop/send button
+                                height: 56,
+                              )
+                            : isDhatriSpeaking
+                                ? DhatriPrimaryButton(
+                                    label: 'धात्री बोल रही हैं... (Speaking)',
+                                    icon: Icons.volume_up_rounded,
+                                    onPressed: null,
+                                    backgroundColor: const Color(0xFF334155),
+                                    height: 56,
+                                  )
+                                : isThinking
+                                    ? DhatriPrimaryButton(
+                                        label: 'सोच रही हूँ... (Thinking)',
+                                        icon: Icons.hourglass_top_rounded,
+                                        onPressed: null,
+                                        backgroundColor: const Color(0xFF334155),
+                                        height: 56,
+                                      )
+                                    : DhatriPrimaryButton(
+                                        label: 'बोलने के लिए दबाएं (Tap to Speak)',
+                                        icon: Icons.mic_rounded,
+                                        onPressed: isYourTurn ? () => voice.startListening() : null,
+                                        backgroundColor: isYourTurn ? AppColors.callGreen : const Color(0xFF334155),
+                                        height: 56,
+                                      ),
+                      ),
+
+                      const SizedBox(width: 10),
+
+                      // Optional Keyboard icon for manual typing accessibility if needed
+                      IconButton(
+                        tooltip: 'Type text manually',
+                        icon: const Icon(Icons.keyboard_alt_outlined, color: Colors.white70, size: 24),
+                        onPressed: isYourTurn ? () => _showManualTextInputDialog(context, voice) : null,
+                        style: IconButton.styleFrom(
+                          backgroundColor: const Color(0xFF334155),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          padding: const EdgeInsets.all(12),
                         ),
                       ),
-                      const SizedBox(width: 14),
+
+                      const SizedBox(width: 10),
+
+                      // End Call Button
                       SizedBox(
-                        width: 60,
-                        height: 58,
+                        width: 56,
+                        height: 56,
                         child: ElevatedButton(
                           onPressed: onEndCall,
                           style: ElevatedButton.styleFrom(
@@ -332,9 +452,9 @@ class ActiveCallScreen extends StatelessWidget {
     );
   }
 
-  void _showVoiceInputSheet(BuildContext context, VoiceCallState voice) {
-    voice.startListening();
-    final controller = TextEditingController(text: CopyHindi.patientAnsWeakness);
+  /// Accessibility fallback modal dialog only opened if user explicitly taps the keyboard icon
+  void _showManualTextInputDialog(BuildContext context, VoiceCallState voice) {
+    final controller = TextEditingController(text: voice.currentPatientSpeech);
 
     showModalBottomSheet(
       context: context,
@@ -355,26 +475,14 @@ class ActiveCallScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: const BoxDecoration(
-                      color: AppColors.callGreen,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.mic_rounded, color: Colors.white, size: 20),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    'आपकी आवाज़ (Your Response)',
-                    style: AppTypography.sectionTitle.copyWith(color: Colors.white, fontSize: 18),
-                  ),
-                ],
+              Text(
+                'संदेश टाइप करें (Type Response)',
+                style: AppTypography.sectionTitle.copyWith(color: Colors.white, fontSize: 18),
               ),
               const SizedBox(height: 14),
               TextField(
                 controller: controller,
+                autofocus: true,
                 style: const TextStyle(color: Colors.white, fontSize: 18),
                 decoration: InputDecoration(
                   hintText: 'उदा. आज बहुत कमजोरी महसूस हो रही है...',
@@ -385,27 +493,12 @@ class ActiveCallScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                     borderSide: const BorderSide(color: Color(0xFF334155)),
                   ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: const BorderSide(color: Color(0xFF334155)),
-                  ),
                 ),
                 maxLines: 2,
               ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _quickPromptChip(ctx, controller, CopyHindi.patientAnsWeakness),
-                  _quickPromptChip(ctx, controller, CopyHindi.patientAnsGood),
-                  _quickPromptChip(ctx, controller, CopyHindi.patientAnsMedicineTaken),
-                  _quickPromptChip(ctx, controller, CopyHindi.patientAnsDizzy),
-                ],
-              ),
               const SizedBox(height: 20),
               DhatriPrimaryButton(
-                label: 'Send to Dhatri (धात्री को भेजें)',
+                label: 'Send to Dhatri (भेजें)',
                 icon: Icons.send_rounded,
                 backgroundColor: AppColors.callGreen,
                 onPressed: () {
@@ -423,24 +516,4 @@ class ActiveCallScreen extends StatelessWidget {
       },
     );
   }
-
-  Widget _quickPromptChip(BuildContext ctx, TextEditingController controller, String text) {
-    return InkWell(
-      onTap: () => controller.text = text,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          color: const Color(0xFF334155),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFF475569)),
-        ),
-        child: Text(
-          text,
-          style: const TextStyle(color: Colors.white70, fontSize: 13),
-        ),
-      ),
-    );
-  }
 }
-

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../core/constants/copy_hindi.dart';
 import '../repositories/serverpod_dhatri_repository.dart';
+import '../services/voice_audio_service.dart';
 
 enum CallUIPhase {
   incoming,
@@ -17,6 +18,7 @@ enum CallUIPhase {
 
 class VoiceCallState extends ChangeNotifier {
   final ServerpodDhatriRepository repository;
+  final VoiceAudioService _voiceService = VoiceAudioService();
 
   CallUIPhase _phase = CallUIPhase.ended;
   WellnessCheck? _activeCheck;
@@ -25,6 +27,7 @@ class VoiceCallState extends ChangeNotifier {
   String _currentPatientSpeech = '';
   List<String> _rememberedContext = [];
   bool _isDone = false;
+  String? _voiceErrorMessage;
 
   VoiceCallState({required this.repository});
 
@@ -35,6 +38,8 @@ class VoiceCallState extends ChangeNotifier {
   String get currentPatientSpeech => _currentPatientSpeech;
   List<String> get rememberedContext => _rememberedContext;
   bool get isDone => _isDone;
+  String? get voiceErrorMessage => _voiceErrorMessage;
+  VoiceAudioService get voiceService => _voiceService;
 
   String get phaseLabel {
     switch (_phase) {
@@ -63,9 +68,11 @@ class VoiceCallState extends ChangeNotifier {
     _currentPatientSpeech = '';
     _rememberedContext = [];
     _isDone = false;
+    _voiceErrorMessage = null;
     notifyListeners();
   }
 
+  /// Trigger wellness call from caregiver or schedule
   Future<void> triggerCheckIn(int patientId) async {
     try {
       await repository.startCheckIn(patientId);
@@ -76,55 +83,141 @@ class VoiceCallState extends ChangeNotifier {
     } catch (_) {}
   }
 
-  void acceptCall() {
+  /// Direct call initiated by patient from Home Screen
+  Future<void> startDirectCall(int patientId) async {
     _phase = CallUIPhase.connected;
+    _voiceErrorMessage = null;
+    notifyListeners();
+
+    try {
+      await repository.startCheckIn(patientId);
+      final check = await repository.getPendingCheckIn(patientId);
+      if (check != null) {
+        _activeCheck = check;
+      }
+    } catch (_) {}
+
+    await acceptCall();
+  }
+
+  /// Patient answers the incoming or direct call
+  Future<void> acceptCall() async {
+    _phase = CallUIPhase.connected;
+    _voiceErrorMessage = null;
     notifyListeners();
 
     final checkId = _activeCheck?.id ?? 1;
-    repository.acceptCheckIn(checkId).then((turn) {
-      if (turn.text.isNotEmpty) {
-        _currentDhatriText = turn.text;
-        notifyListeners();
-      }
-    }).catchError((_) {});
+    String greeting = CopyHindi.greetingQuestion;
 
-    // After brief connect, Dhatri speaks greeting
-    Future.delayed(const Duration(milliseconds: 600), () {
-      _phase = CallUIPhase.dhatriSpeaking;
-      if (_currentDhatriText.isEmpty) {
-        _currentDhatriText = CopyHindi.greetingQuestion;
+    try {
+      final turn = await repository.acceptCheckIn(checkId);
+      if (turn.text.trim().isNotEmpty) {
+        greeting = turn.text;
       }
-      notifyListeners();
+    } catch (_) {}
 
-      // Dhatri finishes greeting -> patient turn
-      Future.delayed(const Duration(seconds: 2), () {
-        _phase = CallUIPhase.yourTurn;
-        notifyListeners();
-      });
-    });
+    _currentDhatriText = greeting;
+    _phase = CallUIPhase.dhatriSpeaking;
+    notifyListeners();
+
+    // Dhatri speaks her greeting aloud through device speakers!
+    await _voiceService.speak(
+      _currentDhatriText,
+      onComplete: () {
+        if (_phase == CallUIPhase.dhatriSpeaking) {
+          _phase = CallUIPhase.yourTurn;
+          notifyListeners();
+        }
+      },
+    );
   }
 
-  void startListening() {
+  /// Patient taps microphone to speak their response
+  Future<void> startListening() async {
+    // If already listening, tap acts as finish & submit
+    if (_phase == CallUIPhase.listening) {
+      await stopListeningAndSubmit();
+      return;
+    }
+
+    await _voiceService.stopSpeaking();
+    _currentPatientSpeech = '';
+    _voiceErrorMessage = null;
     _phase = CallUIPhase.listening;
     notifyListeners();
+
+    final started = await _voiceService.startListening(
+      onResult: (words, isFinal) {
+        _currentPatientSpeech = words;
+        notifyListeners();
+        // If system detects final utterance boundary, auto-submit
+        if (isFinal && words.trim().isNotEmpty) {
+          submitPatientResponse(words);
+        }
+      },
+      onDone: () {
+        if (_phase == CallUIPhase.listening) {
+          if (_currentPatientSpeech.trim().isNotEmpty) {
+            submitPatientResponse(_currentPatientSpeech);
+          } else {
+            _phase = CallUIPhase.yourTurn;
+            notifyListeners();
+          }
+        }
+      },
+      onError: (error) {
+        _voiceErrorMessage = error;
+        if (_phase == CallUIPhase.listening) {
+          _phase = CallUIPhase.yourTurn;
+          notifyListeners();
+        }
+      },
+    );
+
+    if (!started) {
+      _voiceErrorMessage = 'कृपया माइक्रोफ़ोन की अनुमति दें (Please allow microphone access)';
+      _phase = CallUIPhase.yourTurn;
+      notifyListeners();
+    }
+  }
+
+  /// Stop listening and immediately send what was heard
+  Future<void> stopListeningAndSubmit() async {
+    await _voiceService.stopListening();
+    final words = _currentPatientSpeech.trim();
+    if (words.isNotEmpty) {
+      await submitPatientResponse(words);
+    } else {
+      _phase = CallUIPhase.yourTurn;
+      notifyListeners();
+    }
   }
 
   /// Patient speaks or selects quick Hindi answer chip
   Future<void> submitPatientResponse(String text) async {
-    _currentPatientSpeech = text;
+    await _voiceService.stopListening();
+    final cleanText = text.trim();
+    if (cleanText.isEmpty) return;
+
+    _currentPatientSpeech = cleanText;
     _phase = CallUIPhase.thinking;
+    _voiceErrorMessage = null;
     notifyListeners();
 
-    if (_activeCheck == null) return;
+    if (_activeCheck == null) {
+      _phase = CallUIPhase.yourTurn;
+      notifyListeners();
+      return;
+    }
 
     try {
       final checkId = _activeCheck!.id;
-      final turn = await repository.answerCheckInText(checkId, text);
+      final turn = await repository.answerCheckInText(checkId, cleanText);
       _currentTurn = turn.turnIndex;
       _currentDhatriText = turn.text;
       _isDone = turn.done;
 
-      if (text.contains('कमजोरी') || text.contains('weakness')) {
+      if (cleanText.contains('कमजोरी') || cleanText.contains('weakness')) {
         _rememberedContext = [
           '3 days ago: Reported weakness (severity 2/5)',
           'Yesterday: Persistent weakness reported after evening dose',
@@ -134,25 +227,31 @@ class VoiceCallState extends ChangeNotifier {
       _phase = CallUIPhase.dhatriSpeaking;
       notifyListeners();
 
-      if (!_isDone) {
-        Future.delayed(const Duration(seconds: 3), () {
-          _phase = CallUIPhase.yourTurn;
+      // Dhatri speaks clinical reply out loud
+      await _voiceService.speak(
+        _currentDhatriText,
+        onComplete: () {
+          if (_isDone) {
+            _phase = CallUIPhase.ended;
+          } else {
+            _phase = CallUIPhase.yourTurn;
+          }
           notifyListeners();
-        });
-      } else {
-        Future.delayed(const Duration(seconds: 4), () {
-          _phase = CallUIPhase.ended;
-          notifyListeners();
-        });
-      }
+        },
+      );
     } catch (_) {
       // In case of network interruption, gracefully advance turn
       _phase = CallUIPhase.dhatriSpeaking;
+      _currentDhatriText = 'मैंने आपकी बात सुन ली है। आपका स्वास्थ्य डेटा सुरक्षित कर लिया गया है।';
       notifyListeners();
-      Future.delayed(const Duration(seconds: 3), () {
-        _phase = CallUIPhase.yourTurn;
-        notifyListeners();
-      });
+
+      await _voiceService.speak(
+        _currentDhatriText,
+        onComplete: () {
+          _phase = CallUIPhase.yourTurn;
+          notifyListeners();
+        },
+      );
     }
   }
 
@@ -172,17 +271,17 @@ class VoiceCallState extends ChangeNotifier {
       _phase = CallUIPhase.dhatriSpeaking;
       notifyListeners();
 
-      if (!_isDone) {
-        Future.delayed(const Duration(seconds: 3), () {
-          _phase = CallUIPhase.yourTurn;
+      await _voiceService.speak(
+        _currentDhatriText,
+        onComplete: () {
+          if (_isDone) {
+            _phase = CallUIPhase.ended;
+          } else {
+            _phase = CallUIPhase.yourTurn;
+          }
           notifyListeners();
-        });
-      } else {
-        Future.delayed(const Duration(seconds: 4), () {
-          _phase = CallUIPhase.ended;
-          notifyListeners();
-        });
-      }
+        },
+      );
     } catch (_) {
       _phase = CallUIPhase.yourTurn;
       notifyListeners();
@@ -190,10 +289,19 @@ class VoiceCallState extends ChangeNotifier {
   }
 
   void endCall() {
+    _voiceService.stopSpeaking();
+    _voiceService.stopListening();
+
     if (_activeCheck != null && !_isDone) {
       repository.snoozeCheckIn(_activeCheck!.id).catchError((_) {});
     }
     _phase = CallUIPhase.ended;
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _voiceService.dispose();
+    super.dispose();
   }
 }

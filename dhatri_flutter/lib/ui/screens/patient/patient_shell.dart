@@ -42,10 +42,7 @@ class _PatientShellState extends State<PatientShell> {
     // 3. Normal Patient Navigation Shell
     final pages = [
       PatientHomeScreen(
-        onOpenVoiceCall: () {
-          voice.triggerCheckIn(1);
-          voice.acceptCall();
-        },
+        onOpenVoiceCall: () => voice.startDirectCall(1),
       ),
       const PatientMedicinesScreen(),
       const PatientHealthScreen(),
