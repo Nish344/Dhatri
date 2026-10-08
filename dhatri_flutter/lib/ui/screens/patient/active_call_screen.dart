@@ -270,7 +270,7 @@ class ActiveCallScreen extends StatelessWidget {
                           label: isListening ? 'Listening...' : 'Tap to Speak',
                           icon: isListening ? null : Icons.mic_rounded,
                           onPressed: isYourTurn
-                              ? () => voice.submitPatientResponse(CopyHindi.patientSecondResponse)
+                              ? () => _showVoiceInputSheet(context, voice)
                               : null,
                           backgroundColor: isYourTurn ? AppColors.callGreen : const Color(0xFF334155),
                           height: 54,
@@ -327,6 +327,117 @@ class ActiveCallScreen extends StatelessWidget {
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showVoiceInputSheet(BuildContext context, VoiceCallState voice) {
+    voice.startListening();
+    final controller = TextEditingController(text: CopyHindi.patientAnsWeakness);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF1E293B),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(
+                      color: AppColors.callGreen,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.mic_rounded, color: Colors.white, size: 20),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'आपकी आवाज़ (Your Response)',
+                    style: AppTypography.sectionTitle.copyWith(color: Colors.white, fontSize: 18),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: controller,
+                style: const TextStyle(color: Colors.white, fontSize: 18),
+                decoration: InputDecoration(
+                  hintText: 'उदा. आज बहुत कमजोरी महसूस हो रही है...',
+                  hintStyle: const TextStyle(color: Colors.white38),
+                  filled: true,
+                  fillColor: const Color(0xFF0F172A),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: Color(0xFF334155)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: const BorderSide(color: Color(0xFF334155)),
+                  ),
+                ),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _quickPromptChip(ctx, controller, CopyHindi.patientAnsWeakness),
+                  _quickPromptChip(ctx, controller, CopyHindi.patientAnsGood),
+                  _quickPromptChip(ctx, controller, CopyHindi.patientAnsMedicineTaken),
+                  _quickPromptChip(ctx, controller, CopyHindi.patientAnsDizzy),
+                ],
+              ),
+              const SizedBox(height: 20),
+              DhatriPrimaryButton(
+                label: 'Send to Dhatri (धात्री को भेजें)',
+                icon: Icons.send_rounded,
+                backgroundColor: AppColors.callGreen,
+                onPressed: () {
+                  final text = controller.text.trim();
+                  if (text.isNotEmpty) {
+                    Navigator.pop(ctx);
+                    voice.submitPatientResponse(text);
+                  }
+                },
+                height: 52,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _quickPromptChip(BuildContext ctx, TextEditingController controller, String text) {
+    return InkWell(
+      onTap: () => controller.text = text,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: const Color(0xFF334155),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFF475569)),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(color: Colors.white70, fontSize: 13),
         ),
       ),
     );
