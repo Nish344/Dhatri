@@ -14,6 +14,13 @@ alert:
   - needHelp:
 careStream:
   - watch:
+checkIn:
+  - startNow:
+  - pending:
+  - accept:
+  - snooze:
+  - answer:
+  - answerText:
 demo:
   - seed:
   - reset:
@@ -25,6 +32,11 @@ insight:
   - timeline:
 patients:
   - overview:
+prescription:
+  - uploadTicket:
+  - submit:
+  - drafts:
+  - confirm:
 profile:
   - me:
   - register:

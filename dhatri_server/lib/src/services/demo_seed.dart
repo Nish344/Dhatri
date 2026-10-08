@@ -24,11 +24,19 @@ Future<int> seedDemoData(Session session) async {
 
   final caregiver = await Profile.db.insertRow(
     session,
-    Profile(name: 'Ananya Kumar', role: Role.caregiver, phone: '+91 98111 22233'),
+    Profile(
+      name: 'Ananya Kumar',
+      role: Role.caregiver,
+      phone: '+91 98111 22233',
+    ),
   );
   final doctor = await Profile.db.insertRow(
     session,
-    Profile(name: 'Dr. Priya Sharma', role: Role.doctor, phone: '+91 99999 88888'),
+    Profile(
+      name: 'Dr. Priya Sharma',
+      role: Role.doctor,
+      phone: '+91 99999 88888',
+    ),
   );
   final patient = await Profile.db.insertRow(
     session,
@@ -174,7 +182,9 @@ Future<int> seedDemoData(Session session) async {
       mood: 'okay',
       summaryEn: 'Mild fatigue reported.',
       createdAt: now.subtract(const Duration(days: 5)),
-      completedAt: now.subtract(const Duration(days: 5)).add(const Duration(minutes: 3)),
+      completedAt: now
+          .subtract(const Duration(days: 5))
+          .add(const Duration(minutes: 3)),
     ),
   );
   final checkWeak = await WellnessCheck.db.insertRow(
@@ -188,7 +198,9 @@ Future<int> seedDemoData(Session session) async {
       summaryEn: 'Weakness reported (severity 2).',
       memoryUsed: const ['Weakness reported 5 days ago'],
       createdAt: now.subtract(const Duration(days: 3)),
-      completedAt: now.subtract(const Duration(days: 3)).add(const Duration(minutes: 3)),
+      completedAt: now
+          .subtract(const Duration(days: 3))
+          .add(const Duration(minutes: 3)),
     ),
   );
   final checkRecent = await WellnessCheck.db.insertRow(
@@ -202,7 +214,9 @@ Future<int> seedDemoData(Session session) async {
       summaryEn: 'Weakness (severity 3) with mild dizziness.',
       memoryUsed: const ['Weakness reported 3 days ago'],
       createdAt: now.subtract(const Duration(days: 1)),
-      completedAt: now.subtract(const Duration(days: 1)).add(const Duration(minutes: 3)),
+      completedAt: now
+          .subtract(const Duration(days: 1))
+          .add(const Duration(minutes: 3)),
     ),
   );
 

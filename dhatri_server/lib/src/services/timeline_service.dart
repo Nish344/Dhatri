@@ -13,8 +13,7 @@ Future<List<TimelineItem>> buildTimeline(
 
   final doses = await DoseEvent.db.find(
     session,
-    where: (t) =>
-        t.patientId.equals(patientId) & (t.scheduledAt >= since),
+    where: (t) => t.patientId.equals(patientId) & (t.scheduledAt >= since),
     orderBy: (t) => t.scheduledAt.desc(),
   );
   for (final d in doses) {
@@ -30,29 +29,39 @@ Future<List<TimelineItem>> buildTimeline(
         kind: TimelineKind.dose,
         tone: tone,
         title: title,
-        detail: 'Medication #${d.medicationId} at ${d.scheduledAt.toIso8601String()}',
+        detail:
+            'Medication #${d.medicationId} at ${d.scheduledAt.toIso8601String()}',
       ),
     );
   }
 
   final checks = await WellnessCheck.db.find(
     session,
-    where: (t) =>
-        t.patientId.equals(patientId) &
-        (t.createdAt >= since) &
-        t.status.equals(CheckStatus.completed),
+    where: (t) => t.patientId.equals(patientId) & (t.createdAt >= since),
     orderBy: (t) => t.createdAt.desc(),
   );
   for (final c in checks) {
-    items.add(
-      TimelineItem(
-        at: c.completedAt ?? c.createdAt,
-        kind: TimelineKind.wellness,
-        tone: c.mood == 'low' ? TimelineTone.warning : TimelineTone.neutral,
-        title: 'Care check-in',
-        detail: c.summaryEn ?? 'Check-in completed',
-      ),
-    );
+    if (c.status == CheckStatus.completed) {
+      items.add(
+        TimelineItem(
+          at: c.completedAt ?? c.createdAt,
+          kind: TimelineKind.wellness,
+          tone: c.mood == 'low' ? TimelineTone.warning : TimelineTone.neutral,
+          title: 'Care check-in',
+          detail: c.summaryEn ?? 'Check-in completed',
+        ),
+      );
+    } else if (c.status == CheckStatus.snoozed && c.ringCount >= 2) {
+      items.add(
+        TimelineItem(
+          at: c.createdAt,
+          kind: TimelineKind.wellness,
+          tone: TimelineTone.warning,
+          title: 'Check-in not answered',
+          detail: 'The evening care call rang twice with no answer.',
+        ),
+      );
+    }
   }
 
   final alerts = await Alert.db.find(

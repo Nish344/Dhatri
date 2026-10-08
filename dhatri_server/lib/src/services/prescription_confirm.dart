@@ -80,16 +80,13 @@ Future<List<Medication>> confirmPrescription(
   return created;
 }
 
+/// [istDayStart] is midnight IST as a UTC instant (see [istDayStartUtc]).
 DateTime istTimeToUtc(DateTime istDayStart, String hhmm) {
   final parts = hhmm.split(':');
-  final h = int.parse(parts[0]);
-  final m = int.parse(parts[1]);
-  final istLocal = DateTime(
-    istDayStart.year,
-    istDayStart.month,
-    istDayStart.day,
-    h,
-    m,
+  return istDayStart.add(
+    Duration(
+      hours: int.parse(parts[0]),
+      minutes: int.parse(parts[1]),
+    ),
   );
-  return istLocal.subtract(const Duration(hours: 5, minutes: 30));
 }

@@ -424,6 +424,7 @@ Every endpoint sets `requireLogin => true` and calls `requireAccess(session, pat
 | | `accept(int checkId)` → `CheckInTurn` | patient | `pending/snoozed → active`, returns turn 0: Hindi greeting text and audio |
 | | `snooze(int checkId)` → `void` | patient | `→ snoozed`, schedules `ring` again in 15 min (max 2 snoozes) |
 | | `answer(int checkId, ByteData audio)` → `CheckInTurn` | patient | The pipeline in §7. Returns the next question or the closing line with `done = true` |
+| | `answerText(int checkId, String transcript)` → `CheckInTurn` | patient | Same pipeline without STT (tap-to-answer Hindi buttons) |
 | `AlertEndpoint` | `acknowledge(int alertId)` → `Alert` | caregiver | Sets `acknowledgedAt`, post update |
 | | `needHelp(int patientId)` → `Alert` | patient | Creates `patientHelp` / `high`, post update ("Something feels wrong") |
 | `InsightEndpoint` | `week(int patientId)` → `PatientInsight` | caregiver, doctor | Counts over the last 7 days and the 7 before; AI summary |

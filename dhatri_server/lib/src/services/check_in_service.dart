@@ -26,9 +26,10 @@ Future<CheckInTurn> acceptCheckIn(
     throw StateError('This check-in has already finished');
   }
   if (check.status != CheckStatus.active) {
+    // Reset turnCount so ring/snooze counters never bleed into speech turns.
     check = await WellnessCheck.db.updateRow(
       session,
-      check.copyWith(status: CheckStatus.active),
+      check.copyWith(status: CheckStatus.active, turnCount: 0),
     );
     await postUpdate(
       session,
@@ -47,8 +48,7 @@ Future<CheckInTurn> acceptCheckIn(
   );
 }
 
-/// The care-call pipeline (ARCHITECTURE §7): transcribe, gather facts and
-/// memories, interpret, store, apply rules, reply.
+/// Speech path: AAC → Sarvam STT → [answerCheckInWithTranscript].
 Future<CheckInTurn> answerCheckIn(
   Session session,
   WellnessCheck check,
@@ -60,10 +60,42 @@ Future<CheckInTurn> answerCheckIn(
   if (check.status != CheckStatus.active) {
     throw StateError('This check-in is not active');
   }
-  final patientId = check.patientId;
 
   final transcript = await voice.transcribe(audio);
   if (transcript.isEmpty) {
+    return CheckInTurn(
+      checkId: check.id!,
+      turnIndex: check.turnCount,
+      text: sayAgainHi,
+      audio: await _speakOrSilence(session, voice, sayAgainHi),
+      done: false,
+    );
+  }
+  return answerCheckInWithTranscript(
+    session,
+    check,
+    transcript,
+    gemini: gemini,
+    voice: voice,
+    memory: memory,
+  );
+}
+
+/// Text path for the four Hindi answer buttons when STT is unreliable.
+Future<CheckInTurn> answerCheckInWithTranscript(
+  Session session,
+  WellnessCheck check,
+  String transcript, {
+  required Gemini gemini,
+  required VoiceEngine voice,
+  required MemoryService memory,
+}) async {
+  if (check.status != CheckStatus.active) {
+    throw StateError('This check-in is not active');
+  }
+  final patientId = check.patientId;
+  final cleaned = transcript.trim();
+  if (cleaned.isEmpty) {
     return CheckInTurn(
       checkId: check.id!,
       turnIndex: check.turnCount,
@@ -81,13 +113,13 @@ Future<CheckInTurn> answerCheckIn(
     doseCounts(session, patientId, istDayStartUtc(now), now),
     doseCounts(session, patientId, weekAgo, now),
     // Retrieval runs before this turn is remembered, so it never finds itself.
-    memory.retrieve(session, patientId, transcript).catchError((Object e) {
+    memory.retrieve(session, patientId, cleaned).catchError((Object e) {
       session.log('Memory retrieval failed: $e', level: LogLevel.warning);
       return <PatientMemory>[];
     }),
   ).wait;
   final name = patient!.name;
-  final emergency = scanEmergency(transcript);
+  final emergency = scanEmergency(cleaned);
   final turnCount = check.turnCount + 1;
   final lastTurn = turnCount >= maxTurns;
 
@@ -96,7 +128,7 @@ Future<CheckInTurn> answerCheckIn(
     reading = await gemini.interpretCheckIn(
       CheckInPacket(
         patientName: name,
-        transcript: transcript,
+        transcript: cleaned,
         symptomsLast7Days: symptoms,
         dosesToday: today,
         dosesWeek: week,
@@ -139,7 +171,7 @@ Future<CheckInTurn> answerCheckIn(
       turnCount: turnCount,
       transcript: [
         if (check.transcript != null) check.transcript!,
-        transcript,
+        cleaned,
       ].join('\n'),
       replyText: reply,
       mood: reading.mood ?? check.mood,

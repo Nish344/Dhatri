@@ -14,8 +14,7 @@ class PrescriptionEndpoint extends Endpoint {
 
   Future<UploadTicket> uploadTicket(Session session, int patientId) async {
     await requireAccess(session, patientId, write: true);
-    final path =
-        'prescriptions/$patientId/${Uuid().v4()}.jpg';
+    final path = 'prescriptions/$patientId/${Uuid().v4()}.jpg';
     final description = await session.storage.createUploadDescription(
       storageId: _storageId,
       path: path,

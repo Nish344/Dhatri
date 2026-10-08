@@ -4,6 +4,7 @@ import 'package:serverpod/serverpod.dart';
 
 import '../generated/protocol.dart';
 import 'access.dart';
+import 'check_in_open.dart';
 
 Future<Profile?> currentProfile(Session session) async {
   final auth = session.authenticated;
@@ -64,16 +65,21 @@ Future<Profile> linkWithCode(Session session, String code) async {
     throw ArgumentError('Invalid link code');
   }
 
+  final Profile linked;
   if (caller.role == Role.caregiver) {
-    return Profile.db.updateRow(
+    linked = await Profile.db.updateRow(
       session,
       patient.copyWith(caregiverId: caller.id),
     );
+  } else {
+    linked = await Profile.db.updateRow(
+      session,
+      patient.copyWith(doctorId: caller.id),
+    );
   }
-  return Profile.db.updateRow(
-    session,
-    patient.copyWith(doctorId: caller.id),
-  );
+  // Daily evening check-in (ARCHITECTURE §6). Safe to re-register on re-link.
+  await scheduleDailyCheckIn(session, linked.id!);
+  return linked;
 }
 
 Future<List<Profile>> linkedPatients(Session session) async {

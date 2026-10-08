@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dhatri_server/src/generated/protocol.dart';
 import 'package:dhatri_server/src/services/gemini.dart';
 import 'package:dhatri_server/src/services/insight_service.dart';
+import 'package:dhatri_server/src/services/prescription_confirm.dart';
 import 'package:dhatri_server/src/services/safety_rules.dart';
 import 'package:dhatri_server/src/services/sarvam.dart';
 import 'package:http/http.dart' as http;
@@ -116,6 +117,12 @@ void main() {
       istDayStartUtc(DateTime.utc(2026, 10, 7, 10)),
       DateTime.utc(2026, 10, 6, 18, 30),
     );
+  });
+
+  test('istTimeToUtc adds HH:MM onto midnight IST', () {
+    final midnight = DateTime.utc(2026, 10, 7, 18, 30);
+    expect(istTimeToUtc(midnight, '08:00'), DateTime.utc(2026, 10, 8, 2, 30));
+    expect(istTimeToUtc(midnight, '20:00'), DateTime.utc(2026, 10, 8, 14, 30));
   });
 
   group('Gemini', () {
