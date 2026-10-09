@@ -87,7 +87,7 @@ class CaregiverHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final care = context.watch<CareState>();
-    final auth = context.read<AuthState>();
+    final auth = context.watch<AuthState>();
 
     return Scaffold(
       appBar: AppBar(
@@ -101,7 +101,7 @@ class CaregiverHomeScreen extends StatelessWidget {
         actions: [
           const DhatriRoleSwitcherButton(),
           IconButton(
-            icon: const Icon(Icons.person_add_link_rounded),
+            icon: const Icon(Icons.person_add_rounded),
             tooltip: 'Link Patient with Code',
             onPressed: () => _showLinkPatientDialog(context),
           ),
@@ -225,7 +225,7 @@ class CaregiverHomeScreen extends StatelessWidget {
                   ),
                 ),
                 TextButton.icon(
-                  icon: const Icon(Icons.add_link_rounded, size: 18),
+                  icon: const Icon(Icons.link_rounded, size: 18),
                   label: const Text('Link Patient'),
                   onPressed: () => _showLinkPatientDialog(context),
                 ),

@@ -165,7 +165,7 @@ class ServerpodClientService extends ChangeNotifier {
         email: email.trim(),
         password: password,
       );
-      await _authManager.put(res.key);
+      await _authManager.put(res.token);
       _lastError = null;
       notifyListeners();
       return true;

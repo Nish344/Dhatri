@@ -82,7 +82,7 @@ class DhatriRoleSwitcherSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthState>();
-    final care = context.read<CareState>();
+    final care = context.watch<CareState>();
 
     return Container(
       decoration: const BoxDecoration(

@@ -36,7 +36,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final care = context.watch<CareState>();
-    final voice = context.read<VoiceCallState>();
+    final status = widget.status;
     final patient = widget.status.patient;
 
     final memories = care.patientInsight?.latestCheck?.memoryUsed ??
@@ -104,7 +104,7 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
               label: 'Initiate Wellness Call Now',
               icon: Icons.mic_rounded,
               onPressed: () {
-                voice.triggerCheckIn(patient.id);
+                context.read<VoiceCallState>().triggerCheckIn(patient.id);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Wellness check-in call queued on Serverpod!'),

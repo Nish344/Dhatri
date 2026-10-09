@@ -10,8 +10,6 @@ class PatientHelpScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final care = context.read<CareState>();
-
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Column(
@@ -159,7 +157,7 @@ class PatientHelpScreen extends StatelessWidget {
                     label: 'Something Feels Wrong — Alert Ananya',
                     icon: Icons.warning_amber_rounded,
                     onPressed: () {
-                      care.triggerEmergencyHelp();
+                      context.read<CareState>().triggerEmergencyHelp();
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('🚨 Urgent alert sent to Ananya!'),

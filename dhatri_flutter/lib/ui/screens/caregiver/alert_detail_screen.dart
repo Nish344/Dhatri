@@ -17,7 +17,6 @@ class AlertDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final care = context.read<CareState>();
     final isMissedDose = alert.kind == AlertKind.missedDose;
 
     return Scaffold(
@@ -111,7 +110,7 @@ class AlertDetailScreen extends StatelessWidget {
             DhatriSecondaryButton(
               label: 'Mark as Handled / Dismiss',
               onPressed: () {
-                care.acknowledgeAlert(alert.id);
+                context.read<CareState>().acknowledgeAlert(alert.id);
                 Navigator.pop(context);
               },
               height: 50,
