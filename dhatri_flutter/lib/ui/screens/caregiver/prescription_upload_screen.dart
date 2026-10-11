@@ -90,10 +90,6 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
         // Sample demonstration prescription extraction simulation
         await Future.delayed(const Duration(milliseconds: 700));
         if (mounted) setState(() => _readingStep = 2);
-        await Future.delayed(const Duration(milliseconds: 700));
-        if (mounted) setState(() => _readingStep = 3);
-      }
-
       }
 
       if (mounted) {
