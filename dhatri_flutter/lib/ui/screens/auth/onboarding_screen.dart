@@ -80,14 +80,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       appBar: AppBar(
         title: const Text('Complete Your Profile'),
         automaticallyImplyLeading: false,
-        actions: [
-          TextButton(
-            onPressed: () {
-              context.read<AuthState>().skipOnboardingWithDefault();
-            },
-            child: const Text('Skip for Demo'),
-          ),
-        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -168,7 +160,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 TextFormField(
                   controller: _nameController,
                   decoration: InputDecoration(
-                    hintText: 'e.g. Ramesh Kumar',
+                    hintText: 'e.g. Full Name',
                     prefixIcon: const Icon(Icons.person_outline_rounded),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
                   ),

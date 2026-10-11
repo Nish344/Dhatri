@@ -516,7 +516,7 @@ class Alert {
     return Alert(
       id: p.id ?? 0,
       patientId: p.patientId,
-      patientName: patientName ?? 'Ramesh Kumar',
+      patientName: patientName ?? 'Patient',
       kind: AlertKind.values.byName(p.kind.name),
       priority: AlertPriority.values.byName(p.priority.name),
       doseEventId: p.doseEventId,

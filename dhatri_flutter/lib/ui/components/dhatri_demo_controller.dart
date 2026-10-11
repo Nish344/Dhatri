@@ -104,7 +104,7 @@ class _DhatriDemoControllerState extends State<DhatriDemoController> {
                     label: '👴 Patient',
                     isSelected: auth.activeRole == Role.patient,
                     onTap: () {
-                      auth.switchToRole(Role.patient);
+                      auth.setActiveRole(Role.patient);
                       care.loadAll();
                     },
                   ),
@@ -113,7 +113,7 @@ class _DhatriDemoControllerState extends State<DhatriDemoController> {
                     label: '👩‍💼 Caregiver',
                     isSelected: auth.activeRole == Role.caregiver,
                     onTap: () {
-                      auth.switchToRole(Role.caregiver);
+                      auth.setActiveRole(Role.caregiver);
                       care.loadAll();
                     },
                   ),
@@ -122,7 +122,7 @@ class _DhatriDemoControllerState extends State<DhatriDemoController> {
                     label: '🩺 Doctor',
                     isSelected: auth.activeRole == Role.doctor,
                     onTap: () {
-                      auth.switchToRole(Role.doctor);
+                      auth.setActiveRole(Role.doctor);
                       care.loadAll();
                     },
                   ),
@@ -144,7 +144,10 @@ class _DhatriDemoControllerState extends State<DhatriDemoController> {
                           ? null
                           : () async {
                               setState(() => _isActionRunning = true);
-                              await voice.triggerCheckIn(care.activePatientId);
+                              final pid = care.activePatientId ?? auth.currentProfile.id;
+                              if (pid > 0) {
+                                await voice.triggerCheckIn(pid);
+                              }
                               if (mounted) {
                                 setState(() => _isActionRunning = false);
                                 ScaffoldMessenger.of(context).showSnackBar(

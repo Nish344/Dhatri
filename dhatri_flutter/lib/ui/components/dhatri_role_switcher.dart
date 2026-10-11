@@ -108,85 +108,164 @@ class DhatriRoleSwitcherSheet extends StatelessWidget {
           const SizedBox(height: 18),
 
           Text(
-            'Switch Role / Account',
+            'Account & Role Settings',
             style: AppTypography.sectionTitle.copyWith(fontSize: 20),
           ),
           const SizedBox(height: 4),
           Text(
-            'Test and manage different roles on this device',
+            'Signed in as ${auth.currentProfile.name}',
             style: AppTypography.supporting,
           ),
+          const SizedBox(height: 16),
+
+          // Current User Profile Card
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppColors.primaryLight,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      backgroundColor: AppColors.primary,
+                      radius: 22,
+                      child: Text(
+                        auth.currentProfile.name.isNotEmpty
+                            ? auth.currentProfile.name[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            auth.currentProfile.name,
+                            style: AppTypography.cardTitle.copyWith(fontSize: 16),
+                          ),
+                          Text(
+                            '${auth.activeRole.name[0].toUpperCase()}${auth.activeRole.name.substring(1)}${auth.currentProfile.age != null ? ' · ${auth.currentProfile.age} yrs' : ''}',
+                            style: AppTypography.supporting.copyWith(
+                              color: AppColors.primaryDark,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (auth.currentProfile.linkCode != null && auth.currentProfile.linkCode!.isNotEmpty) ...[
+                  const Divider(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Patient Link Code',
+                            style: AppTypography.supporting.copyWith(fontSize: 12),
+                          ),
+                          Text(
+                            auth.currentProfile.linkCode!,
+                            style: AppTypography.cardTitle.copyWith(
+                              fontSize: 20,
+                              letterSpacing: 3,
+                              color: AppColors.primaryDark,
+                            ),
+                          ),
+                        ],
+                      ),
+                      TextButton.icon(
+                        icon: const Icon(Icons.copy, size: 16),
+                        label: const Text('Copy'),
+                        onPressed: () {
+                          // Copy link code to clipboard
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Link code ${auth.currentProfile.linkCode} copied!')),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
           const SizedBox(height: 20),
+
+          Text(
+            'Switch View Mode',
+            style: AppTypography.cardTitle.copyWith(fontSize: 15),
+          ),
+          const SizedBox(height: 10),
 
           // Role 1: Patient
           _roleOptionCard(
             context: context,
             role: Role.patient,
             emoji: '👴',
-            name: 'Ramesh Kumar (72 yrs)',
-            roleDescription: 'Patient · Accessible UI, Hindi voice check-in, dose tracker',
+            name: 'Patient Portal',
+            roleDescription: 'Accessible UI, Hindi voice check-ins, medication tracker',
             isSelected: auth.activeRole == Role.patient,
             onSelect: () async {
               Navigator.pop(context);
-              await auth.switchToRole(Role.patient);
+              auth.setActiveRole(Role.patient);
               await care.loadAll();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Switched to Patient view (Ramesh Kumar)')),
-                );
-              }
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
           // Role 2: Caregiver
           _roleOptionCard(
             context: context,
             role: Role.caregiver,
             emoji: '👩‍💼',
-            name: 'Ananya Kumar',
-            roleDescription: 'Caregiver · Triage alerts, prescription upload, remote check-in',
+            name: 'Caregiver Portal',
+            roleDescription: 'Remote health alerts, prescription upload, patient monitoring',
             isSelected: auth.activeRole == Role.caregiver,
             onSelect: () async {
               Navigator.pop(context);
-              await auth.switchToRole(Role.caregiver);
+              auth.setActiveRole(Role.caregiver);
               await care.loadAll();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Switched to Caregiver view (Ananya Kumar)')),
-                );
-              }
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
           // Role 3: Doctor
           _roleOptionCard(
             context: context,
             role: Role.doctor,
             emoji: '🩺',
-            name: 'Dr. Priya Sharma',
-            roleDescription: 'Doctor · Clinical longitudinal timeline & adherence analysis',
+            name: 'Doctor Portal',
+            roleDescription: 'Clinical review, longitudinal adherence and symptom timeline',
             isSelected: auth.activeRole == Role.doctor,
             onSelect: () async {
               Navigator.pop(context);
-              await auth.switchToRole(Role.doctor);
+              auth.setActiveRole(Role.doctor);
               await care.loadAll();
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Switched to Doctor clinical view (Dr. Priya Sharma)')),
-                );
-              }
             },
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
 
           // Sign Out / Switch User Button
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
               icon: const Icon(Icons.logout_rounded, size: 20),
-              label: const Text('Log Out / Choose Different Account'),
+              label: const Text('Log Out'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.error,
                 side: const BorderSide(color: AppColors.errorBorder),

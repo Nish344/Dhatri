@@ -56,6 +56,14 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
     final care = context.read<CareState>();
     final patientId = care.activePatientId;
 
+    if (patientId == null || patientId <= 0) {
+      setState(() {
+        _isReading = false;
+        _errorMessage = 'Please link a patient first before uploading a prescription.';
+      });
+      return;
+    }
+
     try {
       int? prescriptionId;
       List<MedicationDraft> drafts = [];
@@ -86,38 +94,6 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
         if (mounted) setState(() => _readingStep = 3);
       }
 
-      // If server extraction is still processing or returned empty,
-      // seed high-accuracy demo schedule per docs/DEMO.md
-      if (drafts.isEmpty) {
-        drafts = [
-          MedicationDraft(
-            name: 'Metformin',
-            strength: '500 mg',
-            doseText: '1 tablet',
-            instructions: 'After breakfast and dinner',
-            times: ['08:00', '20:00'],
-            durationDays: 30,
-            uncertain: false,
-          ),
-          MedicationDraft(
-            name: 'Amlodipine',
-            strength: '5 mg',
-            doseText: '1 tablet',
-            instructions: 'Morning with water',
-            times: ['08:00'],
-            durationDays: 30,
-            uncertain: false,
-          ),
-          MedicationDraft(
-            name: 'Atorvastatin',
-            strength: '20 mg',
-            doseText: '1 tablet',
-            instructions: 'Bedtime',
-            times: ['22:00'],
-            durationDays: 30,
-            uncertain: true, // Marked for human review
-          ),
-        ];
       }
 
       if (mounted) {
@@ -135,7 +111,7 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
       if (mounted) {
         setState(() {
           _isReading = false;
-          _errorMessage = 'Extraction failed: $e. You can try the demo prescription.';
+          _errorMessage = 'Extraction failed: $e. You can enter the medication schedule manually below.';
         });
       }
     }
@@ -252,15 +228,22 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
               ),
               const SizedBox(height: 14),
               OutlinedButton.icon(
-                icon: const Icon(Icons.document_scanner_outlined, size: 20),
-                label: const Text('Use Sample Prescription (Dr. Verma Clinic)'),
+                icon: const Icon(Icons.edit_note_rounded, size: 20),
+                label: const Text('Enter Prescription Schedule Manually'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primary,
                   side: BorderSide(color: AppColors.primary.withOpacity(0.5)),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
-                onPressed: () => _processPrescription(),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PrescriptionReviewScreen(initialDrafts: []),
+                    ),
+                  );
+                },
               ),
             ] else ...[
               // Reading & Extraction State (Guide §15)

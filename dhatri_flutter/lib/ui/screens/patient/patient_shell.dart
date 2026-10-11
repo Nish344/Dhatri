@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../state/care_state.dart';
+import '../../../state/auth_state.dart';
 import '../../../state/voice_call_state.dart';
 import 'patient_home_screen.dart';
 import 'patient_medicines_screen.dart';
@@ -25,7 +26,7 @@ class _PatientShellState extends State<PatientShell> {
   @override
   Widget build(BuildContext context) {
     final voice = context.watch<VoiceCallState>();
-    final care = context.watch<CareState>();
+    final auth = context.watch<AuthState>();
 
     // 1. Phone-style Incoming Call full-screen overlay
     if (voice.phase == CallUIPhase.incoming) {
@@ -45,7 +46,7 @@ class _PatientShellState extends State<PatientShell> {
     // 3. Normal Patient Navigation Shell
     final pages = [
       PatientHomeScreen(
-        onOpenVoiceCall: () => voice.startDirectCall(care.activePatientId),
+        onOpenVoiceCall: () => voice.startDirectCall(auth.currentProfile.id),
       ),
       const PatientMedicinesScreen(),
       const PatientHealthScreen(),
@@ -72,37 +73,13 @@ class _PatientShellState extends State<PatientShell> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (_currentIndex == 0) ...[
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Text('🌿', style: TextStyle(fontSize: 20)),
-              ),
-              const SizedBox(width: 10),
-            ],
-            Flexible(
-              child: Text(
-                tabTitle,
-                style: AppTypography.sectionTitle.copyWith(fontSize: 20),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
+        title: Text(
+          tabTitle,
+          style: AppTypography.sectionTitle.copyWith(fontSize: 20),
+          overflow: TextOverflow.ellipsis,
         ),
-        actions: [
-          const DhatriRoleSwitcherButton(),
-          if (_currentIndex != 3)
-            IconButton(
-              icon: const Icon(Icons.help_outline_rounded),
-              tooltip: 'Help',
-              onPressed: () => setState(() => _currentIndex = 3),
-            ),
+        actions: const [
+          DhatriRoleSwitcherButton(),
         ],
       ),
       body: IndexedStack(

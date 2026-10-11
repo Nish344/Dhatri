@@ -30,26 +30,7 @@ class _PrescriptionReviewScreenState extends State<PrescriptionReviewScreen> {
     super.initState();
     _drafts = widget.initialDrafts != null && widget.initialDrafts!.isNotEmpty
         ? List.from(widget.initialDrafts!)
-        : [
-            MedicationDraft(
-              name: 'Metformin',
-              strength: '500 mg',
-              doseText: '1 tablet',
-              instructions: 'After dinner with water',
-              times: ['08:00', '20:00'],
-              durationDays: 30,
-              uncertain: false,
-            ),
-            MedicationDraft(
-              name: 'Amlodipine',
-              strength: '5 mg',
-              doseText: '1 tablet',
-              instructions: 'Morning with water',
-              times: ['08:00'],
-              durationDays: 30,
-              uncertain: true,
-            ),
-          ];
+        : [];
   }
 
   void _showEditSheet(int index) {
@@ -294,82 +275,109 @@ class _PrescriptionReviewScreenState extends State<PrescriptionReviewScreen> {
             const SizedBox(height: 24),
 
             // Draft Medication Cards
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _drafts.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 14),
-              itemBuilder: (context, index) {
-                final draft = _drafts[index];
-                return Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: draft.uncertain ? AppColors.warning : AppColors.cardBorder,
-                      width: draft.uncertain ? 2 : 1.2,
+            if (_drafts.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.cardBorder),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.medication_outlined, size: 44, color: AppColors.textSecondary),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No medicines in schedule yet',
+                      style: AppTypography.cardTitle.copyWith(fontSize: 16),
                     ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Tap "Add Medicine" below to add medications to the patient schedule.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _drafts.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 14),
+                itemBuilder: (context, index) {
+                  final draft = _drafts[index];
+                  return Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: draft.uncertain ? AppColors.warning : AppColors.cardBorder,
+                        width: draft.uncertain ? 2 : 1.2,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${draft.name} ${draft.strength ?? ""}',
+                                style: AppTypography.cardTitle.copyWith(fontSize: 19),
+                              ),
+                            ),
+                            TextButton.icon(
+                              icon: const Icon(Icons.edit_outlined, size: 18),
+                              label: const Text('EDIT'),
+                              style: TextButton.styleFrom(
+                                foregroundColor: AppColors.primary,
+                                visualDensity: VisualDensity.compact,
+                              ),
+                              onPressed: () => _showEditSheet(index),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${draft.doseText} · ${draft.times.length} times/day (${draft.times.join(", ")})',
+                          style: AppTypography.bodyMedium,
+                        ),
+                        Text(
+                          draft.instructions ?? 'As directed',
+                          style: AppTypography.supporting,
+                        ),
+                        if (draft.uncertain) ...[
+                          const SizedBox(height: 10),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.warningBg,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                             child: Text(
-                              '${draft.name} ${draft.strength ?? ""}',
-                              style: AppTypography.cardTitle.copyWith(fontSize: 19),
+                              '⚠ Please check bedtime timing and strength',
+                              style: AppTypography.statusLabel.copyWith(
+                                fontSize: 12,
+                                color: AppColors.warning,
+                              ),
                             ),
-                          ),
-                          TextButton.icon(
-                            icon: const Icon(Icons.edit_outlined, size: 18),
-                            label: const Text('EDIT'),
-                            style: TextButton.styleFrom(
-                              foregroundColor: AppColors.primary,
-                              visualDensity: VisualDensity.compact,
-                            ),
-                            onPressed: () => _showEditSheet(index),
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        '${draft.doseText} · ${draft.times.length} times/day (${draft.times.join(", ")})',
-                        style: AppTypography.bodyMedium,
-                      ),
-                      Text(
-                        draft.instructions ?? 'As directed',
-                        style: AppTypography.supporting,
-                      ),
-                      if (draft.uncertain) ...[
-                        const SizedBox(height: 10),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.warningBg,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '⚠ Please check bedtime timing and strength',
-                            style: AppTypography.statusLabel.copyWith(
-                              fontSize: 12,
-                              color: AppColors.warning,
-                            ),
-                          ),
-                        ),
                       ],
-                    ],
-                  ),
-                );
-              },
-            ),
+                    ),
+                  );
+                },
+              ),
 
             const SizedBox(height: 14),
 
             DhatriSecondaryButton(
-              label: 'Add Another Medicine',
+              label: 'Add Medicine',
               icon: Icons.add_circle_outline_rounded,
               onPressed: _showAddSheet,
               height: 48,
@@ -380,7 +388,7 @@ class _PrescriptionReviewScreenState extends State<PrescriptionReviewScreen> {
             DhatriPrimaryButton(
               label: 'Confirm & Activate Schedule',
               icon: Icons.check_circle_outline_rounded,
-              onPressed: _isConfirming ? null : _confirm,
+              onPressed: _isConfirming || _drafts.isEmpty ? null : _confirm,
               isLoading: _isConfirming,
               height: 58,
             ),

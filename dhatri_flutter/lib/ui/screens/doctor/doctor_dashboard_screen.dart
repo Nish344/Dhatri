@@ -64,50 +64,82 @@ class DoctorDashboardScreen extends StatelessWidget {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Patient Header Banner
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.cardBorder, width: 1.2),
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: AppColors.primaryLight,
-                    child: Text(
-                      'R',
-                      style: AppTypography.displayLarge.copyWith(fontSize: 24, color: AppColors.primary),
+        child: insight == null
+            ? Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.cardBorder),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.people_alt_outlined, size: 56, color: AppColors.textSecondary),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No Patient Records Loaded',
+                      style: AppTypography.cardTitle.copyWith(fontSize: 18),
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(height: 8),
+                    const Text(
+                      'When patients are registered and linked in the system, their clinical insights, symptom logs, and longitudinal timelines will appear here.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Patient Header Banner
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.cardBorder, width: 1.2),
+                    ),
+                    child: Row(
                       children: [
-                        Text('Ramesh Kumar · 72', style: AppTypography.cardTitle.copyWith(fontSize: 20)),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Type-2 Diabetes & Hypertension · Monitored since Oct 2026',
-                          style: AppTypography.supporting,
+                        CircleAvatar(
+                          radius: 28,
+                          backgroundColor: AppColors.primaryLight,
+                          child: Text(
+                            insight.patient.name.isNotEmpty
+                                ? insight.patient.name[0].toUpperCase()
+                                : 'P',
+                            style: AppTypography.displayLarge.copyWith(fontSize: 24, color: AppColors.primary),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${insight.patient.name}${insight.patient.age != null ? " · ${insight.patient.age} yrs" : ""}',
+                                style: AppTypography.cardTitle.copyWith(fontSize: 20),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                insight.patient.phone != null && insight.patient.phone!.isNotEmpty
+                                    ? 'Contact: ${insight.patient.phone}'
+                                    : 'Patient Record ID #${insight.patient.id}',
+                                style: AppTypography.supporting,
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
 
-            const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-            // AI Clinical Summary Card (Guide §14, §25)
-            if (insight != null)
-              DhatriInsightCard(insight: insight),
+                  // AI Clinical Summary Card (Guide §14, §25)
+                  DhatriInsightCard(insight: insight),
 
             const SizedBox(height: 28),
 

@@ -4,95 +4,45 @@ import '../models/models.dart';
 import '../services/serverpod_client_service.dart';
 
 /// Manages active authentication & profile sessions for Patient, Caregiver, and Doctor.
+/// Driven 100% by live Serverpod database records.
 class AuthState extends ChangeNotifier {
   final ServerpodClientService? clientService;
-
-  static const defaultPatient = Profile(
-    id: 1,
-    name: 'Ramesh Kumar',
-    role: Role.patient,
-    age: 72,
-    phone: '+91 98765 43210',
-    caregiverId: 2,
-    doctorId: 3,
-    linkCode: '482910',
-  );
-
-  static const defaultCaregiver = Profile(
-    id: 2,
-    name: 'Ananya Kumar',
-    role: Role.caregiver,
-    phone: '+91 98111 22233',
-  );
-
-  static const defaultDoctor = Profile(
-    id: 3,
-    name: 'Dr. Priya Sharma',
-    role: Role.doctor,
-    phone: '+91 99999 88888',
-  );
-
-  // Pre-configured demo accounts matching docs/DEMO.md
-  static const Map<Role, (String email, String password)> demoCredentials = {
-    Role.patient: ('ramesh.demo@dhatri.local', 'Demo@2026!'),
-    Role.caregiver: ('ananya.demo@dhatri.local', 'Demo@2026!'),
-    Role.doctor: ('priya.demo@dhatri.local', 'Demo@2026!'),
-  };
 
   bool _isSignedIn = false;
   bool _needsOnboarding = false;
   Role _activeRole = Role.patient;
-  Profile _currentProfile = defaultPatient;
+  Profile? _currentProfile;
   String? _authError;
 
   AuthState({this.clientService}) {
-    _setLocalDefaultProfile(_activeRole);
+    _checkExistingSession();
   }
 
   bool get isSignedIn => _isSignedIn;
   bool get needsOnboarding => _needsOnboarding;
-  Role get activeRole => _activeRole;
-  Profile get currentProfile => _currentProfile;
+  Role get activeRole => _currentProfile?.role ?? _activeRole;
+  Profile get currentProfile =>
+      _currentProfile ??
+      const Profile(
+        id: 0,
+        name: 'User',
+        role: Role.patient,
+      );
   String? get authError => _authError;
 
-  bool get isPatient => _activeRole == Role.patient;
-  bool get isCaregiver => _activeRole == Role.caregiver;
-  bool get isDoctor => _activeRole == Role.doctor;
+  bool get isPatient => activeRole == Role.patient;
+  bool get isCaregiver => activeRole == Role.caregiver;
+  bool get isDoctor => activeRole == Role.doctor;
 
-  void _setLocalDefaultProfile(Role role) {
-    switch (role) {
-      case Role.patient:
-        _currentProfile = defaultPatient;
-        break;
-      case Role.caregiver:
-        _currentProfile = defaultCaregiver;
-        break;
-      case Role.doctor:
-        _currentProfile = defaultDoctor;
-        break;
-    }
-  }
-
-  /// One-tap role switch or demo sign-in
-  Future<void> signInWithRole(Role role) async {
-    _isSignedIn = true;
-    _needsOnboarding = false;
-    _activeRole = role;
-    _authError = null;
-    _setLocalDefaultProfile(role);
-    notifyListeners();
-
-    // If an authenticated session already exists with Serverpod, load the remote profile
+  Future<void> _checkExistingSession() async {
     if (clientService != null && await clientService!.isAuthenticated) {
       await loadCurrentProfile();
     }
   }
 
   /// Sign in with registered Serverpod Email IDP
-  Future<bool> signInWithEmail(String email, String password, Role role) async {
+  Future<bool> signInWithEmail(String email, String password) async {
     _authError = null;
-    _activeRole = role;
-    _setLocalDefaultProfile(role);
 
     if (clientService != null) {
       final success = await clientService!.signIn(email, password);
@@ -108,25 +58,31 @@ class AuthState extends ChangeNotifier {
       }
     }
 
-    _isSignedIn = true;
+    _authError = 'Server client unavailable';
     notifyListeners();
-    return true;
+    return false;
   }
 
-  /// Registers user profile in Serverpod database if not yet created
+  /// Registers user profile in Serverpod database for the authenticated account
   Future<bool> registerProfile({
     required String name,
     required Role role,
     int? age,
     String? phone,
   }) async {
-    if (clientService == null || !clientService!.isOnline) return false;
+    if (clientService == null || !clientService!.isOnline) {
+      _authError = 'Backend is offline';
+      notifyListeners();
+      return false;
+    }
     try {
       final protoRole = protocol.Role.values.byName(role.name);
       final p = await clientService!.client.profile.register(name, protoRole, age, phone);
       _currentProfile = Profile.fromProtocol(p);
       _activeRole = role;
+      _isSignedIn = true;
       _needsOnboarding = false;
+      _authError = null;
       notifyListeners();
       return true;
     } catch (e) {
@@ -143,32 +99,33 @@ class AuthState extends ChangeNotifier {
         final p = await clientService!.client.profile.me();
         if (p != null) {
           _currentProfile = Profile.fromProtocol(p);
-          _activeRole = _currentProfile.role;
+          _activeRole = _currentProfile!.role;
+          _isSignedIn = true;
           _needsOnboarding = false;
-          notifyListeners();
         } else {
+          // User is authenticated but hasn't created a Profile yet
+          _isSignedIn = true;
           _needsOnboarding = true;
-          notifyListeners();
         }
-      } catch (_) {}
+        notifyListeners();
+      } catch (e) {
+        _authError = e.toString();
+        notifyListeners();
+      }
     }
   }
 
-  /// Skip onboarding and fall back to local default profile for instant testing
-  void skipOnboardingWithDefault() {
-    _needsOnboarding = false;
+  /// Switch active portal role (for multi-role views if applicable)
+  void setActiveRole(Role role) {
+    _activeRole = role;
     notifyListeners();
-  }
-
-  /// Switch active portal role for simulation
-  Future<void> switchToRole(Role role) async {
-    await signInWithRole(role);
   }
 
   /// Sign out and clear active session
   void signOut() {
     _isSignedIn = false;
     _needsOnboarding = false;
+    _currentProfile = null;
     _authError = null;
     if (clientService != null) {
       clientService!.signOut();

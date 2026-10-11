@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../models/models.dart';
 import '../repositories/dhatri_repository.dart';
+import 'auth_state.dart';
 
 enum CareStreamStatus { live, reconnecting, offline }
 
@@ -11,7 +12,7 @@ class CareState extends ChangeNotifier {
   Timer? _reconnectTimer;
   Timer? _retryTimer;
 
-  int _activePatientId = 1;
+  int? _activePatientId;
   CareStreamStatus _streamStatus = CareStreamStatus.offline;
 
   List<DoseEvent> _todayDoses = [];
@@ -19,23 +20,58 @@ class CareState extends ChangeNotifier {
   List<TimelineItem> _timeline = [];
   PatientInsight? _patientInsight;
   List<PatientStatus> _overview = [];
+  Profile? _caregiverContact;
 
   // Local optimistic states: doseId -> 'saving' | 'saved' | 'retry'
   final Map<int, String> _optimisticDoseStatus = {};
   final Set<int> _pendingSyncDoseIds = {};
 
-  CareState({required this.repository}) {
-    loadAll();
-    _subscribeToStream();
-  }
+  CareState({required this.repository});
 
-  int get activePatientId => _activePatientId;
+  int? get activePatientId => _activePatientId;
   CareStreamStatus get streamStatus => _streamStatus;
   List<DoseEvent> get todayDoses => _todayDoses;
   List<Alert> get openAlerts => _openAlerts;
   List<TimelineItem> get timeline => _timeline;
   PatientInsight? get patientInsight => _patientInsight;
   List<PatientStatus> get overview => _overview;
+  Profile? get caregiverContact => _caregiverContact;
+
+  /// Synchronize active patient context with authenticated user session
+  void syncWithAuth(AuthState auth) {
+    if (!auth.isSignedIn || auth.needsOnboarding) {
+      if (_activePatientId != null || _todayDoses.isNotEmpty || _streamSubscription != null) {
+        _streamSubscription?.cancel();
+        _streamSubscription = null;
+        _reconnectTimer?.cancel();
+        _reconnectTimer = null;
+        _activePatientId = null;
+        _todayDoses = [];
+        _openAlerts = [];
+        _timeline = [];
+        _patientInsight = null;
+        _overview = [];
+        _caregiverContact = null;
+        _streamStatus = CareStreamStatus.offline;
+        notifyListeners();
+      }
+      return;
+    }
+
+    final profile = auth.currentProfile;
+    if (auth.isPatient) {
+      if (profile.id > 0 && _activePatientId != profile.id) {
+        _activePatientId = profile.id;
+        loadAll();
+        _subscribeToStream();
+      }
+    } else {
+      // Caregiver or Doctor:
+      if (_overview.isEmpty && _activePatientId == null) {
+        loadAll();
+      }
+    }
+  }
 
   DoseEvent? get nextDose {
     final pending = _todayDoses.where((d) =>
@@ -55,24 +91,39 @@ class CareState extends ChangeNotifier {
   }
 
   Future<void> loadAll() async {
-    try {
-      _todayDoses = await repository.getTodayDoses(_activePatientId);
-    } catch (_) {}
-
-    try {
-      _openAlerts = await repository.getOpenAlerts(_activePatientId);
-    } catch (_) {}
-
-    try {
-      _timeline = await repository.getTimeline(_activePatientId);
-    } catch (_) {}
-
-    try {
-      _patientInsight = await repository.getWeeklyInsight(_activePatientId);
-    } catch (_) {}
-
+    // 1. For Caregivers & Doctors, load overview of linked patients
     try {
       _overview = await repository.getOverview();
+      if (_overview.isNotEmpty && (_activePatientId == null || !_overview.any((p) => p.patient.id == _activePatientId))) {
+        _activePatientId = _overview.first.patient.id;
+        _subscribeToStream();
+      }
+    } catch (_) {}
+
+    final patientId = _activePatientId;
+    if (patientId == null || patientId <= 0) {
+      notifyListeners();
+      return;
+    }
+
+    try {
+      _todayDoses = await repository.getTodayDoses(patientId);
+    } catch (_) {}
+
+    try {
+      _openAlerts = await repository.getOpenAlerts(patientId);
+    } catch (_) {}
+
+    try {
+      _timeline = await repository.getTimeline(patientId);
+    } catch (_) {}
+
+    try {
+      _patientInsight = await repository.getWeeklyInsight(patientId);
+    } catch (_) {}
+
+    try {
+      _caregiverContact = await repository.getCaregiverContact(patientId);
     } catch (_) {}
 
     notifyListeners();
@@ -82,11 +133,17 @@ class CareState extends ChangeNotifier {
     _streamSubscription?.cancel();
     _reconnectTimer?.cancel();
 
+    final patientId = _activePatientId;
+    if (patientId == null || patientId <= 0) {
+      _streamStatus = CareStreamStatus.offline;
+      return;
+    }
+
     try {
       _streamStatus = CareStreamStatus.live;
       notifyListeners();
 
-      _streamSubscription = repository.watchPatient(_activePatientId).listen(
+      _streamSubscription = repository.watchPatient(patientId).listen(
         (update) {
           _streamStatus = CareStreamStatus.live;
           loadAll();
@@ -171,7 +228,9 @@ class CareState extends ChangeNotifier {
   }
 
   Future<void> triggerEmergencyHelp() async {
-    await repository.triggerEmergencyHelp(_activePatientId);
+    final patientId = _activePatientId;
+    if (patientId == null || patientId <= 0) return;
+    await repository.triggerEmergencyHelp(patientId);
     await loadAll();
   }
 

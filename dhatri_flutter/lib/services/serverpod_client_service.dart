@@ -167,6 +167,53 @@ class ServerpodClientService extends ChangeNotifier {
     }
   }
 
+  /// Starts registration with Serverpod Email IDP
+  Future<UuidValue?> startRegistration(String email) async {
+    try {
+      final reqId = await _client.emailIdp.startRegistration(email: email.trim());
+      _lastError = null;
+      return reqId;
+    } catch (e) {
+      _lastError = e.toString();
+      notifyListeners();
+      return null;
+    }
+  }
+
+  /// Verifies email registration code
+  Future<String?> verifyRegistrationCode(UuidValue accountRequestId, String code) async {
+    try {
+      final token = await _client.emailIdp.verifyRegistrationCode(
+        accountRequestId: accountRequestId,
+        verificationCode: code.trim(),
+      );
+      _lastError = null;
+      return token;
+    } catch (e) {
+      _lastError = e.toString();
+      notifyListeners();
+      return null;
+    }
+  }
+
+  /// Finishes email registration and stores issued JWT token
+  Future<bool> finishRegistration(String registrationToken, String password) async {
+    try {
+      final res = await _client.emailIdp.finishRegistration(
+        registrationToken: registrationToken,
+        password: password,
+      );
+      await _authManager.put(res.token);
+      _lastError = null;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _lastError = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   /// Sign out by clearing the JWT token.
   Future<void> signOut() async {
     await _authManager.remove();

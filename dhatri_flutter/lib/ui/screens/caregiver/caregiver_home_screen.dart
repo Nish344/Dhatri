@@ -27,7 +27,7 @@ class CaregiverHomeScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Enter the 6-digit link code shown on the patient\'s profile (e.g. 482910 for Ramesh Kumar).',
+              'Enter the 6-digit link code shown on the patient\'s profile or settings screen.',
               style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
             ),
             const SizedBox(height: 14),
@@ -156,7 +156,7 @@ class CaregiverHomeScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '${care.overview.isNotEmpty ? care.overview.length : 1} patient${care.overview.length == 1 ? '' : 's'} monitored · ${care.openAlerts.length} need attention',
+                          '${care.overview.length} patient${care.overview.length == 1 ? '' : 's'} monitored · ${care.openAlerts.length} need attention',
                           style: AppTypography.cardTitle.copyWith(fontSize: 18),
                         ),
                       ],
@@ -263,28 +263,36 @@ class CaregiverHomeScreen extends StatelessWidget {
                 },
               )
             else
-              DhatriPatientCard(
-                status: const PatientStatus(
-                  patient: AuthState.defaultPatient,
-                  state: PatientState.attention,
-                  headline: 'Weakness reported · Check-in recommended',
-                  openAlerts: 1,
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.cardBorder),
                 ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const PatientDetailScreen(
-                        status: PatientStatus(
-                          patient: AuthState.defaultPatient,
-                          state: PatientState.attention,
-                          headline: 'Weakness reported · Check-in recommended',
-                          openAlerts: 1,
-                        ),
-                      ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.person_search_outlined, size: 48, color: AppColors.textSecondary),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No patients linked yet',
+                      style: AppTypography.cardTitle.copyWith(fontSize: 16),
                     ),
-                  );
-                },
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Tap "Link Patient" above to connect using the patient\'s 6-digit link code.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.add_link),
+                      label: const Text('Link Patient Now'),
+                      onPressed: () => _showLinkPatientDialog(context),
+                    ),
+                  ],
+                ),
               ),
 
             const SizedBox(height: 80),

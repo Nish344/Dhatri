@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../state/care_state.dart';
+import '../../../state/auth_state.dart';
 import '../../components/dhatri_buttons.dart';
 
 class PatientHelpScreen extends StatelessWidget {
@@ -10,6 +11,10 @@ class PatientHelpScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthState>();
+    final care = context.watch<CareState>();
+    final caregiver = care.caregiverContact;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Column(
@@ -75,57 +80,141 @@ class PatientHelpScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.cardBorder, width: 1.5),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 28,
-                        backgroundColor: AppColors.primaryLight,
-                        child: Text(
-                          'A',
-                          style: AppTypography.displayLarge.copyWith(
-                            fontSize: 24,
-                            color: AppColors.primary,
+            if (caregiver != null)
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.cardBorder, width: 1.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 28,
+                          backgroundColor: AppColors.primaryLight,
+                          child: Text(
+                            caregiver.name.isNotEmpty
+                                ? caregiver.name[0].toUpperCase()
+                                : 'C',
+                            style: AppTypography.displayLarge.copyWith(
+                              fontSize: 24,
+                              color: AppColors.primary,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Ananya Kumar', style: AppTypography.cardTitle),
-                            const SizedBox(height: 2),
-                            Text('Daughter · Primary Caregiver', style: AppTypography.supporting),
-                          ],
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(caregiver.name, style: AppTypography.cardTitle),
+                              const SizedBox(height: 2),
+                              Text(
+                                caregiver.phone != null && caregiver.phone!.isNotEmpty
+                                    ? 'Primary Caregiver · ${caregiver.phone}'
+                                    : 'Primary Caregiver',
+                                style: AppTypography.supporting,
+                              ),
+                            ],
+                          ),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    DhatriPrimaryButton(
+                      label: 'Call ${caregiver.name}',
+                      icon: Icons.phone_rounded,
+                      onPressed: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(caregiver.phone != null
+                                ? 'Calling ${caregiver.name} (${caregiver.phone})...'
+                                : 'Calling ${caregiver.name}...'),
+                          ),
+                        );
+                      },
+                      backgroundColor: AppColors.callGreen,
+                      height: 54,
+                    ),
+                  ],
+                ),
+              )
+            else
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.cardBorder, width: 1.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.person_search_outlined, size: 28, color: AppColors.textSecondary),
+                        const SizedBox(width: 10),
+                        Text('No Caregiver Linked Yet', style: AppTypography.cardTitle),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Give your 6-digit link code to your caregiver so they can link to your account and receive updates:',
+                      style: AppTypography.bodyMedium,
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryLight,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  DhatriPrimaryButton(
-                    label: 'Call Ananya',
-                    icon: Icons.phone_rounded,
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Calling Ananya (+91 98111 22233)...')),
-                      );
-                    },
-                    backgroundColor: AppColors.callGreen,
-                    height: 54,
-                  ),
-                ],
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'YOUR LINK CODE',
+                                style: AppTypography.supporting.copyWith(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.primaryDark,
+                                ),
+                              ),
+                              Text(
+                                auth.currentProfile.linkCode ?? '------',
+                                style: AppTypography.cardTitle.copyWith(
+                                  fontSize: 22,
+                                  letterSpacing: 3,
+                                  color: AppColors.primaryDark,
+                                ),
+                              ),
+                            ],
+                          ),
+                          TextButton.icon(
+                            icon: const Icon(Icons.copy, size: 16),
+                            label: const Text('Copy'),
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Link code ${auth.currentProfile.linkCode} copied!'),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
 
             const SizedBox(height: 28),
 
@@ -154,13 +243,17 @@ class PatientHelpScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 18),
                   DhatriSecondaryButton(
-                    label: 'Something Feels Wrong — Alert Ananya',
+                    label: caregiver != null
+                        ? 'Something Feels Wrong — Alert ${caregiver.name}'
+                        : 'Something Feels Wrong — Send Alert',
                     icon: Icons.warning_amber_rounded,
                     onPressed: () {
                       context.read<CareState>().triggerEmergencyHelp();
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('🚨 Urgent alert sent to Ananya!'),
+                        SnackBar(
+                          content: Text(caregiver != null
+                              ? '🚨 Urgent alert sent to ${caregiver.name}!'
+                              : '🚨 Urgent alert sent!'),
                           backgroundColor: AppColors.error,
                         ),
                       );

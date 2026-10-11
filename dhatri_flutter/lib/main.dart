@@ -11,7 +11,6 @@ import 'state/voice_call_state.dart';
 import 'models/models.dart';
 
 import 'ui/components/dhatri_connection_banner.dart';
-import 'ui/components/dhatri_demo_controller.dart';
 import 'ui/screens/auth/dhatri_auth_screen.dart';
 import 'ui/screens/auth/onboarding_screen.dart';
 import 'ui/screens/patient/patient_shell.dart';
@@ -35,7 +34,10 @@ void main() {
         Provider<ServerpodDhatriRepository>.value(value: repository),
         Provider<DhatriRepository>.value(value: repository),
         ChangeNotifierProvider(create: (_) => AuthState(clientService: clientService)),
-        ChangeNotifierProvider(create: (_) => CareState(repository: repository)),
+        ChangeNotifierProxyProvider<AuthState, CareState>(
+          create: (_) => CareState(repository: repository),
+          update: (_, auth, care) => (care ?? CareState(repository: repository))..syncWithAuth(auth),
+        ),
         ChangeNotifierProvider(
           create: (_) => VoiceCallState(repository: repository),
         ),
@@ -91,18 +93,13 @@ class DhatriRootShell extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         top: false,
-        child: Stack(
+        child: Column(
           children: [
-            Column(
-              children: [
-                DhatriConnectionBanner(
-                  isOnline: clientService.isOnline,
-                  serverUrl: clientService.serverUrl,
-                ),
-                Expanded(child: currentRoleView),
-              ],
+            DhatriConnectionBanner(
+              isOnline: clientService.isOnline,
+              serverUrl: clientService.serverUrl,
             ),
-            const DhatriDemoController(),
+            Expanded(child: currentRoleView),
           ],
         ),
       ),
