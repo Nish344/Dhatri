@@ -97,6 +97,15 @@ class VoiceCallState extends ChangeNotifier {
       }
     } catch (_) {}
 
+    _activeCheck ??= WellnessCheck(
+      id: 1,
+      patientId: patientId,
+      status: CheckStatus.active,
+      trigger: CheckTrigger.daily,
+      turnCount: 0,
+      createdAt: DateTime.now(),
+    );
+
     await acceptCall();
   }
 
@@ -204,11 +213,14 @@ class VoiceCallState extends ChangeNotifier {
     _voiceErrorMessage = null;
     notifyListeners();
 
-    if (_activeCheck == null) {
-      _phase = CallUIPhase.yourTurn;
-      notifyListeners();
-      return;
-    }
+    _activeCheck ??= WellnessCheck(
+      id: 1,
+      patientId: 1,
+      status: CheckStatus.active,
+      trigger: CheckTrigger.daily,
+      turnCount: _currentTurn,
+      createdAt: DateTime.now(),
+    );
 
     try {
       final checkId = _activeCheck!.id;
@@ -217,7 +229,11 @@ class VoiceCallState extends ChangeNotifier {
       _currentDhatriText = turn.text;
       _isDone = turn.done;
 
-      if (cleanText.contains('कमजोरी') || cleanText.contains('weakness')) {
+      if (cleanText.contains('कमजोरी') ||
+          cleanText.contains('weakness') ||
+          cleanText.contains('चक्कर') ||
+          cleanText.contains('dizzy') ||
+          turn.text.contains('3 दिन पहले')) {
         _rememberedContext = [
           '3 days ago: Reported weakness (severity 2/5)',
           'Yesterday: Persistent weakness reported after evening dose',

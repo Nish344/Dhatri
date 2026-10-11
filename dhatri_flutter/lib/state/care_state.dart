@@ -108,9 +108,8 @@ class CareState extends ChangeNotifier {
     notifyListeners();
 
     _reconnectTimer?.cancel();
-    _reconnectTimer = Timer(const Duration(seconds: 2), () {
+    _reconnectTimer = Timer(const Duration(seconds: 10), () {
       _subscribeToStream();
-      loadAll();
     });
   }
 

@@ -23,7 +23,10 @@ void main() {
 
   // 1. Initialize Serverpod client service & repository
   final clientService = ServerpodClientService();
-  final repository = ServerpodDhatriRepository(client: clientService.client);
+  final repository = ServerpodDhatriRepository(
+    client: clientService.client,
+    clientService: clientService,
+  );
 
   runApp(
     MultiProvider(

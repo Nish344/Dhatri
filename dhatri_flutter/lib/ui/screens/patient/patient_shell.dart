@@ -73,6 +73,7 @@ class _PatientShellState extends State<PatientShell> {
     return Scaffold(
       appBar: AppBar(
         title: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             if (_currentIndex == 0) ...[
               Container(
@@ -85,7 +86,13 @@ class _PatientShellState extends State<PatientShell> {
               ),
               const SizedBox(width: 10),
             ],
-            Text(tabTitle, style: AppTypography.sectionTitle.copyWith(fontSize: 20)),
+            Flexible(
+              child: Text(
+                tabTitle,
+                style: AppTypography.sectionTitle.copyWith(fontSize: 20),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         actions: [

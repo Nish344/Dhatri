@@ -93,37 +93,28 @@ class ServerpodClientService extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final baseUri = Uri.parse(_serverUrl);
-      final checkUri = Uri(
-        scheme: baseUri.scheme,
-        host: baseUri.host,
-        port: baseUri.port,
-        path: '/assets/assets/config.json',
-      );
-
-      final response = await http
-          .get(checkUri)
-          .timeout(const Duration(milliseconds: 2500));
-
-      if (response.statusCode == 200 || response.statusCode == 404) {
+      // Use Serverpod's public unauthenticated RPC to verify backend connectivity
+      await _client.emailIdp.hasAccount().timeout(const Duration(seconds: 3));
+      _isOnline = true;
+      _lastError = null;
+    } catch (e) {
+      if (e is ServerpodClientException) {
+        // If Serverpod responded (even with an RPC exception), the backend is online!
         _isOnline = true;
         _lastError = null;
       } else {
-        _isOnline = false;
-        _lastError = 'HTTP ${response.statusCode}';
-      }
-    } catch (e) {
-      // Also try fallback ping directly to root /
-      try {
-        final rootUri = Uri.parse(_serverUrl);
-        final response = await http
-            .get(rootUri)
-            .timeout(const Duration(milliseconds: 1500));
-        _isOnline = response.statusCode == 200 || response.statusCode == 404;
-        _lastError = null;
-      } catch (err) {
-        _isOnline = false;
-        _lastError = err.toString();
+        // Network timeout or connection refused
+        try {
+          final rootUri = Uri.parse(_serverUrl);
+          final res = await http
+              .get(rootUri)
+              .timeout(const Duration(milliseconds: 1500));
+          _isOnline = res.statusCode >= 200 && res.statusCode < 500;
+          _lastError = _isOnline ? null : 'HTTP ${res.statusCode}';
+        } catch (err) {
+          _isOnline = false;
+          _lastError = err.toString();
+        }
       }
     } finally {
       _isChecking = false;

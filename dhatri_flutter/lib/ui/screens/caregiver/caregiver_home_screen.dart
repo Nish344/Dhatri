@@ -93,9 +93,18 @@ class CaregiverHomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Caregiver Portal', style: AppTypography.sectionTitle.copyWith(fontSize: 20)),
-            Text('${auth.currentProfile.name} · Primary Caregiver', style: AppTypography.supporting.copyWith(fontSize: 12)),
+            Text(
+              'Caregiver Portal',
+              style: AppTypography.sectionTitle.copyWith(fontSize: 20),
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              '${auth.currentProfile.name} · Primary Caregiver',
+              style: AppTypography.supporting.copyWith(fontSize: 12),
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ),
         actions: [

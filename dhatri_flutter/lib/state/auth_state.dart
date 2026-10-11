@@ -82,22 +82,9 @@ class AuthState extends ChangeNotifier {
     _setLocalDefaultProfile(role);
     notifyListeners();
 
-    final creds = demoCredentials[role];
-    if (creds != null && clientService != null && clientService!.isOnline) {
-      try {
-        final ok = await clientService!.signIn(creds.$1, creds.$2);
-        if (ok) {
-          await loadCurrentProfile();
-        } else {
-          // If demo user is not yet created in Serverpod auth DB,
-          // ensure auth key is cleared so invalid headers aren't sent.
-          clientService!.setAuthKey(null);
-        }
-      } catch (_) {
-        clientService!.setAuthKey(null);
-      }
-    } else if (clientService != null) {
-      clientService!.setAuthKey(null);
+    // If an authenticated session already exists with Serverpod, load the remote profile
+    if (clientService != null && await clientService!.isAuthenticated) {
+      await loadCurrentProfile();
     }
   }
 

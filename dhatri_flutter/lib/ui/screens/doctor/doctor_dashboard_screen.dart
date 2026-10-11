@@ -21,9 +21,18 @@ class DoctorDashboardScreen extends StatelessWidget {
       appBar: AppBar(
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Clinical Portal', style: AppTypography.sectionTitle.copyWith(fontSize: 20)),
-            Text('${auth.currentProfile.name} · Geriatric Medicine', style: AppTypography.supporting.copyWith(fontSize: 12)),
+            Text(
+              'Clinical Portal',
+              style: AppTypography.sectionTitle.copyWith(fontSize: 20),
+              overflow: TextOverflow.ellipsis,
+            ),
+            Text(
+              '${auth.currentProfile.name} · Geriatric Medicine',
+              style: AppTypography.supporting.copyWith(fontSize: 12),
+              overflow: TextOverflow.ellipsis,
+            ),
           ],
         ),
         actions: [

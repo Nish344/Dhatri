@@ -36,6 +36,7 @@ class ActiveCallScreen extends StatelessWidget {
         title: Text(
           'Dhatri Care Call',
           style: AppTypography.pageTitle.copyWith(color: Colors.white, fontSize: 20),
+          overflow: TextOverflow.ellipsis,
         ),
         actions: [
           Container(
