@@ -24,8 +24,7 @@ class ServerpodDhatriRepository implements DhatriRepository {
     if (clientService != null) {
       return await clientService!.isAuthenticated;
     }
-    final key = await client.authKeyProvider?.get();
-    return key != null && key.trim().isNotEmpty;
+    return false;
   }
 
   @override
@@ -320,8 +319,10 @@ class ServerpodDhatriRepository implements DhatriRepository {
       } catch (_) {}
     }
     return protocol.CheckInTurn(
+      checkId: checkId,
       turnIndex: 1,
       text: CopyHindi.greetingQuestion,
+      audio: ByteData(0),
       done: false,
     );
   }
@@ -343,15 +344,19 @@ class ServerpodDhatriRepository implements DhatriRepository {
         transcript.contains('चक्कर') ||
         transcript.contains('dizzy')) {
       return protocol.CheckInTurn(
+        checkId: checkId,
         turnIndex: 2,
         text: CopyHindi.followUpWithMemory,
+        audio: ByteData(0),
         done: false,
       );
     }
 
     return protocol.CheckInTurn(
+      checkId: checkId,
       turnIndex: 3,
       text: CopyHindi.closingThankYou,
+      audio: ByteData(0),
       done: true,
     );
   }
@@ -367,8 +372,10 @@ class ServerpodDhatriRepository implements DhatriRepository {
       } catch (_) {}
     }
     return protocol.CheckInTurn(
+      checkId: checkId,
       turnIndex: 2,
       text: CopyHindi.followUpWithMemory,
+      audio: audio,
       done: false,
     );
   }
