@@ -29,6 +29,37 @@ void main() {
       expect(checks.single.trigger, CheckTrigger.daily);
     });
 
+    test('open reclaims a stuck active check so a new call can ring', () async {
+      final session = sessionBuilder.build();
+      final patient = await insertProfile(
+        session,
+        authUserId: 'reclaim-${DateTime.now().microsecondsSinceEpoch}',
+        name: 'Ramesh',
+        role: Role.patient,
+      );
+
+      await openCheckIn(session, patient.id!);
+      final first = (await WellnessCheck.db.findFirstRow(
+        session,
+        where: (t) => t.patientId.equals(patient.id!),
+      ))!;
+      await WellnessCheck.db.updateRow(
+        session,
+        first.copyWith(status: CheckStatus.active),
+      );
+
+      await openCheckIn(session, patient.id!, trigger: CheckTrigger.caregiver);
+
+      final checks = await WellnessCheck.db.find(
+        session,
+        where: (t) => t.patientId.equals(patient.id!),
+        orderBy: (t) => t.id,
+      );
+      expect(checks, hasLength(2));
+      expect(checks.first.status, CheckStatus.completed);
+      expect(checks.last.status, CheckStatus.pending);
+    });
+
     test('ring re-posts twice then leaves the check unanswered', () async {
       final session = sessionBuilder.build();
       final patient = await insertProfile(

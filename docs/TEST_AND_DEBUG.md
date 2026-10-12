@@ -137,7 +137,9 @@ After `serverpod start`, use the Flutter app (launched with it or via spawn).
 5. Call UI chip shows `Sarvam · bulbul` when server WAV plays, or `Device TTS (fallback)` if Sarvam audio was empty (browser TTS — robotic).
 6. Caregiver timeline/alerts update; severe / emergency phrases raise high-priority alerts.
 
-**If initiate call seems stuck:** look for `endpoint.checkIn.startNow`, `checkIn.open` / `checkIn.open re-ring` in server logs. The patient console should print `CareState: incoming check` then `VoiceCallState: ringing`.
+**If initiate call seems stuck:** look for `endpoint.checkIn.startNow`, `checkIn.open` / `checkIn.open re-ring` / `checkIn.open reclaim active` in server logs. The patient console should print `CareState: incoming check` then `VoiceCallState: ringing`.
+
+**If Talk-to-Dhatri stops working after hang-up:** an old check was left `active`. Hang-up now completes it (`checkIn.hangUp complete`); `openCheckIn` also reclaim-completes any stuck `active` row before creating a new pending ring. Hot-restart both browsers after pulling this fix.
 
 ### Doctor
 

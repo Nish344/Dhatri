@@ -8,7 +8,9 @@ import '../../state/care_state.dart';
 
 /// Top AppBar pill button that shows current active role and opens role switcher sheet.
 class DhatriRoleSwitcherButton extends StatelessWidget {
-  const DhatriRoleSwitcherButton({super.key});
+  final bool compact;
+
+  const DhatriRoleSwitcherButton({super.key, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +47,10 @@ class DhatriRoleSwitcherButton extends StatelessWidget {
           },
           borderRadius: BorderRadius.circular(20),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? 8 : 10,
+              vertical: 6,
+            ),
             decoration: BoxDecoration(
               color: AppColors.primaryLight,
               borderRadius: BorderRadius.circular(20),
@@ -55,17 +60,22 @@ class DhatriRoleSwitcherButton extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(emoji, style: const TextStyle(fontSize: 16)),
-                const SizedBox(width: 6),
-                Text(
-                  roleLabel,
-                  style: AppTypography.supporting.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
+                if (!compact) ...[
+                  const SizedBox(width: 6),
+                  Text(
+                    roleLabel,
+                    style: AppTypography.supporting.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
                   ),
+                ],
+                const Icon(
+                  Icons.arrow_drop_down,
+                  size: 18,
+                  color: AppColors.primary,
                 ),
-                const SizedBox(width: 2),
-                const Icon(Icons.arrow_drop_down, size: 18, color: AppColors.primary),
               ],
             ),
           ),

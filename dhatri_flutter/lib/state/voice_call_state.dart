@@ -31,6 +31,7 @@ class VoiceCallState extends ChangeNotifier {
   bool _isDone = false;
   String? _voiceErrorMessage;
   String _lastVoiceSource = 'none';
+  bool _starting = false;
 
   VoiceCallState({required this.repository});
 
@@ -43,8 +44,6 @@ class VoiceCallState extends ChangeNotifier {
   bool get isDone => _isDone;
   String? get voiceErrorMessage => _voiceErrorMessage;
   VoiceAudioService get voiceService => _voiceService;
-
-  /// `sarvam` | `device_tts` | `none` — what actually played last.
   String get lastVoiceSource => _lastVoiceSource;
 
   String get phaseLabel {
@@ -67,6 +66,7 @@ class VoiceCallState extends ChangeNotifier {
   }
 
   void receiveIncomingCall(WellnessCheck check) {
+    if (_starting) return;
     if (_phase != CallUIPhase.ended && _phase != CallUIPhase.incoming) {
       debugPrint(
         'VoiceCallState: ignore incoming id=${check.id} while phase=$_phase',
@@ -76,9 +76,7 @@ class VoiceCallState extends ChangeNotifier {
     if (_phase == CallUIPhase.incoming && _activeCheck?.id == check.id) {
       return;
     }
-    debugPrint(
-      'VoiceCallState: ringing patient for check id=${check.id}',
-    );
+    debugPrint('VoiceCallState: ringing patient for check id=${check.id}');
     _activeCheck = check;
     _phase = CallUIPhase.incoming;
     _currentTurn = 0;
@@ -90,9 +88,7 @@ class VoiceCallState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Caregiver / demo HUD: create (or re-ring) on the server only.
-  /// The *patient* browser must pick this up via care stream / pending poll —
-  /// do not flip this tab into an incoming UI (caregiver shell has no ringtone).
+  /// Caregiver / demo HUD: queue on server only (patient browser rings).
   Future<bool> triggerCheckIn(int patientId) async {
     try {
       debugPrint('VoiceCallState: startNow patient=$patientId');
@@ -111,10 +107,23 @@ class VoiceCallState extends ChangeNotifier {
     }
   }
 
-  /// Patient starts a call from Home.
+  /// Patient starts a call from Home ("Talk to Dhatri").
   Future<void> startDirectCall(int patientId) async {
-    _phase = CallUIPhase.connected;
+    if (_starting) return;
+    _starting = true;
+
+    await _voiceService.stopSpeaking();
+    await _voiceService.stopListening();
+
+    // Drop any stale local check — hang-up must not leave us binding to an
+    // already-active row that pending() cannot see.
+    _activeCheck = null;
+    _isDone = false;
+    _currentTurn = 0;
+    _currentPatientSpeech = '';
+    _rememberedContext = [];
     _voiceErrorMessage = null;
+    _phase = CallUIPhase.connected;
     notifyListeners();
 
     try {
@@ -122,19 +131,30 @@ class VoiceCallState extends ChangeNotifier {
       final check = await repository.getPendingCheckIn(patientId);
       if (check != null) {
         _activeCheck = check;
+      } else {
+        debugPrint(
+          'VoiceCallState: startDirectCall got null pending for patient=$patientId',
+        );
       }
     } catch (e, st) {
       debugPrint('VoiceCallState: startDirectCall FAILED: $e\n$st');
+      _voiceErrorMessage = 'Check-in could not be started: $e';
     }
 
     if (_activeCheck == null) {
-      _voiceErrorMessage = 'Check-in could not be started. Is the server online?';
       _phase = CallUIPhase.ended;
+      _voiceErrorMessage ??=
+          'Check-in could not be started. Is the server online?';
+      _starting = false;
       notifyListeners();
       return;
     }
 
-    await acceptCall();
+    try {
+      await acceptCall();
+    } finally {
+      _starting = false;
+    }
   }
 
   Future<void> acceptCall() async {
@@ -146,6 +166,7 @@ class VoiceCallState extends ChangeNotifier {
     if (checkId == null || checkId <= 0) {
       _voiceErrorMessage = 'No active check-in to accept';
       _phase = CallUIPhase.ended;
+      _activeCheck = null;
       notifyListeners();
       return;
     }
@@ -162,6 +183,10 @@ class VoiceCallState extends ChangeNotifier {
     } catch (e, st) {
       debugPrint('VoiceCallState: acceptCheckIn FAILED: $e\n$st');
       _voiceErrorMessage = 'Accept failed: $e';
+      _phase = CallUIPhase.ended;
+      _activeCheck = null;
+      notifyListeners();
+      return;
     }
 
     _currentDhatriText = greeting;
@@ -278,6 +303,7 @@ class VoiceCallState extends ChangeNotifier {
         onComplete: () {
           if (_isDone) {
             _phase = CallUIPhase.ended;
+            _activeCheck = null;
           } else {
             _phase = CallUIPhase.yourTurn;
           }
@@ -285,11 +311,8 @@ class VoiceCallState extends ChangeNotifier {
         },
       );
     } catch (e, st) {
-      // Do NOT invent a "data surakshit" line — that was confusing users when
-      // the real Gemini reply failed to load.
       debugPrint('VoiceCallState: answerText FAILED: $e\n$st');
       _voiceErrorMessage = 'Reply failed: $e';
-      _currentDhatriText = CopyHindi.greetingQuestion;
       _phase = CallUIPhase.yourTurn;
       notifyListeners();
     }
@@ -317,6 +340,7 @@ class VoiceCallState extends ChangeNotifier {
         onComplete: () {
           if (_isDone) {
             _phase = CallUIPhase.ended;
+            _activeCheck = null;
           } else {
             _phase = CallUIPhase.yourTurn;
           }
@@ -345,17 +369,30 @@ class VoiceCallState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void endCall() {
-    _voiceService.stopSpeaking();
-    _voiceService.stopListening();
+  /// Hang up / decline. Always clears local state so Talk-to-Dhatri works again.
+  Future<void> endCall() async {
+    await _voiceService.stopSpeaking();
+    await _voiceService.stopListening();
 
-    if (_activeCheck != null && !_isDone) {
-      repository.snoozeCheckIn(_activeCheck!.id).catchError((e) {
-        debugPrint('VoiceCallState: snooze failed: $e');
-      });
-    }
+    final checkId = _activeCheck?.id;
+    final shouldNotifyServer = checkId != null && checkId > 0 && !_isDone;
+
     _phase = CallUIPhase.ended;
+    _activeCheck = null;
+    _isDone = false;
+    _currentTurn = 0;
+    _currentPatientSpeech = '';
+    _starting = false;
     notifyListeners();
+
+    if (shouldNotifyServer) {
+      try {
+        // Server: active → completed (hang-up); pending → snoozed (decline).
+        await repository.snoozeCheckIn(checkId);
+      } catch (e) {
+        debugPrint('VoiceCallState: hangUp/snooze failed: $e');
+      }
+    }
   }
 
   void resetCall() {
@@ -370,6 +407,7 @@ class VoiceCallState extends ChangeNotifier {
     _isDone = false;
     _voiceErrorMessage = null;
     _lastVoiceSource = 'none';
+    _starting = false;
     notifyListeners();
   }
 

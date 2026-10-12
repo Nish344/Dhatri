@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -52,7 +54,11 @@ class _PatientShellState extends State<PatientShell> {
 
     if (voice.phase != CallUIPhase.ended &&
         voice.phase != CallUIPhase.incoming) {
-      return ActiveCallScreen(onEndCall: () => voice.endCall());
+      return ActiveCallScreen(
+        onEndCall: () {
+          unawaited(voice.endCall());
+        },
+      );
     }
 
     final pages = [
@@ -84,12 +90,17 @@ class _PatientShellState extends State<PatientShell> {
 
     return Scaffold(
       appBar: AppBar(
+        titleSpacing: 16,
         title: Text(
           tabTitle,
           style: AppTypography.sectionTitle.copyWith(fontSize: 20),
           overflow: TextOverflow.ellipsis,
+          maxLines: 1,
         ),
-        actions: const [DhatriRoleSwitcherButton()],
+        actions: const [
+          // Compact so narrow web widths don't overflow the AppBar Row.
+          DhatriRoleSwitcherButton(compact: true),
+        ],
       ),
       body: IndexedStack(index: _currentIndex, children: pages),
       bottomNavigationBar: NavigationBar(

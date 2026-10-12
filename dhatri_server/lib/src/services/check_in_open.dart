@@ -46,30 +46,36 @@ Future<void> openCheckIn(
         }),
   );
   if (existing != null) {
-    // Caregiver "call now" while a ring is already out: re-notify the patient
-    // over the care stream instead of silently no-oping (multi-browser demos).
+    // Abandoned "active" checks (patient hung up / tab closed) block every new
+    // call because pending() ignores active. Reclaim and open a fresh ring.
     if (existing.status == CheckStatus.active) {
       session.log(
-        'checkIn.open skipped patient=$patientId existingId=${existing.id} '
-        'status=active (call in progress)',
+        'checkIn.open reclaim active id=${existing.id} patient=$patientId',
+        level: LogLevel.warning,
       );
+      await _completeCheck(
+        session,
+        existing,
+        summaryFallback: 'Check-in ended without finishing.',
+      );
+      // Fall through and create a new pending check below.
+    } else {
+      session.log(
+        'checkIn.open re-ring patient=$patientId existingId=${existing.id} '
+        'status=${existing.status.name} trigger=${trigger.name}',
+      );
+      final revived = await WellnessCheck.db.updateRow(
+        session,
+        existing.copyWith(status: CheckStatus.pending),
+      );
+      await postUpdate(
+        session,
+        patientId,
+        CareUpdate(patientId: patientId, check: revived),
+      );
+      await _scheduleRing(session, revived.id!);
       return;
     }
-    session.log(
-      'checkIn.open re-ring patient=$patientId existingId=${existing.id} '
-      'status=${existing.status.name} trigger=${trigger.name}',
-    );
-    final revived = await WellnessCheck.db.updateRow(
-      session,
-      existing.copyWith(status: CheckStatus.pending),
-    );
-    await postUpdate(
-      session,
-      patientId,
-      CareUpdate(patientId: patientId, check: revived),
-    );
-    await _scheduleRing(session, revived.id!);
-    return;
   }
 
   final check = await WellnessCheck.db.insertRow(
@@ -145,9 +151,28 @@ Future<void> snoozeCheckIn(Session session, int checkId) async {
     );
     return;
   }
+
+  // Hang-up mid-call: complete so Talk-to-Dhatri / caregiver ring can start again.
+  if (check.status == CheckStatus.active) {
+    session.log('checkIn.hangUp complete id=$checkId');
+    await _completeCheck(
+      session,
+      check,
+      summaryFallback: 'Check-in ended by patient.',
+    );
+    return;
+  }
+
   if (check.snoozeCount >= maxCheckInSnoozes) {
+    // Decline after max snoozes — complete instead of leaving a zombie pending.
     session.log(
-      'checkIn.snooze maxed id=$checkId snoozes=${check.snoozeCount}',
+      'checkIn.snooze maxed → complete id=$checkId '
+      'snoozes=${check.snoozeCount}',
+    );
+    await _completeCheck(
+      session,
+      check,
+      summaryFallback: 'Check-in declined after max snoozes.',
     );
     return;
   }
@@ -175,6 +200,26 @@ Future<void> snoozeCheckIn(Session session, int checkId) async {
       )
       .checkIn
       .ring(checkId);
+}
+
+Future<void> _completeCheck(
+  Session session,
+  WellnessCheck check, {
+  required String summaryFallback,
+}) async {
+  final updated = await WellnessCheck.db.updateRow(
+    session,
+    check.copyWith(
+      status: CheckStatus.completed,
+      completedAt: DateTime.now().toUtc(),
+      summaryEn: check.summaryEn ?? summaryFallback,
+    ),
+  );
+  await postUpdate(
+    session,
+    check.patientId,
+    CareUpdate(patientId: check.patientId, check: updated),
+  );
 }
 
 Future<void> _scheduleRing(Session session, int checkId) => session

@@ -105,6 +105,7 @@ class _DhatriDemoControllerState extends State<DhatriDemoController> {
                     isSelected: auth.activeRole == Role.patient,
                     onTap: () {
                       auth.setActiveRole(Role.patient);
+                      voice.resetCall();
                       care.loadAll();
                     },
                   ),
@@ -114,6 +115,7 @@ class _DhatriDemoControllerState extends State<DhatriDemoController> {
                     isSelected: auth.activeRole == Role.caregiver,
                     onTap: () {
                       auth.setActiveRole(Role.caregiver);
+                      voice.resetCall();
                       care.loadAll();
                     },
                   ),
@@ -123,6 +125,7 @@ class _DhatriDemoControllerState extends State<DhatriDemoController> {
                     isSelected: auth.activeRole == Role.doctor,
                     onTap: () {
                       auth.setActiveRole(Role.doctor);
+                      voice.resetCall();
                       care.loadAll();
                     },
                   ),
