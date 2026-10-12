@@ -16,6 +16,9 @@ String dailyCheckInId(int patientId) => 'checkin-$patientId';
 
 /// Registers the evening care call when a caregiver or doctor links a patient.
 Future<void> scheduleDailyCheckIn(Session session, int patientId) async {
+  session.log(
+    'checkIn.scheduleDaily patient=$patientId cron=$dailyCheckInCron',
+  );
   await session.serverpod.futureCalls.cancel(dailyCheckInId(patientId));
   await session.serverpod.futureCalls
       .callRecurring(identifier: dailyCheckInId(patientId))
@@ -31,6 +34,7 @@ Future<void> openCheckIn(
   int patientId, {
   CheckTrigger trigger = CheckTrigger.caregiver,
 }) async {
+  session.log('checkIn.open patient=$patientId trigger=${trigger.name}');
   final existing = await WellnessCheck.db.findFirstRow(
     session,
     where: (t) =>
@@ -41,7 +45,13 @@ Future<void> openCheckIn(
           CheckStatus.active,
         }),
   );
-  if (existing != null) return;
+  if (existing != null) {
+    session.log(
+      'checkIn.open skipped patient=$patientId existingId=${existing.id} '
+      'status=${existing.status.name}',
+    );
+    return;
+  }
 
   final check = await WellnessCheck.db.insertRow(
     session,
@@ -51,6 +61,7 @@ Future<void> openCheckIn(
       trigger: trigger,
     ),
   );
+  session.log('checkIn.open created id=${check.id} patient=$patientId');
   await postUpdate(
     session,
     patientId,
@@ -64,12 +75,21 @@ Future<void> openCheckIn(
 /// the timeline can show "Check-in not answered".
 Future<void> ringCheckIn(Session session, int checkId) async {
   final check = await WellnessCheck.db.findById(session, checkId);
-  if (check == null) return;
-  if (check.status != CheckStatus.pending &&
-      check.status != CheckStatus.snoozed) {
+  if (check == null) {
+    session.log('checkIn.ring missing id=$checkId', level: LogLevel.warning);
     return;
   }
-  if (check.ringCount >= maxCheckInRings) return;
+  if (check.status != CheckStatus.pending &&
+      check.status != CheckStatus.snoozed) {
+    session.log(
+      'checkIn.ring skip id=$checkId status=${check.status.name}',
+    );
+    return;
+  }
+  if (check.ringCount >= maxCheckInRings) {
+    session.log('checkIn.ring maxed id=$checkId rings=${check.ringCount}');
+    return;
+  }
 
   final rings = check.ringCount + 1;
   final unanswered = rings >= maxCheckInRings;
@@ -80,6 +100,10 @@ Future<void> ringCheckIn(Session session, int checkId) async {
       // Bring the call back to pending so the patient can answer or snooze again.
       status: unanswered ? CheckStatus.snoozed : CheckStatus.pending,
     ),
+  );
+  session.log(
+    'checkIn.ring id=$checkId ring=$rings/$maxCheckInRings '
+    'unanswered=$unanswered status=${updated.status.name}',
   );
   await postUpdate(
     session,
@@ -97,9 +121,17 @@ Future<void> snoozeCheckIn(Session session, int checkId) async {
   if (check == null) throw ArgumentError('Check-in not found');
   if (check.status != CheckStatus.pending &&
       check.status != CheckStatus.active) {
+    session.log(
+      'checkIn.snooze skip id=$checkId status=${check.status.name}',
+    );
     return;
   }
-  if (check.snoozeCount >= maxCheckInSnoozes) return;
+  if (check.snoozeCount >= maxCheckInSnoozes) {
+    session.log(
+      'checkIn.snooze maxed id=$checkId snoozes=${check.snoozeCount}',
+    );
+    return;
+  }
 
   final updated = await WellnessCheck.db.updateRow(
     session,
@@ -107,6 +139,10 @@ Future<void> snoozeCheckIn(Session session, int checkId) async {
       status: CheckStatus.snoozed,
       snoozeCount: check.snoozeCount + 1,
     ),
+  );
+  session.log(
+    'checkIn.snooze id=$checkId snooze=${updated.snoozeCount}/'
+    '$maxCheckInSnoozes delay=${checkInSnoozeDelay.inMinutes}m',
   );
   await postUpdate(
     session,

@@ -19,11 +19,19 @@ Future<void> remindDose(Session session, int doseEventId) async {
     from: {DoseStatus.scheduled},
     to: DoseStatus.reminded,
   );
-  if (!changed) return;
+  if (!changed) {
+    session.log('dose.remind skip id=$doseEventId (not scheduled)');
+    return;
+  }
 
   final event = await DoseEvent.db.findById(session, doseEventId);
   if (event == null) return;
 
+  session.log(
+    'dose.remind id=$doseEventId patient=${event.patientId} '
+    'med=${event.medicationId} scheduledAt=${event.scheduledAt.toIso8601String()} '
+    'graceMin=${doseGracePeriod().inMinutes}',
+  );
   await postUpdate(
     session,
     event.patientId,
@@ -40,17 +48,26 @@ Future<void> scheduleDoseReminders(
   Session session,
   Iterable<int> doseEventIds,
 ) async {
+  final ids = doseEventIds.toList();
+  session.log('dose.scheduleReminders count=${ids.length}');
   final now = DateTime.now().toUtc();
-  for (final id in doseEventIds) {
+  var immediate = 0;
+  var deferred = 0;
+  for (final id in ids) {
     final event = await DoseEvent.db.findById(session, id);
     if (event == null || event.status != DoseStatus.scheduled) continue;
     if (!event.scheduledAt.isAfter(now)) {
+      immediate++;
       await remindDose(session, id);
     } else {
+      deferred++;
       await session.serverpod.futureCalls
           .callAtTime(event.scheduledAt, identifier: 'remind-$id')
           .dose
           .remind(id);
     }
   }
+  session.log(
+    'dose.scheduleReminders done immediate=$immediate deferred=$deferred',
+  );
 }

@@ -24,6 +24,7 @@ class DoseEndpoint extends Endpoint {
   }
 
   Future<DoseEvent> markTaken(Session session, int doseEventId) async {
+    session.log('endpoint.dose.markTaken id=$doseEventId');
     final event = await DoseEvent.db.findById(session, doseEventId);
     if (event == null) {
       throw ArgumentError('Dose not found');

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../state/voice_call_state.dart';
 import '../../components/dhatri_buttons.dart';
 
 class IncomingCallScreen extends StatelessWidget {
@@ -64,7 +62,10 @@ class IncomingCallScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 18),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -112,4 +113,3 @@ class IncomingCallScreen extends StatelessWidget {
     );
   }
 }
-

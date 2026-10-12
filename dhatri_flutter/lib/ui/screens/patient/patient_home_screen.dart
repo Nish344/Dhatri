@@ -5,17 +5,12 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../../state/care_state.dart';
 import '../../../state/auth_state.dart';
-import '../../../state/voice_call_state.dart';
 import '../../components/dhatri_medication_card.dart';
-import '../../components/dhatri_buttons.dart';
 
 class PatientHomeScreen extends StatelessWidget {
   final VoidCallback onOpenVoiceCall;
 
-  const PatientHomeScreen({
-    super.key,
-    required this.onOpenVoiceCall,
-  });
+  const PatientHomeScreen({super.key, required this.onOpenVoiceCall});
 
   String _timeOfDayGreeting() {
     final hour = DateTime.now().hour;
@@ -73,7 +68,10 @@ class PatientHomeScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('All caught up for today!', style: AppTypography.cardTitle),
+                        Text(
+                          'All caught up for today!',
+                          style: AppTypography.cardTitle,
+                        ),
                         const SizedBox(height: 4),
                         Text(
                           'You have taken all your scheduled medications.',
@@ -108,7 +106,11 @@ class PatientHomeScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  const Icon(Icons.calendar_today_outlined, size: 36, color: AppColors.textSecondary),
+                  const Icon(
+                    Icons.calendar_today_outlined,
+                    size: 36,
+                    color: AppColors.textSecondary,
+                  ),
                   const SizedBox(height: 10),
                   Text(
                     'No medications scheduled for today',
@@ -118,7 +120,10 @@ class PatientHomeScreen extends StatelessWidget {
                   const Text(
                     'When prescriptions are added, daily dosage reminders appear here.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -151,7 +156,10 @@ class PatientHomeScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.primaryLight,
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1.5),
+                border: Border.all(
+                  color: AppColors.primary.withOpacity(0.3),
+                  width: 1.5,
+                ),
               ),
               child: Row(
                 children: [
@@ -161,7 +169,11 @@ class PatientHomeScreen extends StatelessWidget {
                       color: AppColors.primary,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.mic_rounded, color: Colors.white, size: 28),
+                    child: const Icon(
+                      Icons.mic_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -170,17 +182,25 @@ class PatientHomeScreen extends StatelessWidget {
                       children: [
                         Text(
                           'Talk to Dhatri',
-                          style: AppTypography.cardTitle.copyWith(color: AppColors.primary),
+                          style: AppTypography.cardTitle.copyWith(
+                            color: AppColors.primary,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'How are you feeling today? Tap to check in in Hindi.',
-                          style: AppTypography.supporting.copyWith(fontSize: 14),
+                          style: AppTypography.supporting.copyWith(
+                            fontSize: 14,
+                          ),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right_rounded, color: AppColors.primary, size: 28),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.primary,
+                    size: 28,
+                  ),
                 ],
               ),
             ),
@@ -191,4 +211,3 @@ class PatientHomeScreen extends StatelessWidget {
     );
   }
 }
-

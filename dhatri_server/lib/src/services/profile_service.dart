@@ -39,7 +39,7 @@ Future<Profile> registerProfile(
     linkCode = await _uniqueLinkCode(session);
   }
 
-  return Profile.db.insertRow(
+  final profile = await Profile.db.insertRow(
     session,
     Profile(
       authUserId: auth.userIdentifier,
@@ -50,6 +50,11 @@ Future<Profile> registerProfile(
       linkCode: linkCode,
     ),
   );
+  session.log(
+    'profile.register id=${profile.id} role=${role.name} '
+    'auth=${auth.userIdentifier}',
+  );
+  return profile;
 }
 
 Future<Profile> linkWithCode(Session session, String code) async {
@@ -79,6 +84,10 @@ Future<Profile> linkWithCode(Session session, String code) async {
   }
   // Daily evening check-in (ARCHITECTURE §6). Safe to re-register on re-link.
   await scheduleDailyCheckIn(session, linked.id!);
+  session.log(
+    'profile.link caller=${caller.id} role=${caller.role.name} '
+    'patient=${linked.id}',
+  );
   return linked;
 }
 

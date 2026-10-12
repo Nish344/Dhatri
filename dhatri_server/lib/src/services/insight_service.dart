@@ -146,14 +146,25 @@ Future<String> _summary(
   }
   var text = templateSummary(facts);
   if (gemini != null) {
+    final started = DateTime.now().toUtc();
     try {
       text = await gemini.summarizeWeek(facts);
+      session.log(
+        'insight.summary gemini patient=${facts.patient.id} '
+        'ms=${DateTime.now().toUtc().difference(started).inMilliseconds} '
+        'chars=${text.length}',
+      );
     } catch (e) {
       session.log(
         'Weekly summary fell back to template: $e',
         level: LogLevel.warning,
       );
     }
+  } else {
+    session.log(
+      'insight.summary template patient=${facts.patient.id} '
+      'chars=${text.length}',
+    );
   }
   _summaryCache[key] = (at: DateTime.now(), text: text);
   return text;

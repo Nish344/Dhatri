@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../state/care_state.dart';
 import '../../../state/auth_state.dart';
 import '../../../state/voice_call_state.dart';
 import 'patient_home_screen.dart';
@@ -37,10 +35,9 @@ class _PatientShellState extends State<PatientShell> {
     }
 
     // 2. Active Voice Call interface
-    if (voice.phase != CallUIPhase.ended && voice.phase != CallUIPhase.incoming) {
-      return ActiveCallScreen(
-        onEndCall: () => voice.endCall(),
-      );
+    if (voice.phase != CallUIPhase.ended &&
+        voice.phase != CallUIPhase.incoming) {
+      return ActiveCallScreen(onEndCall: () => voice.endCall());
     }
 
     // 3. Normal Patient Navigation Shell
@@ -78,14 +75,9 @@ class _PatientShellState extends State<PatientShell> {
           style: AppTypography.sectionTitle.copyWith(fontSize: 20),
           overflow: TextOverflow.ellipsis,
         ),
-        actions: const [
-          DhatriRoleSwitcherButton(),
-        ],
+        actions: const [DhatriRoleSwitcherButton()],
       ),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: pages),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) => setState(() => _currentIndex = index),

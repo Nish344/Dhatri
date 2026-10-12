@@ -19,6 +19,7 @@ class PrescriptionEndpoint extends Endpoint {
       storageId: _storageId,
       path: path,
     );
+    session.log('endpoint.rx.uploadTicket patient=$patientId path=$path');
     return UploadTicket(path: path, description: description);
   }
 
@@ -48,6 +49,10 @@ class PrescriptionEndpoint extends Endpoint {
         status: PrescriptionStatus.uploaded,
       ),
     );
+    session.log(
+      'endpoint.rx.submit id=${rx.id} patient=$patientId path=$path '
+      '(queued extract)',
+    );
 
     await session.serverpod.futureCalls
         .callWithDelay(Duration.zero)
@@ -72,6 +77,9 @@ class PrescriptionEndpoint extends Endpoint {
     int prescriptionId,
     List<MedicationDraft> meds,
   ) async {
+    session.log(
+      'endpoint.rx.confirm id=$prescriptionId drafts=${meds.length}',
+    );
     final p = await Prescription.db.findById(session, prescriptionId);
     if (p == null) throw ArgumentError('Prescription not found');
     await requireAccess(session, p.patientId, write: true);

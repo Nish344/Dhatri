@@ -22,6 +22,11 @@ Future<CheckInTurn> acceptCheckIn(
   WellnessCheck check,
   VoiceEngine voice,
 ) async {
+  session.log(
+    'checkIn.accept id=${check.id} patient=${check.patientId} '
+    'status=${check.status.name} rings=${check.ringCount} '
+    'snoozes=${check.snoozeCount}',
+  );
   if (check.status == CheckStatus.completed) {
     throw StateError('This check-in has already finished');
   }
@@ -36,14 +41,20 @@ Future<CheckInTurn> acceptCheckIn(
       check.patientId,
       CareUpdate(patientId: check.patientId, check: check),
     );
+    session.log('checkIn.accept activated id=${check.id}');
   }
   final patient = await Profile.db.findById(session, check.patientId);
   final text = greetingHi(patient!.name);
+  final audio = await _speakOrSilence(session, voice, text);
+  session.log(
+    'checkIn.accept greeting ready id=${check.id} '
+    'audioBytes=${audio.lengthInBytes}',
+  );
   return CheckInTurn(
     checkId: check.id!,
     turnIndex: 0,
     text: text,
-    audio: await _speakOrSilence(session, voice, text),
+    audio: audio,
     done: false,
   );
 }
@@ -61,7 +72,17 @@ Future<CheckInTurn> answerCheckIn(
     throw StateError('This check-in is not active');
   }
 
+  session.log(
+    'checkIn.answer(audio) id=${check.id} patient=${check.patientId} '
+    'turn=${check.turnCount} audioBytes=${audio.length}',
+  );
+  final sttStarted = DateTime.now().toUtc();
   final transcript = await voice.transcribe(audio);
+  final sttMs = DateTime.now().toUtc().difference(sttStarted).inMilliseconds;
+  session.log(
+    'checkIn.stt id=${check.id} ms=$sttMs chars=${transcript.length} '
+    'empty=${transcript.isEmpty}',
+  );
   if (transcript.isEmpty) {
     return CheckInTurn(
       checkId: check.id!,
@@ -95,6 +116,10 @@ Future<CheckInTurn> answerCheckInWithTranscript(
   }
   final patientId = check.patientId;
   final cleaned = transcript.trim();
+  session.log(
+    'checkIn.answer(text) id=${check.id} patient=$patientId '
+    'turn=${check.turnCount} chars=${cleaned.length}',
+  );
   if (cleaned.isEmpty) {
     return CheckInTurn(
       checkId: check.id!,
@@ -122,8 +147,15 @@ Future<CheckInTurn> answerCheckInWithTranscript(
   final emergency = scanEmergency(cleaned);
   final turnCount = check.turnCount + 1;
   final lastTurn = turnCount >= maxTurns;
+  session.log(
+    'checkIn.context id=${check.id} turn=$turnCount/$maxTurns '
+    'memories=${memories.length} symptoms7d=${symptoms.length} '
+    'dosesToday=${today.taken}/${today.missed} '
+    'emergency=${emergency.isNotEmpty}',
+  );
 
   CheckInReading reading;
+  final geminiStarted = DateTime.now().toUtc();
   try {
     reading = await gemini.interpretCheckIn(
       CheckInPacket(
@@ -139,6 +171,13 @@ Future<CheckInTurn> answerCheckInWithTranscript(
         emergencyPhrases: emergency,
         isLastTurn: lastTurn,
       ),
+    );
+    session.log(
+      'checkIn.gemini id=${check.id} '
+      'ms=${DateTime.now().toUtc().difference(geminiStarted).inMilliseconds} '
+      'mood=${reading.mood} symptoms=${reading.symptoms.length} '
+      'followup=${reading.needsFollowup} '
+      'observations=${reading.observationsEn.length}',
     );
   } catch (e) {
     // The call must still end politely and the safety rule must still fire.
@@ -196,6 +235,11 @@ Future<CheckInTurn> answerCheckInWithTranscript(
         createdAt: now,
       ),
     );
+    session.log(
+      'checkIn.emergencyAlert id=${check.id} alertId=${alert.id} '
+      'phrases=${emergency.join(",")}',
+      level: LogLevel.warning,
+    );
     await postUpdate(
       session,
       patientId,
@@ -212,6 +256,11 @@ Future<CheckInTurn> answerCheckInWithTranscript(
     session,
     patientId,
     CareUpdate(patientId: patientId, check: updated),
+  );
+  session.log(
+    'checkIn.turnDone id=${check.id} turn=$turnCount done=$done '
+    'severe=$severe status=${updated.status.name} '
+    'replyChars=${reply.length} audioBytes=${replyAudio.lengthInBytes}',
   );
   return CheckInTurn(
     checkId: check.id!,
@@ -231,6 +280,15 @@ Future<void> _remember(
   MemoryService memory,
 ) async {
   final mentionsSymptom = reading.symptoms.isNotEmpty;
+  if (reading.observationsEn.isEmpty) {
+    session.log('checkIn.memory skip checkId=$checkId (no observations)');
+    return;
+  }
+  session.log(
+    'checkIn.memory store checkId=$checkId '
+    'count=${reading.observationsEn.length} kind='
+    '${mentionsSymptom ? 'symptom' : 'note'}',
+  );
   for (final observation in reading.observationsEn) {
     try {
       final embedding = Vector(await gemini.embed(observation));
@@ -258,7 +316,13 @@ Future<ByteData> _speakOrSilence(
   String text,
 ) async {
   try {
-    return await voice.speak(text);
+    final started = DateTime.now().toUtc();
+    final audio = await voice.speak(text);
+    session.log(
+      'checkIn.tts chars=${text.length} bytes=${audio.lengthInBytes} '
+      'ms=${DateTime.now().toUtc().difference(started).inMilliseconds}',
+    );
+    return audio;
   } catch (e) {
     session.log('Text-to-speech failed: $e', level: LogLevel.warning);
     return ByteData(0);

@@ -21,8 +21,16 @@ Future<void> extractPrescription(
         PrescriptionStatus.uploaded,
         PrescriptionStatus.extracting,
       }.contains(p.status)) {
+    session.log(
+      'rx.extract skip id=$prescriptionId '
+      'status=${p?.status.name ?? 'missing'}',
+    );
     return;
   }
+  session.log(
+    'rx.extract start id=$prescriptionId patient=${p.patientId} '
+    'path=${p.path}',
+  );
   p = await _save(session, p.copyWith(status: PrescriptionStatus.extracting));
 
   try {
@@ -33,6 +41,10 @@ Future<void> extractPrescription(
         path: p.path,
       );
     } on CloudStorageFileNotFoundException {
+      session.log(
+        'rx.extract fileMissing id=$prescriptionId path=${p.path}',
+        level: LogLevel.error,
+      );
       await _save(
         session,
         p.copyWith(
@@ -42,14 +54,26 @@ Future<void> extractPrescription(
       );
       return;
     }
+    session.log(
+      'rx.extract fileLoaded id=$prescriptionId '
+      'bytes=${bytes.lengthInBytes} mime=${_mimeType(p.path)}',
+    );
+    final started = DateTime.now().toUtc();
     final json = await gemini.extractPrescription(
       bytes.buffer.asUint8List(bytes.offsetInBytes, bytes.lengthInBytes),
       _mimeType(p.path),
     );
+    final geminiMs = DateTime.now().toUtc().difference(started).inMilliseconds;
+    final drafts = parseDrafts(json);
     final unreadable = (jsonDecode(json) as Map)['unreadable'] == true;
+    session.log(
+      'rx.extract gemini id=$prescriptionId ms=$geminiMs '
+      'unreadable=$unreadable drafts=${drafts.length} '
+      'uncertain=${drafts.where((d) => d.uncertain).length}',
+    );
     await _save(
       session,
-      unreadable || parseDrafts(json).isEmpty
+      unreadable || drafts.isEmpty
           ? p.copyWith(
               status: PrescriptionStatus.failed,
               extractedJson: json,
@@ -60,6 +84,10 @@ Future<void> extractPrescription(
               status: PrescriptionStatus.extracted,
               extractedJson: json,
             ),
+    );
+    session.log(
+      'rx.extract done id=$prescriptionId '
+      'status=${unreadable || drafts.isEmpty ? 'failed' : 'extracted'}',
     );
   } catch (e, st) {
     session.log(

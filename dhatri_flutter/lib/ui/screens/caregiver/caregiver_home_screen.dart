@@ -4,7 +4,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../state/care_state.dart';
 import '../../../state/auth_state.dart';
-import '../../../models/models.dart';
 import '../../../repositories/dhatri_repository.dart';
 import '../../components/dhatri_alert_card.dart';
 import '../../components/dhatri_patient_card.dart';
@@ -61,7 +60,9 @@ class CaregiverHomeScreen extends StatelessWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('✓ Successfully linked with ${linked.name}!'),
+                      content: Text(
+                        '✓ Successfully linked with ${linked.name}!',
+                      ),
                       backgroundColor: AppColors.success,
                     ),
                   );
@@ -120,7 +121,9 @@ class CaregiverHomeScreen extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const PrescriptionUploadScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const PrescriptionUploadScreen(),
+                ),
               );
             },
           ),
@@ -141,7 +144,11 @@ class CaregiverHomeScreen extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.analytics_outlined, color: AppColors.primary, size: 28),
+                  const Icon(
+                    Icons.analytics_outlined,
+                    color: AppColors.primary,
+                    size: 28,
+                  ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(
@@ -209,7 +216,9 @@ class CaregiverHomeScreen extends StatelessWidget {
                     onCallPatient: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Calling ${alert.patientName} (+91 98765 43210)...'),
+                          content: Text(
+                            'Calling ${alert.patientName} (+91 98765 43210)...',
+                          ),
                           backgroundColor: AppColors.callGreen,
                         ),
                       );
@@ -265,7 +274,10 @@ class CaregiverHomeScreen extends StatelessWidget {
             else
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 32,
+                  horizontal: 20,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(16),
@@ -273,7 +285,11 @@ class CaregiverHomeScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    const Icon(Icons.person_search_outlined, size: 48, color: AppColors.textSecondary),
+                    const Icon(
+                      Icons.person_search_outlined,
+                      size: 48,
+                      color: AppColors.textSecondary,
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       'No patients linked yet',
@@ -283,7 +299,10 @@ class CaregiverHomeScreen extends StatelessWidget {
                     const Text(
                       'Tap "Link Patient" above to connect using the patient\'s 6-digit link code.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton.icon(
@@ -305,7 +324,9 @@ class CaregiverHomeScreen extends StatelessWidget {
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const PrescriptionUploadScreen()),
+              MaterialPageRoute(
+                builder: (_) => const PrescriptionUploadScreen(),
+              ),
             );
           },
           backgroundColor: AppColors.primary,
@@ -317,4 +338,3 @@ class CaregiverHomeScreen extends StatelessWidget {
     );
   }
 }
-

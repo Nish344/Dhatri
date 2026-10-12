@@ -7,7 +7,6 @@ import '../../../services/serverpod_client_service.dart';
 import '../../../state/auth_state.dart';
 import '../../../state/care_state.dart';
 import '../../components/dhatri_buttons.dart';
-import 'onboarding_screen.dart';
 
 class DhatriAuthScreen extends StatefulWidget {
   const DhatriAuthScreen({super.key});
@@ -22,12 +21,15 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
 
   // Sign In controllers
   final TextEditingController _signInEmailController = TextEditingController();
-  final TextEditingController _signInPasswordController = TextEditingController();
+  final TextEditingController _signInPasswordController =
+      TextEditingController();
 
   // Sign Up controllers
   final TextEditingController _signUpEmailController = TextEditingController();
-  final TextEditingController _signUpPasswordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _signUpPasswordController =
+      TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   bool _isLoading = false;
 
@@ -67,7 +69,9 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
     if (!ok && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Sign in failed: ${auth.authError ?? 'Invalid credentials'}'),
+          content: Text(
+            'Sign in failed: ${auth.authError ?? 'Invalid credentials'}',
+          ),
           backgroundColor: AppColors.error,
         ),
       );
@@ -90,15 +94,17 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
     }
 
     if (password != confirm) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Passwords do not match')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
       return;
     }
 
     if (password.length < 8) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password must be at least 8 characters long')),
+        const SnackBar(
+          content: Text('Password must be at least 8 characters long'),
+        ),
       );
       return;
     }
@@ -113,7 +119,9 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Registration failed: ${clientService.lastError ?? 'Unknown error'}'),
+            content: Text(
+              'Registration failed: ${clientService.lastError ?? 'Unknown error'}',
+            ),
             backgroundColor: AppColors.error,
           ),
         );
@@ -140,7 +148,9 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
       builder: (dialogCtx) => StatefulBuilder(
         builder: (context, setDialogState) {
           return AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
             title: const Text('Enter Verification Code'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -159,7 +169,10 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
                   ),
                   child: Text(
                     '💡 In local development, Serverpod logs the verification code to the "serverpod start" terminal.',
-                    style: AppTypography.supporting.copyWith(fontSize: 11, color: AppColors.primaryDark),
+                    style: AppTypography.supporting.copyWith(
+                      fontSize: 11,
+                      color: AppColors.primaryDark,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -170,7 +183,9 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
                   decoration: InputDecoration(
                     labelText: 'Verification Code',
                     hintText: 'e.g. 12345678',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
               ],
@@ -188,16 +203,20 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
                         if (code.isEmpty) return;
 
                         setDialogState(() => isVerifying = true);
-                        final clientService = context.read<ServerpodClientService>();
+                        final clientService = context
+                            .read<ServerpodClientService>();
                         final auth = context.read<AuthState>();
 
-                        final token = await clientService.verifyRegistrationCode(accountRequestId, code);
+                        final token = await clientService
+                            .verifyRegistrationCode(accountRequestId, code);
                         if (token == null) {
                           setDialogState(() => isVerifying = false);
                           if (dialogCtx.mounted) {
                             ScaffoldMessenger.of(dialogCtx).showSnackBar(
                               SnackBar(
-                                content: Text('Invalid code: ${clientService.lastError ?? 'Try again'}'),
+                                content: Text(
+                                  'Invalid code: ${clientService.lastError ?? 'Try again'}',
+                                ),
                                 backgroundColor: AppColors.error,
                               ),
                             );
@@ -205,13 +224,18 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
                           return;
                         }
 
-                        final finished = await clientService.finishRegistration(token, password);
+                        final finished = await clientService.finishRegistration(
+                          token,
+                          password,
+                        );
                         if (!finished) {
                           setDialogState(() => isVerifying = false);
                           if (dialogCtx.mounted) {
                             ScaffoldMessenger.of(dialogCtx).showSnackBar(
                               SnackBar(
-                                content: Text('Registration failed: ${clientService.lastError ?? 'Try again'}'),
+                                content: Text(
+                                  'Registration failed: ${clientService.lastError ?? 'Try again'}',
+                                ),
                                 backgroundColor: AppColors.error,
                               ),
                             );
@@ -229,7 +253,10 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
                     ? const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
                     : const Text('Verify & Finish'),
               ),
@@ -291,7 +318,10 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
 
               // Serverpod Connection Pill
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
                   color: clientService.isOnline
                       ? AppColors.success.withOpacity(0.12)
@@ -367,10 +397,7 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
                 height: 440,
                 child: TabBarView(
                   controller: _tabController,
-                  children: [
-                    _buildSignInTab(),
-                    _buildSignUpTab(),
-                  ],
+                  children: [_buildSignInTab(), _buildSignUpTab()],
                 ),
               ),
             ],
@@ -399,7 +426,9 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
                 labelText: 'Email Address',
                 hintText: 'e.g. user@example.com',
                 prefixIcon: const Icon(Icons.email_outlined),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
             const SizedBox(height: 14),
@@ -409,7 +438,9 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
               decoration: InputDecoration(
                 labelText: 'Password',
                 prefixIcon: const Icon(Icons.lock_outline),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
             const SizedBox(height: 24),
@@ -452,7 +483,9 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
                 labelText: 'Email Address',
                 hintText: 'e.g. yourname@example.com',
                 prefixIcon: const Icon(Icons.email_outlined),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
             const SizedBox(height: 14),
@@ -462,7 +495,9 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
               decoration: InputDecoration(
                 labelText: 'Password (min 8 chars)',
                 prefixIcon: const Icon(Icons.lock_outline),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
             const SizedBox(height: 14),
@@ -472,7 +507,9 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
               decoration: InputDecoration(
                 labelText: 'Confirm Password',
                 prefixIcon: const Icon(Icons.lock_reset_outlined),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
             const SizedBox(height: 24),

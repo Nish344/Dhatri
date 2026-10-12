@@ -8,8 +8,15 @@ class CheckInFutureCall extends FutureCall {
     Session session,
     int patientId,
     CheckTrigger trigger,
-  ) => openCheckIn(session, patientId, trigger: trigger);
+  ) {
+    session.log(
+      'futureCall.checkIn.open patient=$patientId trigger=${trigger.name}',
+    );
+    return openCheckIn(session, patientId, trigger: trigger);
+  }
 
-  Future<void> ring(Session session, int checkId) =>
-      ringCheckIn(session, checkId);
+  Future<void> ring(Session session, int checkId) {
+    session.log('futureCall.checkIn.ring id=$checkId');
+    return ringCheckIn(session, checkId);
+  }
 }

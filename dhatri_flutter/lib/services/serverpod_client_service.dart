@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -66,7 +65,7 @@ class ServerpodClientService extends ChangeNotifier {
   }
 
   ServerpodClientService({String? initialUrl})
-      : _serverUrl = initialUrl ?? defaultServerUrl {
+    : _serverUrl = initialUrl ?? defaultServerUrl {
     _initClient();
     checkConnection();
   }
@@ -170,7 +169,9 @@ class ServerpodClientService extends ChangeNotifier {
   /// Starts registration with Serverpod Email IDP
   Future<UuidValue?> startRegistration(String email) async {
     try {
-      final reqId = await _client.emailIdp.startRegistration(email: email.trim());
+      final reqId = await _client.emailIdp.startRegistration(
+        email: email.trim(),
+      );
       _lastError = null;
       return reqId;
     } catch (e) {
@@ -181,7 +182,10 @@ class ServerpodClientService extends ChangeNotifier {
   }
 
   /// Verifies email registration code
-  Future<String?> verifyRegistrationCode(UuidValue accountRequestId, String code) async {
+  Future<String?> verifyRegistrationCode(
+    UuidValue accountRequestId,
+    String code,
+  ) async {
     try {
       final token = await _client.emailIdp.verifyRegistrationCode(
         accountRequestId: accountRequestId,
@@ -197,7 +201,10 @@ class ServerpodClientService extends ChangeNotifier {
   }
 
   /// Finishes email registration and stores issued JWT token
-  Future<bool> finishRegistration(String registrationToken, String password) async {
+  Future<bool> finishRegistration(
+    String registrationToken,
+    String password,
+  ) async {
     try {
       final res = await _client.emailIdp.finishRegistration(
         registrationToken: registrationToken,
@@ -236,4 +243,3 @@ class ServerpodClientService extends ChangeNotifier {
     }
   }
 }
-

@@ -12,7 +12,10 @@ Future<bool> escalateMissedDose(Session session, int doseEventId) async {
     from: {DoseStatus.reminded},
     to: DoseStatus.missed,
   );
-  if (!changed) return false;
+  if (!changed) {
+    session.log('dose.escalate skip id=$doseEventId (not reminded)');
+    return false;
+  }
 
   final event = await DoseEvent.db.findById(session, doseEventId);
   if (event == null) return false;
@@ -27,6 +30,11 @@ Future<bool> escalateMissedDose(Session session, int doseEventId) async {
       message: 'Missed dose for scheduled medication',
       createdAt: DateTime.now().toUtc(),
     ),
+  );
+  session.log(
+    'dose.escalate missed id=$doseEventId patient=${event.patientId} '
+    'alertId=${alert.id}',
+    level: LogLevel.warning,
   );
 
   await postUpdate(
@@ -45,10 +53,15 @@ Future<DoseEvent?> markDoseTaken(Session session, int doseEventId) async {
     to: DoseStatus.taken,
   );
   if (!changed) {
+    session.log('dose.taken noop id=$doseEventId (already terminal)');
     return DoseEvent.db.findById(session, doseEventId);
   }
   final event = await DoseEvent.db.findById(session, doseEventId);
   if (event != null) {
+    session.log(
+      'dose.taken id=$doseEventId patient=${event.patientId} '
+      'med=${event.medicationId}',
+    );
     await postUpdate(
       session,
       event.patientId,

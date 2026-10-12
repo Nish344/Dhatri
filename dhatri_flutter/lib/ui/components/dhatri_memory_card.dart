@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 
 class DhatriMemoryCard extends StatelessWidget {
@@ -40,24 +39,29 @@ class DhatriMemoryCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          ...memories.map((mem) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('• ', style: TextStyle(fontSize: 18, color: Color(0xFFB45309))),
-                    Expanded(
-                      child: Text(
-                        mem,
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: const Color(0xFF78350F),
-                          fontWeight: FontWeight.w500,
-                        ),
+          ...memories.map(
+            (mem) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '• ',
+                    style: TextStyle(fontSize: 18, color: Color(0xFFB45309)),
+                  ),
+                  Expanded(
+                    child: Text(
+                      mem,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: const Color(0xFF78350F),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                  ],
-                ),
-              )),
+                  ),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 4),
           Text(
             'Context-aware follow-up generated using Patient Memory layer.',
@@ -72,4 +76,3 @@ class DhatriMemoryCard extends StatelessWidget {
     );
   }
 }
-

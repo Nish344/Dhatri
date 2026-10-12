@@ -19,6 +19,10 @@ Future<List<Medication>> confirmPrescription(
   }
 
   final patientId = rx.patientId;
+  session.log(
+    'rx.confirm start id=$prescriptionId patient=$patientId '
+    'drafts=${meds.length} status=${rx.status.name}',
+  );
   final start = istDayStartUtc(); // midnight IST as UTC instant
   final created = <Medication>[];
   final doseIds = <int>[];
@@ -76,6 +80,10 @@ Future<List<Medication>> confirmPrescription(
       patientId: patientId,
       prescription: rx.copyWith(status: PrescriptionStatus.confirmed),
     ),
+  );
+  session.log(
+    'rx.confirm done id=$prescriptionId meds=${created.length} '
+    'doses=${doseIds.length}',
   );
   return created;
 }

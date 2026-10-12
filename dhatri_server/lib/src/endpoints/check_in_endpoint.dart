@@ -15,27 +15,35 @@ class CheckInEndpoint extends Endpoint {
   bool get requireLogin => true;
 
   Future<void> startNow(Session session, int patientId) async {
+    session.log('endpoint.checkIn.startNow patient=$patientId');
     await requireAccess(session, patientId, write: true);
     await openCheckIn(session, patientId, trigger: CheckTrigger.caregiver);
   }
 
   Future<WellnessCheck?> pending(Session session, int patientId) async {
     await requireAccess(session, patientId, write: false);
-    return WellnessCheck.db.findFirstRow(
+    final check = await WellnessCheck.db.findFirstRow(
       session,
       where: (t) =>
           t.patientId.equals(patientId) &
           t.status.inSet({CheckStatus.pending, CheckStatus.snoozed}),
       orderBy: (t) => t.createdAt.desc(),
     );
+    session.log(
+      'endpoint.checkIn.pending patient=$patientId '
+      'found=${check?.id} status=${check?.status.name}',
+    );
+    return check;
   }
 
   Future<CheckInTurn> accept(Session session, int checkId) async {
+    session.log('endpoint.checkIn.accept checkId=$checkId');
     final check = await _check(session, checkId);
     return acceptCheckIn(session, check, SarvamVoice.of(session));
   }
 
   Future<void> snooze(Session session, int checkId) async {
+    session.log('endpoint.checkIn.snooze checkId=$checkId');
     final check = await _check(session, checkId);
     await requireAccess(session, check.patientId, write: true);
     await snoozeCheckIn(session, checkId);
@@ -46,6 +54,10 @@ class CheckInEndpoint extends Endpoint {
     int checkId,
     ByteData audio,
   ) async {
+    session.log(
+      'endpoint.checkIn.answer checkId=$checkId '
+      'audioBytes=${audio.lengthInBytes}',
+    );
     final check = await _check(session, checkId);
     final gemini = Gemini.of(session);
     return answerCheckIn(
@@ -64,6 +76,10 @@ class CheckInEndpoint extends Endpoint {
     int checkId,
     String transcript,
   ) async {
+    session.log(
+      'endpoint.checkIn.answerText checkId=$checkId '
+      'chars=${transcript.trim().length}',
+    );
     final check = await _check(session, checkId);
     final gemini = Gemini.of(session);
     return answerCheckInWithTranscript(
