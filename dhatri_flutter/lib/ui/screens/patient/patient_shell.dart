@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../../../core/theme/app_typography.dart';
 import '../../../state/auth_state.dart';
+import '../../../state/care_state.dart';
 import '../../../state/voice_call_state.dart';
-import 'patient_home_screen.dart';
-import 'patient_medicines_screen.dart';
+import '../../components/dhatri_role_switcher.dart';
+import 'active_call_screen.dart';
+import 'incoming_call_screen.dart';
 import 'patient_health_screen.dart';
 import 'patient_help_screen.dart';
-import 'incoming_call_screen.dart';
-import 'active_call_screen.dart';
-import '../../components/dhatri_role_switcher.dart';
+import 'patient_home_screen.dart';
+import 'patient_medicines_screen.dart';
 
 class PatientShell extends StatefulWidget {
   const PatientShell({super.key});
@@ -25,8 +27,22 @@ class _PatientShellState extends State<PatientShell> {
   Widget build(BuildContext context) {
     final voice = context.watch<VoiceCallState>();
     final auth = context.watch<AuthState>();
+    final care = context.watch<CareState>();
 
-    // 1. Phone-style Incoming Call full-screen overlay
+    // Caregiver "Initiate call" lands here via care stream / pending poll —
+    // not in the caregiver tab (two browsers must be signed in as different roles).
+    final incoming = care.incomingCheck;
+    if (incoming != null &&
+        (voice.phase == CallUIPhase.ended ||
+            (voice.phase == CallUIPhase.incoming &&
+                voice.activeCheck?.id != incoming.id))) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        context.read<VoiceCallState>().receiveIncomingCall(incoming);
+        context.read<CareState>().clearIncomingCheck();
+      });
+    }
+
     if (voice.phase == CallUIPhase.incoming) {
       return IncomingCallScreen(
         onAnswer: () => voice.acceptCall(),
@@ -34,13 +50,11 @@ class _PatientShellState extends State<PatientShell> {
       );
     }
 
-    // 2. Active Voice Call interface
     if (voice.phase != CallUIPhase.ended &&
         voice.phase != CallUIPhase.incoming) {
       return ActiveCallScreen(onEndCall: () => voice.endCall());
     }
 
-    // 3. Normal Patient Navigation Shell
     final pages = [
       PatientHomeScreen(
         onOpenVoiceCall: () => voice.startDirectCall(auth.currentProfile.id),

@@ -145,16 +145,22 @@ class _DhatriDemoControllerState extends State<DhatriDemoController> {
                           : () async {
                               setState(() => _isActionRunning = true);
                               final pid = care.activePatientId ?? auth.currentProfile.id;
+                              var ok = false;
                               if (pid > 0) {
-                                await voice.triggerCheckIn(pid);
+                                ok = await voice.triggerCheckIn(pid);
                               }
                               if (mounted) {
                                 setState(() => _isActionRunning = false);
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('📞 Wellness call triggered on Serverpod!'),
-                                    backgroundColor: AppColors.callGreen,
-                                    duration: Duration(seconds: 2),
+                                  SnackBar(
+                                    content: Text(
+                                      ok
+                                          ? '📞 Call queued — answer in the patient browser'
+                                          : '📞 Queue failed — see debug console / server logs',
+                                    ),
+                                    backgroundColor:
+                                        ok ? AppColors.callGreen : AppColors.error,
+                                    duration: const Duration(seconds: 3),
                                   ),
                                 );
                               }

@@ -103,12 +103,20 @@ class _PatientDetailScreenState extends State<PatientDetailScreen> {
             DhatriPrimaryButton(
               label: 'Initiate Wellness Call Now',
               icon: Icons.mic_rounded,
-              onPressed: () {
-                context.read<VoiceCallState>().triggerCheckIn(patient.id);
+              onPressed: () async {
+                final ok = await context
+                    .read<VoiceCallState>()
+                    .triggerCheckIn(patient.id);
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Wellness check-in call queued on Serverpod!'),
-                    backgroundColor: AppColors.callGreen,
+                  SnackBar(
+                    content: Text(
+                      ok
+                          ? 'Call queued — open the patient browser (signed in as patient) to answer.'
+                          : 'Could not queue call. Check server logs for checkIn.open / startNow.',
+                    ),
+                    backgroundColor:
+                        ok ? AppColors.callGreen : AppColors.error,
                   ),
                 );
               },

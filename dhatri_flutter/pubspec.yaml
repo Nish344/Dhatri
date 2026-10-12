@@ -21,6 +21,7 @@ dependencies:
   http: ^1.2.0
   dhatri_client:
     path: ../dhatri_client
+  audioplayers: ^6.8.1
 
 dev_dependencies:
   flutter_test:

@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:typed_data';
+
 import 'package:flutter/foundation.dart';
-import '../models/models.dart';
+
 import '../core/constants/copy_hindi.dart';
+import '../models/models.dart';
 import '../repositories/dhatri_repository.dart';
 import '../services/voice_audio_service.dart';
 
@@ -28,6 +30,7 @@ class VoiceCallState extends ChangeNotifier {
   List<String> _rememberedContext = [];
   bool _isDone = false;
   String? _voiceErrorMessage;
+  String _lastVoiceSource = 'none';
 
   VoiceCallState({required this.repository});
 
@@ -40,6 +43,9 @@ class VoiceCallState extends ChangeNotifier {
   bool get isDone => _isDone;
   String? get voiceErrorMessage => _voiceErrorMessage;
   VoiceAudioService get voiceService => _voiceService;
+
+  /// `sarvam` | `device_tts` | `none` — what actually played last.
+  String get lastVoiceSource => _lastVoiceSource;
 
   String get phaseLabel {
     switch (_phase) {
@@ -61,6 +67,18 @@ class VoiceCallState extends ChangeNotifier {
   }
 
   void receiveIncomingCall(WellnessCheck check) {
+    if (_phase != CallUIPhase.ended && _phase != CallUIPhase.incoming) {
+      debugPrint(
+        'VoiceCallState: ignore incoming id=${check.id} while phase=$_phase',
+      );
+      return;
+    }
+    if (_phase == CallUIPhase.incoming && _activeCheck?.id == check.id) {
+      return;
+    }
+    debugPrint(
+      'VoiceCallState: ringing patient for check id=${check.id}',
+    );
     _activeCheck = check;
     _phase = CallUIPhase.incoming;
     _currentTurn = 0;
@@ -72,18 +90,28 @@ class VoiceCallState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Trigger wellness call from caregiver or schedule
-  Future<void> triggerCheckIn(int patientId) async {
+  /// Caregiver / demo HUD: create (or re-ring) on the server only.
+  /// The *patient* browser must pick this up via care stream / pending poll —
+  /// do not flip this tab into an incoming UI (caregiver shell has no ringtone).
+  Future<bool> triggerCheckIn(int patientId) async {
     try {
+      debugPrint('VoiceCallState: startNow patient=$patientId');
       await repository.startCheckIn(patientId);
       final check = await repository.getPendingCheckIn(patientId);
-      if (check != null) {
-        receiveIncomingCall(check);
-      }
-    } catch (_) {}
+      debugPrint(
+        'VoiceCallState: startNow done pendingId=${check?.id} '
+        'status=${check?.status.name}',
+      );
+      return check != null;
+    } catch (e, st) {
+      debugPrint('VoiceCallState: startNow FAILED: $e\n$st');
+      _voiceErrorMessage = 'Could not start check-in: $e';
+      notifyListeners();
+      return false;
+    }
   }
 
-  /// Direct call initiated by patient from Home Screen
+  /// Patient starts a call from Home.
   Future<void> startDirectCall(int patientId) async {
     _phase = CallUIPhase.connected;
     _voiceErrorMessage = null;
@@ -95,55 +123,60 @@ class VoiceCallState extends ChangeNotifier {
       if (check != null) {
         _activeCheck = check;
       }
-    } catch (_) {}
+    } catch (e, st) {
+      debugPrint('VoiceCallState: startDirectCall FAILED: $e\n$st');
+    }
 
-    _activeCheck ??= WellnessCheck(
-      id: 1,
-      patientId: patientId,
-      status: CheckStatus.active,
-      trigger: CheckTrigger.daily,
-      turnCount: 0,
-      createdAt: DateTime.now(),
-    );
+    if (_activeCheck == null) {
+      _voiceErrorMessage = 'Check-in could not be started. Is the server online?';
+      _phase = CallUIPhase.ended;
+      notifyListeners();
+      return;
+    }
 
     await acceptCall();
   }
 
-  /// Patient answers the incoming or direct call
   Future<void> acceptCall() async {
     _phase = CallUIPhase.connected;
     _voiceErrorMessage = null;
     notifyListeners();
 
-    final checkId = _activeCheck?.id ?? 1;
+    final checkId = _activeCheck?.id;
+    if (checkId == null || checkId <= 0) {
+      _voiceErrorMessage = 'No active check-in to accept';
+      _phase = CallUIPhase.ended;
+      notifyListeners();
+      return;
+    }
+
     String greeting = CopyHindi.greetingQuestion;
+    ByteData? audio;
 
     try {
       final turn = await repository.acceptCheckIn(checkId);
       if (turn.text.trim().isNotEmpty) {
         greeting = turn.text;
       }
-    } catch (_) {}
+      audio = turn.audio;
+    } catch (e, st) {
+      debugPrint('VoiceCallState: acceptCheckIn FAILED: $e\n$st');
+      _voiceErrorMessage = 'Accept failed: $e';
+    }
 
     _currentDhatriText = greeting;
     _phase = CallUIPhase.dhatriSpeaking;
     notifyListeners();
 
-    // Dhatri speaks her greeting aloud through device speakers!
-    await _voiceService.speak(
-      _currentDhatriText,
-      onComplete: () {
-        if (_phase == CallUIPhase.dhatriSpeaking) {
-          _phase = CallUIPhase.yourTurn;
-          notifyListeners();
-        }
-      },
-    );
+    await _speakTurn(greeting, audio, onComplete: () {
+      if (_phase == CallUIPhase.dhatriSpeaking) {
+        _phase = CallUIPhase.yourTurn;
+        notifyListeners();
+      }
+    });
   }
 
-  /// Patient taps microphone to speak their response
   Future<void> startListening() async {
-    // If already listening, tap acts as finish & submit
     if (_phase == CallUIPhase.listening) {
       await stopListeningAndSubmit();
       return;
@@ -159,7 +192,6 @@ class VoiceCallState extends ChangeNotifier {
       onResult: (words, isFinal) {
         _currentPatientSpeech = words;
         notifyListeners();
-        // If system detects final utterance boundary, auto-submit
         if (isFinal && words.trim().isNotEmpty) {
           submitPatientResponse(words);
         }
@@ -184,13 +216,13 @@ class VoiceCallState extends ChangeNotifier {
     );
 
     if (!started) {
-      _voiceErrorMessage = 'कृपया माइक्रोफ़ोन की अनुमति दें (Please allow microphone access)';
+      _voiceErrorMessage =
+          'कृपया माइक्रोफ़ोन की अनुमति दें (Please allow microphone access)';
       _phase = CallUIPhase.yourTurn;
       notifyListeners();
     }
   }
 
-  /// Stop listening and immediately send what was heard
   Future<void> stopListeningAndSubmit() async {
     await _voiceService.stopListening();
     final words = _currentPatientSpeech.trim();
@@ -202,7 +234,6 @@ class VoiceCallState extends ChangeNotifier {
     }
   }
 
-  /// Patient speaks or selects quick Hindi answer chip
   Future<void> submitPatientResponse(String text) async {
     await _voiceService.stopListening();
     final cleanText = text.trim();
@@ -213,17 +244,15 @@ class VoiceCallState extends ChangeNotifier {
     _voiceErrorMessage = null;
     notifyListeners();
 
-    _activeCheck ??= WellnessCheck(
-      id: 1,
-      patientId: 1,
-      status: CheckStatus.active,
-      trigger: CheckTrigger.daily,
-      turnCount: _currentTurn,
-      createdAt: DateTime.now(),
-    );
+    final checkId = _activeCheck?.id;
+    if (checkId == null || checkId <= 0) {
+      _voiceErrorMessage = 'No active check-in';
+      _phase = CallUIPhase.yourTurn;
+      notifyListeners();
+      return;
+    }
 
     try {
-      final checkId = _activeCheck!.id;
       final turn = await repository.answerCheckInText(checkId, cleanText);
       _currentTurn = turn.turnIndex;
       _currentDhatriText = turn.text;
@@ -233,19 +262,19 @@ class VoiceCallState extends ChangeNotifier {
           cleanText.contains('weakness') ||
           cleanText.contains('चक्कर') ||
           cleanText.contains('dizzy') ||
-          turn.text.contains('3 दिन पहले')) {
+          turn.text.contains('3 दिन पहले') ||
+          turn.text.contains('कुछ दिन पहले')) {
         _rememberedContext = [
-          '3 days ago: Reported weakness (severity 2/5)',
-          'Yesterday: Persistent weakness reported after evening dose',
+          'Earlier check-in: weakness recalled via Patient Memory',
         ];
       }
 
       _phase = CallUIPhase.dhatriSpeaking;
       notifyListeners();
 
-      // Dhatri speaks clinical reply out loud
-      await _voiceService.speak(
+      await _speakTurn(
         _currentDhatriText,
+        turn.audio,
         onComplete: () {
           if (_isDone) {
             _phase = CallUIPhase.ended;
@@ -255,19 +284,14 @@ class VoiceCallState extends ChangeNotifier {
           notifyListeners();
         },
       );
-    } catch (_) {
-      // In case of network interruption, gracefully advance turn
-      _phase = CallUIPhase.dhatriSpeaking;
-      _currentDhatriText = 'मैंने आपकी बात सुन ली है। आपका स्वास्थ्य डेटा सुरक्षित कर लिया गया है।';
+    } catch (e, st) {
+      // Do NOT invent a "data surakshit" line — that was confusing users when
+      // the real Gemini reply failed to load.
+      debugPrint('VoiceCallState: answerText FAILED: $e\n$st');
+      _voiceErrorMessage = 'Reply failed: $e';
+      _currentDhatriText = CopyHindi.greetingQuestion;
+      _phase = CallUIPhase.yourTurn;
       notifyListeners();
-
-      await _voiceService.speak(
-        _currentDhatriText,
-        onComplete: () {
-          _phase = CallUIPhase.yourTurn;
-          notifyListeners();
-        },
-      );
     }
   }
 
@@ -275,10 +299,10 @@ class VoiceCallState extends ChangeNotifier {
     _phase = CallUIPhase.thinking;
     notifyListeners();
 
-    if (_activeCheck == null) return;
+    final checkId = _activeCheck?.id;
+    if (checkId == null) return;
 
     try {
-      final checkId = _activeCheck!.id;
       final turn = await repository.answerCheckInAudio(checkId, audio);
       _currentTurn = turn.turnIndex;
       _currentDhatriText = turn.text;
@@ -287,8 +311,9 @@ class VoiceCallState extends ChangeNotifier {
       _phase = CallUIPhase.dhatriSpeaking;
       notifyListeners();
 
-      await _voiceService.speak(
+      await _speakTurn(
         _currentDhatriText,
+        turn.audio,
         onComplete: () {
           if (_isDone) {
             _phase = CallUIPhase.ended;
@@ -298,10 +323,26 @@ class VoiceCallState extends ChangeNotifier {
           notifyListeners();
         },
       );
-    } catch (_) {
+    } catch (e, st) {
+      debugPrint('VoiceCallState: answerAudio FAILED: $e\n$st');
+      _voiceErrorMessage = 'Audio answer failed: $e';
       _phase = CallUIPhase.yourTurn;
       notifyListeners();
     }
+  }
+
+  Future<void> _speakTurn(
+    String text,
+    ByteData? audio, {
+    VoidCallback? onComplete,
+  }) async {
+    await _voiceService.speakTurn(
+      text: text,
+      audio: audio,
+      onComplete: onComplete,
+    );
+    _lastVoiceSource = _voiceService.lastVoiceSource;
+    notifyListeners();
   }
 
   void endCall() {
@@ -309,13 +350,14 @@ class VoiceCallState extends ChangeNotifier {
     _voiceService.stopListening();
 
     if (_activeCheck != null && !_isDone) {
-      repository.snoozeCheckIn(_activeCheck!.id).catchError((_) {});
+      repository.snoozeCheckIn(_activeCheck!.id).catchError((e) {
+        debugPrint('VoiceCallState: snooze failed: $e');
+      });
     }
     _phase = CallUIPhase.ended;
     notifyListeners();
   }
 
-  /// Resets call state back to idle
   void resetCall() {
     _voiceService.stopSpeaking();
     _voiceService.stopListening();
@@ -327,6 +369,7 @@ class VoiceCallState extends ChangeNotifier {
     _rememberedContext = [];
     _isDone = false;
     _voiceErrorMessage = null;
+    _lastVoiceSource = 'none';
     notifyListeners();
   }
 

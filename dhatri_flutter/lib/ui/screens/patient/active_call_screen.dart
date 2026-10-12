@@ -51,8 +51,15 @@ class ActiveCallScreen extends StatelessWidget {
                 const Icon(Icons.record_voice_over_rounded, size: 16, color: Color(0xFF38BDF8)),
                 const SizedBox(width: 6),
                 Text(
-                  'Hindi · hi-IN',
-                  style: AppTypography.supporting.copyWith(color: Colors.white70, fontSize: 12),
+                  voice.lastVoiceSource == 'sarvam'
+                      ? 'Sarvam · bulbul'
+                      : voice.lastVoiceSource == 'device_tts'
+                          ? 'Device TTS (fallback)'
+                          : 'Hindi · hi-IN',
+                  style: AppTypography.supporting.copyWith(
+                    color: Colors.white70,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),

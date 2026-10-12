@@ -46,10 +46,29 @@ Future<void> openCheckIn(
         }),
   );
   if (existing != null) {
+    // Caregiver "call now" while a ring is already out: re-notify the patient
+    // over the care stream instead of silently no-oping (multi-browser demos).
+    if (existing.status == CheckStatus.active) {
+      session.log(
+        'checkIn.open skipped patient=$patientId existingId=${existing.id} '
+        'status=active (call in progress)',
+      );
+      return;
+    }
     session.log(
-      'checkIn.open skipped patient=$patientId existingId=${existing.id} '
-      'status=${existing.status.name}',
+      'checkIn.open re-ring patient=$patientId existingId=${existing.id} '
+      'status=${existing.status.name} trigger=${trigger.name}',
     );
+    final revived = await WellnessCheck.db.updateRow(
+      session,
+      existing.copyWith(status: CheckStatus.pending),
+    );
+    await postUpdate(
+      session,
+      patientId,
+      CareUpdate(patientId: patientId, check: revived),
+    );
+    await _scheduleRing(session, revived.id!);
     return;
   }
 

@@ -131,9 +131,13 @@ After `serverpod start`, use the Flutter app (launched with it or via spawn).
 ### Patient — dose & check-in
 
 1. Home shows today’s doses; **Mark taken** clears the reminder path.
-2. Caregiver **Start check-in** (or wait for evening cron `30 13 * * *` UTC = 19:00 IST).
-3. Patient: accept call → greeting audio/text → answer by voice **or** Hindi tap `answerText`.
-4. Caregiver timeline/alerts update; severe / emergency phrases raise high-priority alerts.
+2. Caregiver **Initiate Wellness Call Now** (or evening cron `30 13 * * *` UTC = 19:00 IST).
+3. **Two browsers / profiles:** caregiver and patient must be **different signed-in accounts**. The call rings only on the **patient** tab (care stream + 4s pending poll). Same-computer is fine; same login role is not.
+4. Patient: accept call → greeting → answer by voice **or** Hindi tap chips.
+5. Call UI chip shows `Sarvam · bulbul` when server WAV plays, or `Device TTS (fallback)` if Sarvam audio was empty (browser TTS — robotic).
+6. Caregiver timeline/alerts update; severe / emergency phrases raise high-priority alerts.
+
+**If initiate call seems stuck:** look for `endpoint.checkIn.startNow`, `checkIn.open` / `checkIn.open re-ring` in server logs. The patient console should print `CareState: incoming check` then `VoiceCallState: ringing`.
 
 ### Doctor
 

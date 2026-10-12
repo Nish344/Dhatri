@@ -1,18 +1,23 @@
 import 'dart:async';
+import 'dart:typed_data';
+
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
-/// Service managing on-device Text-to-Speech (TTS) for Dhatri's Hindi voice
-/// and live Speech-to-Text (STT) for capturing the patient's voice via microphone.
+/// Plays Sarvam WAV from the server when available; falls back to on-device
+/// [FlutterTts] only if audio bytes are empty (TTS outage on the server).
+/// Patient mic input uses the browser/device STT (`speech_to_text`).
 class VoiceAudioService {
   static final VoiceAudioService _instance = VoiceAudioService._internal();
   factory VoiceAudioService() => _instance;
   VoiceAudioService._internal();
 
   final FlutterTts _tts = FlutterTts();
+  final AudioPlayer _player = AudioPlayer();
   final stt.SpeechToText _speech = stt.SpeechToText();
 
   bool _isTtsInitialized = false;
@@ -22,6 +27,10 @@ class VoiceAudioService {
 
   String? _hindiLocaleId;
   Timer? _speechTimeoutTimer;
+  StreamSubscription<void>? _playerCompleteSub;
+
+  /// `sarvam` when server WAV played, `device_tts` for FlutterTts fallback.
+  String lastVoiceSource = 'none';
 
   final ValueNotifier<double> soundLevel = ValueNotifier<double>(0.0);
 
@@ -29,16 +38,11 @@ class VoiceAudioService {
   bool get isListening => _isListening;
   bool get isSpeechAvailable => _isSpeechInitialized;
 
-  // ---------------------------------------------------------------------------
-  // TEXT-TO-SPEECH (Dhatri speaking to patient)
-  // ---------------------------------------------------------------------------
-
   Future<void> initTts() async {
     if (_isTtsInitialized) return;
     try {
-      // Configure Hindi for Indian elder comprehension
       await _tts.setLanguage('hi-IN');
-      await _tts.setSpeechRate(0.42); // Gentle, calm tempo for elderly ears
+      await _tts.setSpeechRate(0.42);
       await _tts.setVolume(1.0);
       await _tts.setPitch(1.0);
 
@@ -48,20 +52,15 @@ class VoiceAudioService {
         } catch (_) {}
       }
 
-      _tts.setStartHandler(() {
-        _isSpeaking = true;
-      });
-
+      _tts.setStartHandler(() => _isSpeaking = true);
       _tts.setCompletionHandler(() {
         _isSpeaking = false;
         _speechTimeoutTimer?.cancel();
       });
-
       _tts.setCancelHandler(() {
         _isSpeaking = false;
         _speechTimeoutTimer?.cancel();
       });
-
       _tts.setErrorHandler((dynamic msg) {
         _isSpeaking = false;
         _speechTimeoutTimer?.cancel();
@@ -73,8 +72,65 @@ class VoiceAudioService {
     }
   }
 
-  /// Speaks [text] out loud through the device speakers in Hindi.
-  /// Fires [onComplete] when finished or after safety timeout.
+  /// Prefer Sarvam [audio] WAV from Serverpod; else speak [text] via device TTS.
+  Future<void> speakTurn({
+    required String text,
+    ByteData? audio,
+    VoidCallback? onComplete,
+  }) async {
+    final bytes = audio == null || audio.lengthInBytes == 0
+        ? null
+        : audio.buffer.asUint8List(audio.offsetInBytes, audio.lengthInBytes);
+
+    if (bytes != null && bytes.length > 44) {
+      lastVoiceSource = 'sarvam';
+      debugPrint(
+        'VoiceAudioService: playing Sarvam WAV (${bytes.length} bytes)',
+      );
+      await _playWavBytes(bytes, onComplete: onComplete);
+      return;
+    }
+
+    lastVoiceSource = 'device_tts';
+    debugPrint(
+      'VoiceAudioService: no Sarvam audio — falling back to device TTS '
+      '(browser/OS voice, not Sarvam)',
+    );
+    await speak(text, onComplete: onComplete);
+  }
+
+  Future<void> _playWavBytes(
+    Uint8List bytes, {
+    VoidCallback? onComplete,
+  }) async {
+    await stopSpeaking();
+
+    bool hasCompleted = false;
+    void finish() {
+      if (hasCompleted) return;
+      hasCompleted = true;
+      _isSpeaking = false;
+      _speechTimeoutTimer?.cancel();
+      onComplete?.call();
+    }
+
+    try {
+      _isSpeaking = true;
+      await _playerCompleteSub?.cancel();
+      _playerCompleteSub = _player.onPlayerComplete.listen((_) => finish());
+
+      // Duration safety net (~ wave data size at 22kHz mono 16-bit ≈ 44KB/s)
+      final timeoutSecs = (bytes.length / 20000).clamp(3.0, 45.0).ceil();
+      _speechTimeoutTimer = Timer(Duration(seconds: timeoutSecs), finish);
+
+      await _player.play(BytesSource(bytes, mimeType: 'audio/wav'));
+    } catch (e) {
+      debugPrint('VoiceAudioService: Sarvam WAV play failed: $e');
+      finish();
+    }
+  }
+
+  /// Device/browser Hindi TTS fallback only.
   Future<void> speak(String text, {VoidCallback? onComplete}) async {
     final cleanText = text.trim();
     if (cleanText.isEmpty) {
@@ -83,7 +139,7 @@ class VoiceAudioService {
     }
 
     await initTts();
-    _speechTimeoutTimer?.cancel();
+    await stopSpeaking();
 
     bool hasCompleted = false;
     void finish() {
@@ -96,17 +152,14 @@ class VoiceAudioService {
 
     _tts.setCompletionHandler(() => finish());
 
-    // Fallback safety timeout (prevents getting stuck if TTS completion hook fails)
-    final timeoutSecs = ((cleanText.length * 0.08) + 2.0).clamp(3.0, 14.0).toInt();
-    _speechTimeoutTimer = Timer(Duration(seconds: timeoutSecs), () {
-      finish();
-    });
+    final timeoutSecs =
+        ((cleanText.length * 0.08) + 2.0).clamp(3.0, 14.0).toInt();
+    _speechTimeoutTimer = Timer(Duration(seconds: timeoutSecs), finish);
 
     try {
       _isSpeaking = true;
       final res = await _tts.speak(cleanText);
       if (res != 1 && res != true) {
-        // Fallback if platform TTS returns immediately or fails
         finish();
       }
     } catch (e) {
@@ -115,18 +168,16 @@ class VoiceAudioService {
     }
   }
 
-  /// Stops ongoing speech playback.
   Future<void> stopSpeaking() async {
     _speechTimeoutTimer?.cancel();
     _isSpeaking = false;
     try {
+      await _player.stop();
+    } catch (_) {}
+    try {
       await _tts.stop();
     } catch (_) {}
   }
-
-  // ---------------------------------------------------------------------------
-  // SPEECH-TO-TEXT (Patient speaking into microphone)
-  // ---------------------------------------------------------------------------
 
   Future<bool> initSpeech() async {
     if (_isSpeechInitialized) return true;
@@ -162,19 +213,18 @@ class VoiceAudioService {
     }
   }
 
-  /// Activates the device microphone and listens to the patient.
-  /// [onResult] is called with recognized words in real time as they speak.
   Future<bool> startListening({
     required void Function(String words, bool isFinal) onResult,
     VoidCallback? onDone,
     void Function(String error)? onError,
   }) async {
-    // Stop any ongoing TTS before listening so mic doesn't catch Dhatri's own voice
     await stopSpeaking();
 
     final ready = await initSpeech();
     if (!ready) {
-      onError?.call('माइक्रोफ़ोन या वाक् पहचान उपलब्ध नहीं है (Microphone unavailable)');
+      onError?.call(
+        'माइक्रोफ़ोन या वाक् पहचान उपलब्ध नहीं है (Microphone unavailable)',
+      );
       return false;
     }
 
@@ -189,12 +239,11 @@ class VoiceAudioService {
           }
         },
         onSoundLevelChange: (level) {
-          // Normalized level between 0.0 and 1.0 for waveform
           soundLevel.value = (level / 10.0).clamp(0.0, 1.0);
         },
         localeId: _hindiLocaleId ?? 'hi_IN',
         listenFor: const Duration(seconds: 30),
-        pauseFor: const Duration(seconds: 3), // 3s pause completes turn
+        pauseFor: const Duration(seconds: 3),
         listenMode: stt.ListenMode.dictation,
         cancelOnError: false,
         partialResults: true,
@@ -207,7 +256,6 @@ class VoiceAudioService {
     }
   }
 
-  /// Stops recording and finalizes words.
   Future<void> stopListening() async {
     _isListening = false;
     soundLevel.value = 0.0;
@@ -216,7 +264,6 @@ class VoiceAudioService {
     } catch (_) {}
   }
 
-  /// Cancels recording and discards.
   Future<void> cancelListening() async {
     _isListening = false;
     soundLevel.value = 0.0;
@@ -227,8 +274,9 @@ class VoiceAudioService {
 
   void dispose() {
     _speechTimeoutTimer?.cancel();
+    _playerCompleteSub?.cancel();
     stopSpeaking();
     stopListening();
+    _player.dispose();
   }
 }
-
