@@ -165,8 +165,7 @@ Future<CheckInTurn> answerCheckInWithTranscript(
         dosesToday: today,
         dosesWeek: week,
         memories: [
-          for (final m in memories)
-            '${now.difference(m.createdAt).inDays} days ago: ${m.content}',
+          for (final m in memories) _formatMemoryForPrompt(now, m),
         ],
         emergencyPhrases: emergency,
         isLastTurn: lastTurn,
@@ -271,6 +270,44 @@ Future<CheckInTurn> answerCheckInWithTranscript(
   );
 }
 
+String _formatMemoryForPrompt(DateTime now, PatientMemory m) {
+  final days = now.difference(m.createdAt).inDays;
+  final when = days <= 0
+      ? 'today'
+      : days == 1
+      ? 'yesterday'
+      : '$days days ago';
+  return '$when (${m.kind}): ${m.content}';
+}
+
+/// Build distinctive memory lines: include symptom+severity when present.
+List<String> _memoryCandidates(CheckInReading reading) {
+  final out = <String>[];
+  final seen = <String>{};
+  void add(String s) {
+    final t = s.trim();
+    if (t.isEmpty) return;
+    final key = t.toLowerCase();
+    if (seen.contains(key)) return;
+    seen.add(key);
+    out.add(t);
+  }
+
+  for (final s in reading.symptoms) {
+    add(
+      'Patient reported ${s.symptom} at severity ${s.severity}/5 '
+      '(mood: ${reading.mood ?? 'unknown'}).',
+    );
+  }
+  for (final o in reading.observationsEn) {
+    add(o);
+  }
+  if (out.isEmpty && reading.summaryEn.trim().isNotEmpty) {
+    add(reading.summaryEn.trim());
+  }
+  return out;
+}
+
 Future<void> _remember(
   Session session,
   int patientId,
@@ -279,27 +316,29 @@ Future<void> _remember(
   Gemini gemini,
   MemoryService memory,
 ) async {
-  final mentionsSymptom = reading.symptoms.isNotEmpty;
-  if (reading.observationsEn.isEmpty) {
+  final candidates = _memoryCandidates(reading);
+  if (candidates.isEmpty) {
     session.log('checkIn.memory skip checkId=$checkId (no observations)');
     return;
   }
+  final kind = reading.symptoms.isNotEmpty ? 'symptom' : 'note';
   session.log(
-    'checkIn.memory store checkId=$checkId '
-    'count=${reading.observationsEn.length} kind='
-    '${mentionsSymptom ? 'symptom' : 'note'}',
+    'checkIn.memory store checkId=$checkId candidates=${candidates.length} '
+    'kind=$kind',
   );
-  for (final observation in reading.observationsEn) {
+  var stored = 0;
+  for (final observation in candidates) {
     try {
       final embedding = Vector(await gemini.embed(observation));
-      await memory.remember(
+      final ok = await memory.remember(
         session,
         patientId,
-        mentionsSymptom ? 'symptom' : 'note',
+        kind,
         observation,
         checkId,
         embedding,
       );
+      if (ok) stored++;
     } catch (e) {
       session.log(
         'Could not store memory "$observation": $e',
@@ -307,6 +346,7 @@ Future<void> _remember(
       );
     }
   }
+  session.log('checkIn.memory done checkId=$checkId stored=$stored');
 }
 
 /// The app always shows the text, so a TTS outage degrades to silent text.

@@ -141,6 +141,12 @@ After `serverpod start`, use the Flutter app (launched with it or via spawn).
 
 **If Talk-to-Dhatri stops working after hang-up:** an old check was left `active`. Hang-up now completes it (`checkIn.hangUp complete`); `openCheckIn` also reclaim-completes any stuck `active` row before creating a new pending ring. Hot-restart both browsers after pulling this fix.
 
+**If `answerText` times out at 5s:** client `connectionTimeout` must be ≥60s (Gemini + Sarvam often take longer). Pull latest `ServerpodClientService`.
+
+**If `checkIn.pending` returns 401:** JWT expired and refresh failed — sign out and sign in again. Pending poll stops after repeated 401s.
+
+**Caregiver Call buttons:** Home alert cards and alert detail now queue a real wellness check-in (`triggerCheckIn`), same as patient detail “Initiate Wellness Call”.
+
 ### Doctor
 
 1. Open clinical portal for a linked patient.

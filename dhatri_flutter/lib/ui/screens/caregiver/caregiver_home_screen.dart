@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../state/care_state.dart';
 import '../../../state/auth_state.dart';
+import '../../../state/voice_call_state.dart';
 import '../../../repositories/dhatri_repository.dart';
 import '../../components/dhatri_alert_card.dart';
 import '../../components/dhatri_patient_card.dart';
@@ -213,13 +214,20 @@ class CaregiverHomeScreen extends StatelessWidget {
                         ),
                       );
                     },
-                    onCallPatient: () {
+                    onCallPatient: () async {
+                      final ok = await context
+                          .read<VoiceCallState>()
+                          .triggerCheckIn(alert.patientId);
+                      if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            'Calling ${alert.patientName} (+91 98765 43210)...',
+                            ok
+                                ? 'Wellness call queued for ${alert.patientName} — answer on the patient browser'
+                                : 'Could not queue call for ${alert.patientName}',
                           ),
-                          backgroundColor: AppColors.callGreen,
+                          backgroundColor:
+                              ok ? AppColors.callGreen : AppColors.error,
                         ),
                       );
                     },

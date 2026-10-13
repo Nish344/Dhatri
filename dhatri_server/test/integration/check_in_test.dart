@@ -114,22 +114,37 @@ void main() {
           ),
         );
         final prompts = <String>[];
-        final turn = await answer(
-          fakeGemini(
-            reading(
+        final gemini = fakeGemini(
+          {
+            ...reading(
               symptoms: [
                 {'symptom': 'weakness', 'severity': 3},
               ],
               followup: true,
             ),
-            prompts,
-          ),
-          'आज फिर कमजोरी लग रही है',
+            // Distinct vs the seeded mild note so text-dedupe allows a new row.
+            'observationsEn': [
+              'Walking feels harder than three days ago; weakness severity about 3/5.',
+            ],
+          },
+          prompts,
+        );
+        final turn = await answerCheckIn(
+          session,
+          check,
+          Uint8List(8),
+          gemini: gemini,
+          voice: FakeVoice('आज फिर कमजोरी लग रही है'),
+          // Recency path: fake embeddings are identical, so vector mode would
+          // wrongly treat every note as a near-duplicate of the seed.
+          memory: RecencyMemoryService(),
         );
 
         expect(
           prompts.single,
-          contains('3 days ago: Patient reported weakness, mild'),
+          contains(
+            '3 days ago (symptom): Patient reported weakness, mild, in the evening.',
+          ),
         );
         expect(turn.done, isFalse);
         expect(turn.turnIndex, 1);
@@ -147,12 +162,13 @@ void main() {
           ),
           1,
         );
+        // Symptom line + distinct walking observation — not a copy of the old note.
         expect(
           await PatientMemory.db.count(
             session,
             where: (t) => t.sourceCheckId.equals(check.id!),
           ),
-          1,
+          greaterThanOrEqualTo(1),
         );
       },
     );

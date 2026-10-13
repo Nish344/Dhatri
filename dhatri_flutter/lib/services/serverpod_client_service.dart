@@ -1,33 +1,25 @@
 import 'dart:async';
 import 'dart:io' show Platform;
+
+import 'package:dhatri_client/dhatri_client.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:dhatri_client/dhatri_client.dart';
+import 'package:serverpod_auth_core_client/serverpod_auth_core_client.dart';
 
-class DhatriAuthKeyManager extends AuthenticationKeyManager {
-  String? _key;
-
-  @override
-  Future<String?> get() async => _key;
+/// In-memory key/value store for JWT [AuthSuccess] (survives within the tab).
+class _MemoryKeyValueStorage implements KeyValueStorage {
+  final Map<String, String> _data = {};
 
   @override
-  Future<void> put(String key) async {
-    _key = key;
-  }
+  Future<String?> get(String key) async => _data[key];
 
   @override
-  Future<void> remove() async {
-    _key = null;
-  }
-
-  @override
-  Future<String?> toHeaderValue(String? key) async {
-    if (key == null || key.trim().isEmpty) return null;
-    final token = key.trim();
-    if (token.toLowerCase().startsWith('bearer ')) {
-      return token;
+  Future<void> set(String key, String? value) async {
+    if (value == null) {
+      _data.remove(key);
+    } else {
+      _data[key] = value;
     }
-    return 'Bearer $token';
   }
 }
 
@@ -35,7 +27,7 @@ class DhatriAuthKeyManager extends AuthenticationKeyManager {
 /// endpoint routing, and demo database seeding.
 class ServerpodClientService extends ChangeNotifier {
   late Client _client;
-  final DhatriAuthKeyManager _authManager = DhatriAuthKeyManager();
+  late ClientAuthSessionManager _sessionManager;
   String _serverUrl;
   bool _isOnline = false;
   bool _isChecking = false;
@@ -46,6 +38,10 @@ class ServerpodClientService extends ChangeNotifier {
   bool get isOnline => _isOnline;
   bool get isChecking => _isChecking;
   String? get lastError => _lastError;
+  AuthSuccess? get authInfo => _sessionManager.authInfo;
+
+  /// AI check-in (Gemini + Sarvam) regularly exceeds 5s — keep this high.
+  static const connectionTimeout = Duration(seconds: 60);
 
   static String get defaultServerUrl {
     const fromEnv = String.fromEnvironment('SERVER_URL');
@@ -55,8 +51,6 @@ class ServerpodClientService extends ChangeNotifier {
 
     try {
       if (Platform.isAndroid) {
-        // In Android emulator 10.0.2.2 points to host machine.
-        // For physical device, localhost works if adb reverse tcp:8080 tcp:8080 is run.
         return 'http://10.0.2.2:8080/';
       }
     } catch (_) {}
@@ -71,10 +65,20 @@ class ServerpodClientService extends ChangeNotifier {
   }
 
   void _initClient() {
+    _sessionManager = ClientAuthSessionManager(
+      storage: KeyValueClientAuthSuccessStorage(
+        keyValueStorage: _MemoryKeyValueStorage(),
+      ),
+      onAuthInfoChanged: (_) => notifyListeners(),
+    );
+
     _client = Client(
       _serverUrl.endsWith('/') ? _serverUrl : '$_serverUrl/',
-      connectionTimeout: const Duration(seconds: 5),
-    )..authKeyProvider = _authManager;
+      connectionTimeout: connectionTimeout,
+    )..authKeyProvider = _sessionManager;
+
+    // Session manager needs the auth-core caller (status + JWT refresh wiring).
+    _sessionManager.setCaller(_client.modules.serverpod_auth_core);
   }
 
   Future<void> updateServerUrl(String newUrl) async {
@@ -85,24 +89,20 @@ class ServerpodClientService extends ChangeNotifier {
     await checkConnection();
   }
 
-  /// Checks if the Serverpod backend is reachable.
   Future<bool> checkConnection() async {
     if (_isChecking) return _isOnline;
     _isChecking = true;
     notifyListeners();
 
     try {
-      // Use Serverpod's public unauthenticated RPC to verify backend connectivity
       await _client.emailIdp.hasAccount().timeout(const Duration(seconds: 3));
       _isOnline = true;
       _lastError = null;
     } catch (e) {
       if (e is ServerpodClientException) {
-        // If Serverpod responded (even with an RPC exception), the backend is online!
         _isOnline = true;
         _lastError = null;
       } else {
-        // Network timeout or connection refused
         try {
           final rootUri = Uri.parse(_serverUrl);
           final res = await http
@@ -123,7 +123,6 @@ class ServerpodClientService extends ChangeNotifier {
     return _isOnline;
   }
 
-  /// Seeds the 7-day Ramesh Kumar demonstration dataset on Serverpod.
   Future<bool> seedDemoData({String token = 'dhatri-demo-secret-2026'}) async {
     try {
       await _client.demo.seed(token);
@@ -135,7 +134,6 @@ class ServerpodClientService extends ChangeNotifier {
     }
   }
 
-  /// Resets the demo dataset on Serverpod.
   Future<bool> resetDemoData({String token = 'dhatri-demo-secret-2026'}) async {
     try {
       await _client.demo.reset(token);
@@ -147,15 +145,13 @@ class ServerpodClientService extends ChangeNotifier {
     }
   }
 
-  /// Real email login with Serverpod's Email IDP.
-  /// Stores issued JWT token in the auth key manager.
   Future<bool> signIn(String email, String password) async {
     try {
       final res = await _client.emailIdp.login(
         email: email.trim(),
         password: password,
       );
-      await _authManager.put(res.token);
+      await _sessionManager.updateSignedInUser(res);
       _lastError = null;
       notifyListeners();
       return true;
@@ -166,7 +162,6 @@ class ServerpodClientService extends ChangeNotifier {
     }
   }
 
-  /// Starts registration with Serverpod Email IDP
   Future<UuidValue?> startRegistration(String email) async {
     try {
       final reqId = await _client.emailIdp.startRegistration(
@@ -181,7 +176,6 @@ class ServerpodClientService extends ChangeNotifier {
     }
   }
 
-  /// Verifies email registration code
   Future<String?> verifyRegistrationCode(
     UuidValue accountRequestId,
     String code,
@@ -200,7 +194,6 @@ class ServerpodClientService extends ChangeNotifier {
     }
   }
 
-  /// Finishes email registration and stores issued JWT token
   Future<bool> finishRegistration(
     String registrationToken,
     String password,
@@ -210,7 +203,7 @@ class ServerpodClientService extends ChangeNotifier {
         registrationToken: registrationToken,
         password: password,
       );
-      await _authManager.put(res.token);
+      await _sessionManager.updateSignedInUser(res);
       _lastError = null;
       notifyListeners();
       return true;
@@ -221,25 +214,18 @@ class ServerpodClientService extends ChangeNotifier {
     }
   }
 
-  /// Sign out by clearing the JWT token.
   Future<void> signOut() async {
-    await _authManager.remove();
+    await _sessionManager.updateSignedInUser(null);
     _lastError = null;
     notifyListeners();
   }
 
-  /// Check whether an auth key is currently stored.
-  Future<bool> get isAuthenticated async {
-    final key = await _authManager.get();
-    return key != null && key.isNotEmpty;
-  }
+  Future<bool> get isAuthenticated async => _sessionManager.isAuthenticated;
 
-  /// Sets auth key for session simulation or test token override.
-  void setAuthKey(String? key) {
-    if (key == null) {
-      _authManager.remove();
-    } else {
-      _authManager.put(key);
-    }
+  /// Force a JWT refresh (e.g. after a 401). Returns false if refresh failed.
+  Future<bool> refreshAuth() async {
+    final result = await _sessionManager.refreshAuthKey(force: true);
+    notifyListeners();
+    return result == RefreshAuthKeyResult.success;
   }
 }

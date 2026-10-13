@@ -5,6 +5,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../../models/models.dart';
 import '../../../state/care_state.dart';
+import '../../../state/voice_call_state.dart';
 import '../../components/dhatri_buttons.dart';
 
 class AlertDetailScreen extends StatelessWidget {
@@ -93,13 +94,22 @@ class AlertDetailScreen extends StatelessWidget {
 
             // Action Buttons
             DhatriPrimaryButton(
-              label: 'Call ${alert.patientName}',
+              label: 'Start wellness call with ${alert.patientName}',
               icon: Icons.phone_rounded,
-              onPressed: () {
+              onPressed: () async {
+                final ok = await context
+                    .read<VoiceCallState>()
+                    .triggerCheckIn(alert.patientId);
+                if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Calling ${alert.patientName} (+91 98765 43210)...'),
-                    backgroundColor: AppColors.callGreen,
+                    content: Text(
+                      ok
+                          ? 'Call queued — ${alert.patientName} should see an incoming care call'
+                          : 'Could not queue wellness call',
+                    ),
+                    backgroundColor:
+                        ok ? AppColors.callGreen : AppColors.error,
                   ),
                 );
               },

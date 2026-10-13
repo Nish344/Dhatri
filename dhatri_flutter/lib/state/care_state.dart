@@ -14,6 +14,8 @@ class CareState extends ChangeNotifier {
 
   int? _activePatientId;
   CareStreamStatus _streamStatus = CareStreamStatus.offline;
+  bool _isPatient = false;
+  int _pendingAuthFailures = 0;
 
   List<DoseEvent> _todayDoses = [];
   List<Alert> _openAlerts = [];
@@ -67,7 +69,9 @@ class CareState extends ChangeNotifier {
   /// Synchronize active patient context with authenticated user session
   void syncWithAuth(AuthState auth) {
     if (!auth.isSignedIn || auth.needsOnboarding) {
-      if (_activePatientId != null || _todayDoses.isNotEmpty || _streamSubscription != null) {
+      if (_activePatientId != null ||
+          _todayDoses.isNotEmpty ||
+          _streamSubscription != null) {
         _streamSubscription?.cancel();
         _streamSubscription = null;
         _reconnectTimer?.cancel();
@@ -89,12 +93,12 @@ class CareState extends ChangeNotifier {
     }
 
     final profile = auth.currentProfile;
+    _isPatient = auth.isPatient;
     if (auth.isPatient) {
       if (profile.id > 0 && _activePatientId != profile.id) {
         _activePatientId = profile.id;
         loadAll();
         _subscribeToStream();
-        _startPendingPoll();
       }
     } else {
       _pendingPollTimer?.cancel();
@@ -107,8 +111,10 @@ class CareState extends ChangeNotifier {
   }
 
   DoseEvent? get nextDose {
-    final pending = _todayDoses.where((d) =>
-        d.status == DoseStatus.scheduled || d.status == DoseStatus.reminded);
+    final pending = _todayDoses.where(
+      (d) =>
+          d.status == DoseStatus.scheduled || d.status == DoseStatus.reminded,
+    );
     if (pending.isNotEmpty) return pending.first;
     return null;
   }
@@ -124,14 +130,20 @@ class CareState extends ChangeNotifier {
   }
 
   Future<void> loadAll() async {
-    // 1. For Caregivers & Doctors, load overview of linked patients
-    try {
-      _overview = await repository.getOverview();
-      if (_overview.isNotEmpty && (_activePatientId == null || !_overview.any((p) => p.patient.id == _activePatientId))) {
-        _activePatientId = _overview.first.patient.id;
-        _subscribeToStream();
+    // Patients must not call patients.overview (server returns 500 for Role.patient).
+    if (!_isPatient) {
+      try {
+        _overview = await repository.getOverview();
+        if (_overview.isNotEmpty &&
+            (_activePatientId == null ||
+                !_overview.any((p) => p.patient.id == _activePatientId))) {
+          _activePatientId = _overview.first.patient.id;
+          _subscribeToStream();
+        }
+      } catch (e) {
+        debugPrint('CareState: overview failed: $e');
       }
-    } catch (_) {}
+    }
 
     final patientId = _activePatientId;
     if (patientId == null || patientId <= 0) {
@@ -176,23 +188,27 @@ class CareState extends ChangeNotifier {
       _streamStatus = CareStreamStatus.live;
       notifyListeners();
 
-      _streamSubscription = repository.watchPatient(patientId).listen(
-        (update) {
-          _streamStatus = CareStreamStatus.live;
-          if (update.check != null) {
-            _offerIncomingCheck(update.check!);
-          }
-          loadAll();
-        },
-        onError: (err) {
-          debugPrint('CareState: care stream error: $err');
-          _scheduleStreamReconnect();
-        },
-        onDone: () {
-          _scheduleStreamReconnect();
-        },
-      );
-      _startPendingPoll();
+      _streamSubscription = repository
+          .watchPatient(patientId)
+          .listen(
+            (update) {
+              _streamStatus = CareStreamStatus.live;
+              if (update.check != null) {
+                _offerIncomingCheck(update.check!);
+              }
+              loadAll();
+            },
+            onError: (err) {
+              debugPrint('CareState: care stream error: $err');
+              _scheduleStreamReconnect();
+            },
+            onDone: () {
+              _scheduleStreamReconnect();
+            },
+          );
+      if (_isPatient) {
+        _startPendingPoll();
+      }
     } catch (_) {
       _scheduleStreamReconnect();
     }
@@ -201,17 +217,32 @@ class CareState extends ChangeNotifier {
   /// Backup for multi-tab demos if the websocket update is missed.
   void _startPendingPoll() {
     _pendingPollTimer?.cancel();
+    if (!_isPatient) return;
     final patientId = _activePatientId;
     if (patientId == null || patientId <= 0) return;
+    _pendingAuthFailures = 0;
 
     _pendingPollTimer = Timer.periodic(const Duration(seconds: 4), (_) async {
       try {
         final check = await repository.getPendingCheckIn(patientId);
+        _pendingAuthFailures = 0;
         if (check != null) {
           _offerIncomingCheck(check);
         }
       } catch (e) {
+        final msg = e.toString();
         debugPrint('CareState: pending poll failed: $e');
+        if (msg.contains('401') || msg.contains('Unauthorized')) {
+          _pendingAuthFailures++;
+          // Stop hammering the server once the JWT is dead — user must re-login.
+          if (_pendingAuthFailures >= 2) {
+            debugPrint(
+              'CareState: stopping pending poll after repeated 401s — re-login required',
+            );
+            _pendingPollTimer?.cancel();
+            _pendingPollTimer = null;
+          }
+        }
       }
     });
   }
