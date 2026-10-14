@@ -1,0 +1,12 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#E8F5F0', 'primaryTextColor': '#0F3D32', 'primaryBorderColor': '#1B7A5A', 'lineColor': '#3D5A50'}}}%%
+flowchart LR
+  A["Caregiver<br/>photos prescription"] --> B["uploadTicket<br/>+ upload to private storage"]
+  B --> C["prescription.submit<br/>status = uploaded"]
+  C --> D["FutureCall: extract<br/>zero delay"]
+  D --> E["Gemini reads image<br/>→ extractedJson"]
+  E --> F["status = extracted"]
+  F --> G["Caregiver reviews<br/>MedicationDraft list"]
+  G --> H["prescription.confirm<br/>edited drafts"]
+  H --> I[("Medication rows<br/>+ DoseEvent rows<br/>IST times → UTC")]
+  I --> J["schedule remind<br/>at each scheduledAt"]
+  J --> K["Patient sees<br/>Today's medicines"]

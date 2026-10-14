@@ -1,0 +1,73 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#F5F0E8', 'primaryTextColor': '#2A2118', 'primaryBorderColor': '#8B6914', 'lineColor': '#5A4A30'}}}%%
+erDiagram
+  Profile ||--o{ Profile : "caregiverId / doctorId"
+  Profile ||--o{ Prescription : has
+  Profile ||--o{ Medication : has
+  Profile ||--o{ DoseEvent : has
+  Profile ||--o{ WellnessCheck : has
+  Profile ||--o{ SymptomReport : has
+  Profile ||--o{ PatientMemory : has
+  Profile ||--o{ Alert : has
+
+  Prescription ||--o{ Medication : yields
+  Medication ||--o{ DoseEvent : schedules
+  WellnessCheck ||--o{ SymptomReport : captures
+  WellnessCheck ||--o{ PatientMemory : sources
+
+  Profile {
+    int id
+    string name
+    Role role
+    string linkCode
+    int caregiverId
+    int doctorId
+  }
+
+  Prescription {
+    int id
+    PrescriptionStatus status
+    string path
+    string extractedJson
+  }
+
+  Medication {
+    int id
+    string name
+    string doseText
+    list times
+    bool active
+  }
+
+  DoseEvent {
+    int id
+    datetime scheduledAt
+    DoseStatus status
+  }
+
+  WellnessCheck {
+    int id
+    CheckStatus status
+    CheckTrigger trigger
+    int turnCount
+    string transcript
+  }
+
+  SymptomReport {
+    int id
+    string symptom
+    int severity
+  }
+
+  PatientMemory {
+    int id
+    string kind
+    string content
+    vector embedding
+  }
+
+  Alert {
+    int id
+    AlertKind kind
+    AlertPriority priority
+    string message
+  }
