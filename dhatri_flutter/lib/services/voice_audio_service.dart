@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
@@ -179,9 +180,28 @@ class VoiceAudioService {
     } catch (_) {}
   }
 
+  /// Asks for mic access on Android/iOS before STT init (web skips).
+  Future<bool> _ensureMicPermission() async {
+    if (kIsWeb) return true;
+    final status = await Permission.microphone.status;
+    if (status.isGranted) return true;
+    if (status.isPermanentlyDenied) {
+      debugPrint('VoiceAudioService: mic permanently denied — open settings');
+      return false;
+    }
+    final result = await Permission.microphone.request();
+    return result.isGranted;
+  }
+
   Future<bool> initSpeech() async {
     if (_isSpeechInitialized) return true;
     try {
+      final micOk = await _ensureMicPermission();
+      if (!micOk) {
+        debugPrint('VoiceAudioService: microphone permission not granted');
+        return false;
+      }
+
       final available = await _speech.initialize(
         onError: (SpeechRecognitionError error) {
           debugPrint('VoiceAudioService: STT error: ${error.errorMsg}');
@@ -223,7 +243,7 @@ class VoiceAudioService {
     final ready = await initSpeech();
     if (!ready) {
       onError?.call(
-        'माइक्रोफ़ोन या वाक् पहचान उपलब्ध नहीं है (Microphone unavailable)',
+        'माइक्रोफ़ोन की अनुमति दें (Allow microphone in app settings)',
       );
       return false;
     }

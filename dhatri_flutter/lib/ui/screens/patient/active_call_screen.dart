@@ -40,25 +40,31 @@ class ActiveCallScreen extends StatelessWidget {
         ),
         actions: [
           Container(
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            constraints: const BoxConstraints(maxWidth: 140),
+            margin: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(Icons.record_voice_over_rounded, size: 16, color: Color(0xFF38BDF8)),
                 const SizedBox(width: 6),
-                Text(
-                  voice.lastVoiceSource == 'sarvam'
-                      ? 'Sarvam · bulbul'
-                      : voice.lastVoiceSource == 'device_tts'
-                          ? 'Device TTS (fallback)'
-                          : 'Hindi · hi-IN',
-                  style: AppTypography.supporting.copyWith(
-                    color: Colors.white70,
-                    fontSize: 12,
+                Flexible(
+                  child: Text(
+                    voice.lastVoiceSource == 'sarvam'
+                        ? 'Sarvam'
+                        : voice.lastVoiceSource == 'device_tts'
+                            ? 'Device TTS'
+                            : 'Hindi',
+                    style: AppTypography.supporting.copyWith(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],

@@ -53,11 +53,16 @@ class DhatriAlertCard extends StatelessWidget {
                     size: 24,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    isMissedDose ? 'MISSED DOSE ALERT' : 'SYMPTOM ALERT',
-                    style: AppTypography.statusLabel.copyWith(
-                      color: borderColor,
-                      letterSpacing: 0.8,
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 200),
+                    child: Text(
+                      isMissedDose ? 'MISSED DOSE ALERT' : 'SYMPTOM ALERT',
+                      style: AppTypography.statusLabel.copyWith(
+                        color: borderColor,
+                        letterSpacing: 0.8,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],

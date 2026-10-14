@@ -78,27 +78,32 @@ class DhatriInsightCard extends StatelessWidget {
           const SizedBox(height: 16),
           // Clinical Key Indicators
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _metricColumn(
-                label: 'Adherence',
-                value: '${insight.adherencePct ?? 0}%',
-                change: '↓ from ${insight.prevAdherencePct ?? 0}%',
-                changeColor: AppColors.error,
+              Expanded(
+                child: _metricColumn(
+                  label: 'Adherence',
+                  value: '${insight.adherencePct ?? 0}%',
+                  change: '↓ from ${insight.prevAdherencePct ?? 0}%',
+                  changeColor: AppColors.error,
+                ),
               ),
               Container(width: 1, height: 40, color: AppColors.divider),
-              _metricColumn(
-                label: 'Missed Doses',
-                value: '${insight.dosesMissed}',
-                change: 'this week',
-                changeColor: AppColors.warning,
+              Expanded(
+                child: _metricColumn(
+                  label: 'Missed Doses',
+                  value: '${insight.dosesMissed}',
+                  change: 'this week',
+                  changeColor: AppColors.warning,
+                ),
               ),
               Container(width: 1, height: 40, color: AppColors.divider),
-              _metricColumn(
-                label: 'Check-ins',
-                value: '${insight.checkIns}',
-                change: 'completed',
-                changeColor: AppColors.success,
+              Expanded(
+                child: _metricColumn(
+                  label: 'Check-ins',
+                  value: '${insight.checkIns}',
+                  change: 'completed',
+                  changeColor: AppColors.success,
+                ),
               ),
             ],
           ),
@@ -118,10 +123,16 @@ class DhatriInsightCard extends StatelessWidget {
         Text(
           value,
           style: AppTypography.displayLarge.copyWith(fontSize: 26),
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         Text(
           label,
           style: AppTypography.supporting.copyWith(fontSize: 13),
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         Text(
           change,
@@ -130,6 +141,9 @@ class DhatriInsightCard extends StatelessWidget {
             fontWeight: FontWeight.w600,
             color: changeColor,
           ),
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ],
     );

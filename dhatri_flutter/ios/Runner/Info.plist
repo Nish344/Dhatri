@@ -4,6 +4,10 @@
 <dict>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Dhatri needs the microphone for Hindi care-call speech recognition.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Dhatri uses speech recognition so patients can answer care calls by voice.</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

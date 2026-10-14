@@ -30,32 +30,42 @@ class AlertDetailScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Alert Type Badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: isMissedDose ? AppColors.errorBg : AppColors.warningBg,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isMissedDose ? AppColors.errorBorder : AppColors.warningBorder,
-                  width: 1.5,
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isMissedDose ? AppColors.errorBg : AppColors.warningBg,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isMissedDose ? AppColors.errorBorder : AppColors.warningBorder,
+                    width: 1.5,
+                  ),
                 ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    isMissedDose ? Icons.error_rounded : Icons.warning_rounded,
-                    color: isMissedDose ? AppColors.error : AppColors.warning,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    isMissedDose ? 'CRITICAL MISSED DOSE' : 'REPEATED CONCERN',
-                    style: AppTypography.statusLabel.copyWith(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isMissedDose ? Icons.error_rounded : Icons.warning_rounded,
                       color: isMissedDose ? AppColors.error : AppColors.warning,
+                      size: 20,
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth: MediaQuery.sizeOf(context).width - 80,
+                      ),
+                      child: Text(
+                        isMissedDose ? 'CRITICAL MISSED DOSE' : 'REPEATED CONCERN',
+                        style: AppTypography.statusLabel.copyWith(
+                          color: isMissedDose ? AppColors.error : AppColors.warning,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 18),

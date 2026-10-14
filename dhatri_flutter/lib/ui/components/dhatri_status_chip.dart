@@ -109,9 +109,14 @@ class DhatriStatusChip extends StatelessWidget {
         children: [
           Icon(icon, size: 18, color: textColor),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: AppTypography.statusLabel.copyWith(color: textColor),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 180),
+            child: Text(
+              label,
+              style: AppTypography.statusLabel.copyWith(color: textColor),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
