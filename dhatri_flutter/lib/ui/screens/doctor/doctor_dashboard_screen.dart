@@ -2,14 +2,90 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../repositories/dhatri_repository.dart';
 import '../../../state/care_state.dart';
 import '../../../state/auth_state.dart';
 import '../../components/dhatri_insight_card.dart';
 import '../../components/dhatri_timeline_item.dart';
-import '../../components/dhatri_role_switcher.dart';
 
 class DoctorDashboardScreen extends StatelessWidget {
   const DoctorDashboardScreen({super.key});
+
+  void _showLinkPatientDialog(BuildContext context) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Link Patient with Code'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Enter the 6-digit link code shown on the patient\'s profile or settings screen.',
+              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              decoration: const InputDecoration(
+                labelText: '6-digit Link Code',
+                hintText: 'e.g. 482910',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final code = controller.text.trim();
+              if (code.isEmpty) return;
+              Navigator.pop(ctx);
+              try {
+                final repo = context.read<DhatriRepository>();
+                final care = context.read<CareState>();
+                final linked = await repo.linkWithCode(code);
+                // Select the linked patient explicitly so insight loads even if
+                // overview was empty before this link.
+                if (linked.id > 0 && care.activePatientId != linked.id) {
+                  care.setActivePatientId(linked.id);
+                } else {
+                  await care.loadAll();
+                }
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        '✓ Successfully linked with ${linked.name}!',
+                      ),
+                      backgroundColor: AppColors.success,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to link patient: $e'),
+                      backgroundColor: AppColors.error,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Link Patient'),
+          ),
+        ],
+      ),
+    ).whenComplete(controller.dispose);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,9 +112,13 @@ class DoctorDashboardScreen extends StatelessWidget {
           ],
         ),
         actions: [
-          const DhatriRoleSwitcherButton(),
+          IconButton(
+            icon: const Icon(Icons.person_add_rounded),
+            tooltip: 'Link Patient with Code',
+            onPressed: () => _showLinkPatientDialog(context),
+          ),
           Container(
-            margin: const EdgeInsets.only(right: 16),
+            margin: const EdgeInsets.only(right: 4),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: AppColors.primaryLight,
@@ -63,6 +143,11 @@ class DoctorDashboardScreen extends StatelessWidget {
                 ),
               ],
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout_rounded),
+            tooltip: 'Log Out',
+            onPressed: () => auth.signOut(),
           ),
         ],
       ),
@@ -94,12 +179,18 @@ class DoctorDashboardScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'When patients are registered and linked in the system, their clinical insights, symptom logs, and longitudinal timelines will appear here.',
+                      'Link a patient with their 6-digit code to see clinical insights, symptom logs, and longitudinal timelines.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 14,
                         color: AppColors.textSecondary,
                       ),
+                    ),
+                    const SizedBox(height: 20),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.add_link),
+                      label: const Text('Link Patient'),
+                      onPressed: () => _showLinkPatientDialog(context),
                     ),
                   ],
                 ),
