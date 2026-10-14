@@ -52,7 +52,13 @@ class DoctorDashboardScreen extends StatelessWidget {
                 final repo = context.read<DhatriRepository>();
                 final care = context.read<CareState>();
                 final linked = await repo.linkWithCode(code);
-                await care.loadAll();
+                // Select the linked patient explicitly so insight loads even if
+                // overview was empty before this link.
+                if (linked.id > 0 && care.activePatientId != linked.id) {
+                  care.setActivePatientId(linked.id);
+                } else {
+                  await care.loadAll();
+                }
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -78,7 +84,7 @@ class DoctorDashboardScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ).whenComplete(controller.dispose);
   }
 
   @override
