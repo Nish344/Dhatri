@@ -1,0 +1,24 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#FDF2F0', 'primaryTextColor': '#3D1A14', 'primaryBorderColor': '#C44B3A', 'lineColor': '#5A3D35'}}}%%
+sequenceDiagram
+  participant FC as Future calls
+  participant DB as Postgres DoseEvent / Alert
+  participant BUS as care_bus
+  participant Pat as Patient app
+  participant Care as Caregiver app
+
+  Note over FC,Care: At scheduledAt
+  FC->>DB: remind → status scheduled → reminded
+  FC->>BUS: post CareUpdate dose
+  BUS-->>Pat: dose card shows reminder
+  BUS-->>Care: overview refreshes
+
+  alt Patient taps Taken within grace
+    Pat->>DB: markTaken → reminded → taken
+    Pat->>BUS: post CareUpdate
+    BUS-->>Care: adherence updates
+  else Grace expires DHATRI_GRACE_MINUTES default 20
+    FC->>DB: escalate → reminded → missed
+    FC->>DB: insert Alert missedDose
+    FC->>BUS: post CareUpdate alert
+    BUS-->>Care: live missed-dose alert
+  end

@@ -58,6 +58,8 @@ One Flutter app. `Profile.role` chooses the shell (patient, caregiver or doctor)
 
 ## 3. System overview
 
+**Slide-ready diagrams** (PNG + Mermaid source): see [`docs/DIAGRAMS.md`](docs/DIAGRAMS.md).
+
 ```text
  Patient phone        Caregiver phone        Doctor (phone/emulator)
         \                   |                    /

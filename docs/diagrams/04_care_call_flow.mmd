@@ -1,0 +1,21 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#EEF2F7', 'primaryTextColor': '#1A2A3D', 'primaryBorderColor': '#3A6EA5', 'lineColor': '#3D5A70'}}}%%
+flowchart TB
+  TRIG["Trigger<br/>daily cron 19:00 IST<br/>or caregiver startNow"] --> OPEN["CheckInFutureCall.open<br/>WellnessCheck pending"]
+  OPEN --> POST1["care_bus CareUpdate"]
+  POST1 --> RING["Patient phone<br/>incoming care call UI"]
+  RING --> ACCEPT["Patient accepts<br/>CheckInEndpoint.accept"]
+  ACCEPT --> GREET["Turn 0: Hindi greeting<br/>Sarvam TTS"]
+
+  GREET --> ANS["Patient answers<br/>audio or tap-text"]
+  ANS --> STT["Sarvam STT hi-IN<br/>empty → ask again"]
+  STT --> CTX["Parallel context<br/>embed + SQL 7-day state<br/>+ memory.retrieve top 3"]
+  CTX --> SAFE["safety_rules.scan<br/>deterministic emergency keywords"]
+  SAFE --> GEM["Gemini interpretCheckIn<br/>replyHi · symptoms · mood"]
+  GEM --> TX["One transaction<br/>update WellnessCheck<br/>insert SymptomReport"]
+  TX --> MEM["memory.remember<br/>observationsEn + embedding"]
+  MEM --> RULES["symptom_rules<br/>repeat ≥3 / severity ≥4 → Alert"]
+  RULES --> TTS["Sarvam speak replyHi"]
+  TTS --> POST2["care_bus CareUpdate"]
+  POST2 --> MORE{"More turns?<br/>MAX_TURNS default 2"}
+  MORE -->|yes| ANS
+  MORE -->|done| CLOSE["Closing line<br/>timeline + caregiver summary"]
