@@ -1,4 +1,5 @@
 /// Domain models matching ARCHITECTURE.md §4 and synchronized with dhatri_client protocol.
+library;
 import 'package:dhatri_client/dhatri_client.dart' as protocol;
 
 enum Role { patient, caregiver, doctor }

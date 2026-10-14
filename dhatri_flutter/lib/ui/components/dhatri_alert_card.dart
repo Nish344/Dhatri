@@ -23,7 +23,7 @@ class DhatriAlertCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isMissedDose = alert.kind == AlertKind.missedDose;
     final borderColor = isMissedDose ? AppColors.error : AppColors.warning;
-    final bgColor = isMissedDose ? AppColors.errorBg.withOpacity(0.4) : AppColors.warningBg.withOpacity(0.4);
+    final bgColor = isMissedDose ? AppColors.errorBg.withValues(alpha: 0.4) : AppColors.warningBg.withValues(alpha: 0.4);
 
     return InkWell(
       onTap: onTap,

@@ -46,3 +46,11 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Optional platform scaffolding (currently not used in this repo)
+/macos/
+/windows/
+/linux/
+
+# Android generated metadata
+/android/.kotlin/

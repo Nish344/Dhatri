@@ -36,7 +36,7 @@ class IncomingCallScreen extends StatelessWidget {
                       border: Border.all(color: Colors.white24, width: 4),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primary.withOpacity(0.5),
+                          color: AppColors.primary.withValues(alpha: 0.5),
                           blurRadius: 30,
                           spreadRadius: 8,
                         ),
@@ -67,7 +67,7 @@ class IncomingCallScreen extends StatelessWidget {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(

@@ -28,18 +28,18 @@ class _CaregiverShellState extends State<CaregiverShell> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) => setState(() => _currentIndex = index),
-        destinations: [
-          const NavigationDestination(
+        destinations: const [
+          NavigationDestination(
             icon: Icon(Icons.dashboard_outlined),
             selectedIcon: Icon(Icons.dashboard_rounded),
             label: 'Triage Home',
           ),
-          const NavigationDestination(
+          NavigationDestination(
             icon: Icon(Icons.timeline_rounded),
             selectedIcon: Icon(Icons.timeline_rounded),
             label: 'Timeline',
           ),
-          const NavigationDestination(
+          NavigationDestination(
             icon: Icon(Icons.document_scanner_outlined),
             selectedIcon: Icon(Icons.document_scanner_rounded),
             label: 'Upload Rx',

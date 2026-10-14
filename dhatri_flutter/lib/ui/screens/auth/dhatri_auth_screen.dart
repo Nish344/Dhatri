@@ -290,7 +290,7 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
                   borderRadius: BorderRadius.circular(22),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
+                      color: AppColors.primary.withValues(alpha: 0.3),
                       blurRadius: 18,
                       offset: const Offset(0, 6),
                     ),
@@ -324,8 +324,8 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
                 ),
                 decoration: BoxDecoration(
                   color: clientService.isOnline
-                      ? AppColors.success.withOpacity(0.12)
-                      : AppColors.warning.withOpacity(0.12),
+                      ? AppColors.success.withValues(alpha: 0.12)
+                      : AppColors.warning.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -372,7 +372,7 @@ class _DhatriAuthScreenState extends State<DhatriAuthScreen>
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
+                        color: Colors.black.withValues(alpha: 0.06),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),

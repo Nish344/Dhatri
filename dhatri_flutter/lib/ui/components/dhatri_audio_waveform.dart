@@ -50,7 +50,7 @@ class _DhatriAudioWaveformState extends State<DhatriAudioWaveform>
               width: 6,
               height: height,
               decoration: BoxDecoration(
-                color: widget.waveColor.withOpacity(0.8),
+                color: widget.waveColor.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.circular(10),
               ),
             );

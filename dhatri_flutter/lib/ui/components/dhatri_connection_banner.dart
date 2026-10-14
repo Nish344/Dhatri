@@ -22,7 +22,7 @@ class DhatriConnectionBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      color: AppColors.warning.withOpacity(0.12),
+      color: AppColors.warning.withValues(alpha: 0.12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

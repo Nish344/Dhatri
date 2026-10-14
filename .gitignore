@@ -20,3 +20,13 @@ pubspec_overrides.yaml
 
 # Secrets
 dhatri_server/config/passwords.yaml
+
+# Accidental root-level Flutter scaffold (repo app is under dhatri_flutter/)
+/android/
+/ios/
+/lib/
+/linux/
+/macos/
+/test/
+/web/
+/windows/

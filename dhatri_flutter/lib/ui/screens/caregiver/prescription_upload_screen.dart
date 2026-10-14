@@ -132,7 +132,7 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.surface,
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: AppColors.primary.withOpacity(0.4), width: 2),
+                  border: Border.all(color: AppColors.primary.withValues(alpha: 0.4), width: 2),
                 ),
                 child: Column(
                   children: [
@@ -228,7 +228,7 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
                 label: const Text('Enter Prescription Schedule Manually'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primary,
-                  side: BorderSide(color: AppColors.primary.withOpacity(0.5)),
+                  side: BorderSide(color: AppColors.primary.withValues(alpha: 0.5)),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),

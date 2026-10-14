@@ -44,7 +44,7 @@ class ActiveCallScreen extends StatelessWidget {
             margin: const EdgeInsets.only(right: 12),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.12),
+              color: Colors.white.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -80,14 +80,14 @@ class ActiveCallScreen extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
               color: isThinking
-                  ? const Color(0xFF6366F1).withOpacity(0.25)
+                  ? const Color(0xFF6366F1).withValues(alpha: 0.25)
                   : isListening
-                      ? const Color(0xFF10B981).withOpacity(0.25)
+                      ? const Color(0xFF10B981).withValues(alpha: 0.25)
                       : isYourTurn
-                          ? AppColors.callGreen.withOpacity(0.2)
+                          ? AppColors.callGreen.withValues(alpha: 0.2)
                           : isDhatriSpeaking
-                              ? AppColors.primary.withOpacity(0.3)
-                              : Colors.white.withOpacity(0.06),
+                              ? AppColors.primary.withValues(alpha: 0.3)
+                              : Colors.white.withValues(alpha: 0.06),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -180,7 +180,7 @@ class ActiveCallScreen extends StatelessWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF38BDF8).withOpacity(0.18),
+                                    color: const Color(0xFF38BDF8).withValues(alpha: 0.18),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: const Row(
@@ -217,10 +217,10 @@ class ActiveCallScreen extends StatelessWidget {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                           decoration: BoxDecoration(
-                            color: AppColors.callGreen.withOpacity(0.2),
+                            color: AppColors.callGreen.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: isListening ? const Color(0xFF34D399) : AppColors.callGreen.withOpacity(0.5),
+                              color: isListening ? const Color(0xFF34D399) : AppColors.callGreen.withValues(alpha: 0.5),
                               width: isListening ? 2 : 1.2,
                             ),
                           ),
@@ -277,9 +277,9 @@ class ActiveCallScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                         decoration: BoxDecoration(
-                          color: Colors.amber.withOpacity(0.15),
+                          color: Colors.amber.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: Colors.amber.withOpacity(0.5)),
+                          border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
                         ),
                         child: Row(
                           children: [
@@ -370,19 +370,19 @@ class ActiveCallScreen extends StatelessWidget {
                                 height: 56,
                               )
                             : isDhatriSpeaking
-                                ? DhatriPrimaryButton(
+                                ? const DhatriPrimaryButton(
                                     label: 'धात्री बोल रही हैं... (Speaking)',
                                     icon: Icons.volume_up_rounded,
                                     onPressed: null,
-                                    backgroundColor: const Color(0xFF334155),
+                                    backgroundColor: Color(0xFF334155),
                                     height: 56,
                                   )
                                 : isThinking
-                                    ? DhatriPrimaryButton(
+                                    ? const DhatriPrimaryButton(
                                         label: 'सोच रही हूँ... (Thinking)',
                                         icon: Icons.hourglass_top_rounded,
                                         onPressed: null,
-                                        backgroundColor: const Color(0xFF334155),
+                                        backgroundColor: Color(0xFF334155),
                                         height: 56,
                                       )
                                     : DhatriPrimaryButton(
@@ -451,7 +451,7 @@ class ActiveCallScreen extends StatelessWidget {
           color: enabled ? const Color(0xFF334155) : const Color(0xFF1E293B),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: enabled ? const Color(0xFF38BDF8).withOpacity(0.5) : const Color(0xFF475569),
+            color: enabled ? const Color(0xFF38BDF8).withValues(alpha: 0.5) : const Color(0xFF475569),
           ),
         ),
         child: Text(
