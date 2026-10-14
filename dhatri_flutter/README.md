@@ -57,6 +57,8 @@ The complete Flutter frontend application is fully implemented in `dhatri_flutte
    flutter pub get
    ```
 
+   Android builds need `speech_to_text` **7.5+** (no `jcenter`). After pulling, run `flutter pub get` again if you still see `Could not find method jcenter()`.
+
 3. Run the application on your connected device, emulator, or Chrome:
    ```bash
    flutter run
