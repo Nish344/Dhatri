@@ -241,12 +241,14 @@ class VoiceAudioService {
         onSoundLevelChange: (level) {
           soundLevel.value = (level / 10.0).clamp(0.0, 1.0);
         },
-        localeId: _hindiLocaleId ?? 'hi_IN',
-        listenFor: const Duration(seconds: 30),
-        pauseFor: const Duration(seconds: 3),
-        listenMode: stt.ListenMode.dictation,
-        cancelOnError: false,
-        partialResults: true,
+        listenOptions: stt.SpeechListenOptions(
+          localeId: _hindiLocaleId ?? 'hi_IN',
+          listenFor: const Duration(seconds: 30),
+          pauseFor: const Duration(seconds: 3),
+          listenMode: stt.ListenMode.dictation,
+          cancelOnError: false,
+          partialResults: true,
+        ),
       );
       return true;
     } catch (e) {
