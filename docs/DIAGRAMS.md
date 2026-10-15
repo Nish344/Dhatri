@@ -1,6 +1,8 @@
 # Dhatri — Architecture & data-flow diagrams
 
 Source Mermaid (`.mmd`) and rendered PNGs live in [`docs/diagrams/`](diagrams/).
+Brand palette matches the app: primary `#0A686D`, light `#E6F3F3`, success `#15803D`, warning `#B45309`, background `#F7F9FA`.
+
 Use the PNGs in slides, reports, and demos. Edit the `.mmd` files, then re-render:
 
 ```bash

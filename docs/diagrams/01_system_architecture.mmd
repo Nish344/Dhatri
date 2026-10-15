@@ -1,26 +1,61 @@
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#E8F5F0', 'primaryTextColor': '#0F3D32', 'primaryBorderColor': '#1B7A5A', 'lineColor': '#3D5A50', 'secondaryColor': '#F5F0E8', 'tertiaryColor': '#EEF2F7'}}}%%
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'fontFamily': 'Inter, ui-sans-serif, system-ui, sans-serif',
+    'fontSize': '16px',
+    'primaryColor': '#E6F3F3',
+    'primaryTextColor': '#111827',
+    'primaryBorderColor': '#0A686D',
+    'secondaryColor': '#F0F7F7',
+    'tertiaryColor': '#F7F9FA',
+    'lineColor': '#0A686D',
+    'textColor': '#111827',
+    'mainBkg': '#FFFFFF',
+    'nodeBorder': '#0A686D',
+    'clusterBkg': '#F0F7F7',
+    'clusterBorder': '#0A686D',
+    'titleColor': '#06474B',
+    'edgeLabelBackground': '#FFFFFF'
+  },
+  'flowchart': {
+    'curve': 'basis',
+    'padding': 24,
+    'nodeSpacing': 48,
+    'rankSpacing': 64,
+    'htmlLabels': true
+  }
+}}%%
+%% Source for docs/diagrams/01_system_architecture.png
+%% Brand: primary #0A686D, light #E6F3F3, success #15803D, warning #B45309, bg #F7F9FA
 flowchart TB
   subgraph Clients["Flutter clients — one app, three roles"]
+    direction LR
     P["Patient phone<br/>doses · Hindi care call · help"]
     C["Caregiver phone<br/>alerts · upload Rx · start check-in"]
     D["Doctor device<br/>read-only clinical portal"]
   end
 
-  subgraph Edge["Client ↔ server"]
-    WS["Serverpod client<br/>REST endpoints + one WebSocket"]
-  end
+  WS["Serverpod client<br/>REST endpoints + one WebSocket"]
 
   subgraph Server["Serverpod 4"]
-    AUTH["Auth<br/>email + JWT"]
-    EP["Endpoints<br/>profile · prescription · dose<br/>check-in · insight · patients · care"]
-    FC["Future calls<br/>extract · remind · escalate<br/>open · ring"]
-    BUS["care_bus<br/>post CareUpdate → patient_id"]
-    DB[("Postgres<br/>Profile · Prescription · Medication<br/>DoseEvent · WellnessCheck<br/>SymptomReport · Alert · PatientMemory")]
-    VEC[("pgvector<br/>PatientMemory.embedding")]
-    STORE[("Private storage<br/>prescription photos")]
+    direction TB
+    subgraph Core["Runtime"]
+      direction LR
+      AUTH["Auth<br/>email + JWT"]
+      EP["Endpoints<br/>profile · prescription · dose<br/>check-in · insight · patients · care"]
+      FC["Future calls<br/>extract · remind · escalate<br/>open · ring"]
+      BUS["care_bus<br/>post CareUpdate → patient_id"]
+    end
+    subgraph Data["Data"]
+      direction LR
+      DB[("Postgres<br/>Profile · Prescription · Medication<br/>DoseEvent · WellnessCheck<br/>SymptomReport · Alert · PatientMemory")]
+      VEC[("pgvector<br/>PatientMemory.embedding")]
+      STORE[("Private storage<br/>prescription photos")]
+    end
   end
 
   subgraph AI["External AI — keys stay on server"]
+    direction LR
     GEM["Gemini<br/>Rx extract · check-in interpret<br/>week summary · embeddings"]
     SAR["Sarvam AI<br/>STT saaras · TTS bulbul hi-IN"]
   end
@@ -30,13 +65,32 @@ flowchart TB
   D --> WS
   WS --> AUTH
   WS --> EP
+  EP --> FC
+  EP --> BUS
   EP --> DB
   EP --> VEC
   EP --> STORE
-  EP --> FC
-  EP --> BUS
-  BUS -.->|stream CareUpdate| WS
   FC --> DB
-  FC --> BUS
+  BUS -.->|stream CareUpdate| WS
   EP --> GEM
   EP --> SAR
+
+  classDef client fill:#E6F3F3,stroke:#0A686D,stroke-width:2px,color:#111827
+  classDef edge fill:#FFFFFF,stroke:#0A686D,stroke-width:2.5px,color:#06474B
+  classDef core fill:#FFFFFF,stroke:#0A686D,stroke-width:2px,color:#111827
+  classDef store fill:#F0F7F7,stroke:#06474B,stroke-width:2px,color:#111827
+  classDef ai fill:#DCFCE7,stroke:#15803D,stroke-width:2px,color:#111827
+  classDef voice fill:#FEF3C7,stroke:#B45309,stroke-width:2px,color:#111827
+
+  class P,C,D client
+  class WS edge
+  class AUTH,EP,FC,BUS core
+  class DB,VEC,STORE store
+  class GEM ai
+  class SAR voice
+
+  style Clients fill:#E6F3F3,stroke:#0A686D,stroke-width:2px,color:#06474B
+  style Server fill:#F0F7F7,stroke:#0A686D,stroke-width:2px,color:#06474B
+  style AI fill:#FFFFFF,stroke:#15803D,stroke-width:2px,color:#15803D
+  style Core fill:transparent,stroke:#0A686D,stroke-dasharray: 4 4,color:#06474B
+  style Data fill:transparent,stroke:#0A686D,stroke-dasharray: 4 4,color:#06474B
